@@ -59,10 +59,117 @@ export default function AdvertiserSettingsPage() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [youtubeName, setYoutubeName] = useState('')
 
+  // Airtable 연동
+  interface AirtableIntegration {
+    id: string
+    name: string
+    api_key: string
+    is_active: boolean
+    config: {
+      airtable?: {
+        name_field: string
+        phone_field: string
+        ref_code_field: string
+        status_field: string
+        valid_values: string[]
+        contract_values: string[]
+        invalid_values: string[]
+        sales_rep_field?: string
+        contract_date_field?: string
+      }
+    }
+  }
+  const [airtableIntegration, setAirtableIntegration] = useState<AirtableIntegration | null>(null)
+  const [airtableNameField, setAirtableNameField] = useState('이름')
+  const [airtablePhoneField, setAirtablePhoneField] = useState('전화번호')
+  const [airtableRefCodeField, setAirtableRefCodeField] = useState('추천코드')
+  const [airtableStatusField, setAirtableStatusField] = useState('영업상태')
+  const [airtableValidValues, setAirtableValidValues] = useState('유효')
+  const [airtableContractValues, setAirtableContractValues] = useState('계약')
+  const [airtableInvalidValues, setAirtableInvalidValues] = useState('무효')
+  const [airtableContractDateField, setAirtableContractDateField] = useState('계약일')
+  const [savingAirtable, setSavingAirtable] = useState(false)
+
   useEffect(() => {
     fetchAdvertiserInfo()
     fetchMedia()
+    fetchAirtableIntegration()
   }, [])
+
+  const fetchAirtableIntegration = async () => {
+    try {
+      const supabase = createClient()
+      const meRes = await fetch('/api/auth/advertiser/me')
+      if (!meRes.ok) return
+      const meData = await meRes.json()
+
+      const { data: adv } = await supabase
+        .from('advertisers')
+        .select('id')
+        .eq('advertiser_id', meData.advertiser.advertiserId)
+        .single()
+
+      if (!adv) return
+
+      const { data } = await supabase
+        .from('webhook_integrations')
+        .select('id, name, api_key, is_active, config')
+        .eq('advertiser_id', adv.id)
+        .eq('source', 'airtable')
+        .single()
+
+      if (data) {
+        setAirtableIntegration(data)
+        const cfg = data.config?.airtable
+        if (cfg) {
+          setAirtableNameField(cfg.name_field || '이름')
+          setAirtablePhoneField(cfg.phone_field || '전화번호')
+          setAirtableRefCodeField(cfg.ref_code_field || '추천코드')
+          setAirtableStatusField(cfg.status_field || '영업상태')
+          setAirtableValidValues((cfg.valid_values || ['유효']).join(', '))
+          setAirtableContractValues((cfg.contract_values || ['계약']).join(', '))
+          setAirtableInvalidValues((cfg.invalid_values || ['무효']).join(', '))
+          setAirtableContractDateField(cfg.contract_date_field || '계약일')
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  const handleAirtableSave = async () => {
+    if (!airtableIntegration) return
+    setSavingAirtable(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('webhook_integrations')
+        .update({
+          config: {
+            airtable: {
+              name_field: airtableNameField,
+              phone_field: airtablePhoneField,
+              ref_code_field: airtableRefCodeField,
+              status_field: airtableStatusField,
+              valid_values: airtableValidValues.split(',').map(s => s.trim()).filter(Boolean),
+              contract_values: airtableContractValues.split(',').map(s => s.trim()).filter(Boolean),
+              invalid_values: airtableInvalidValues.split(',').map(s => s.trim()).filter(Boolean),
+              contract_date_field: airtableContractDateField,
+            },
+          },
+        })
+        .eq('id', airtableIntegration.id)
+
+      if (error) {
+        toast.error('Airtable 설정 저장에 실패했습니다')
+      } else {
+        toast.success('Airtable 설정이 저장되었습니다')
+        fetchAirtableIntegration()
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setSavingAirtable(false)
+    }
+  }
 
   const fetchMedia = async () => {
     try {
@@ -310,6 +417,7 @@ export default function AdvertiserSettingsPage() {
           <TabsTrigger value="account">계정 정보</TabsTrigger>
           <TabsTrigger value="brand">브랜드 설정</TabsTrigger>
           <TabsTrigger value="program">프로그램 설정</TabsTrigger>
+          <TabsTrigger value="airtable">Airtable 연동</TabsTrigger>
           <TabsTrigger value="password">비밀번호 변경</TabsTrigger>
         </TabsList>
 
@@ -666,6 +774,147 @@ export default function AdvertiserSettingsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Airtable 연동 탭 */}
+        <TabsContent value="airtable" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Airtable 연동</CardTitle>
+              <CardDescription>
+                Airtable에서 영업 상태가 변경될 때 Referio에 자동으로 반영됩니다.
+                Airtable Automations → "Fetch URL" 액션으로 설정하세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {airtableIntegration ? (
+                <>
+                  {/* API 키 표시 */}
+                  <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+                    <p className="text-sm font-semibold text-slate-700">Airtable Automation 설정 정보</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 w-24">웹훅 URL</span>
+                        <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono">
+                          https://referio.kr/api/webhook/airtable
+                        </code>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 w-24">API 키</span>
+                        <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono break-all">
+                          {airtableIntegration.api_key}
+                        </code>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 w-24">헤더 이름</span>
+                        <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono">
+                          X-API-Key
+                        </code>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Airtable Automation에서 "Fetch URL" 액션을 추가하고, 위 URL과 헤더를 설정하세요.
+                      요청 본문(JSON)에 아래 필드 매핑에 따른 레코드 데이터를 포함하면 됩니다.
+                    </p>
+                  </div>
+
+                  {/* 필드 매핑 설정 */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm text-slate-700">Airtable 필드 이름 매핑</h3>
+                    <p className="text-xs text-slate-500">Airtable에서 사용하는 필드 이름을 정확히 입력하세요</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>이름 필드</Label>
+                        <Input
+                          value={airtableNameField}
+                          onChange={(e) => setAirtableNameField(e.target.value)}
+                          placeholder="이름"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>전화번호 필드</Label>
+                        <Input
+                          value={airtablePhoneField}
+                          onChange={(e) => setAirtablePhoneField(e.target.value)}
+                          placeholder="전화번호"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>추천코드 필드</Label>
+                        <Input
+                          value={airtableRefCodeField}
+                          onChange={(e) => setAirtableRefCodeField(e.target.value)}
+                          placeholder="추천코드"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>영업상태 필드</Label>
+                        <Input
+                          value={airtableStatusField}
+                          onChange={(e) => setAirtableStatusField(e.target.value)}
+                          placeholder="영업상태"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>계약일 필드</Label>
+                        <Input
+                          value={airtableContractDateField}
+                          onChange={(e) => setAirtableContractDateField(e.target.value)}
+                          placeholder="계약일"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-sm font-medium text-slate-700">영업상태 값 매핑 (쉼표로 구분)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-green-700">유효 처리 값</Label>
+                          <Input
+                            value={airtableValidValues}
+                            onChange={(e) => setAirtableValidValues(e.target.value)}
+                            placeholder="유효"
+                            className="border-green-200"
+                          />
+                          <p className="text-xs text-slate-400">이 값이면 is_valid = true</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-blue-700">계약 처리 값</Label>
+                          <Input
+                            value={airtableContractValues}
+                            onChange={(e) => setAirtableContractValues(e.target.value)}
+                            placeholder="계약"
+                            className="border-blue-200"
+                          />
+                          <p className="text-xs text-slate-400">이 값이면 계약 완료 처리</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-red-700">무효 처리 값</Label>
+                          <Input
+                            value={airtableInvalidValues}
+                            onChange={(e) => setAirtableInvalidValues(e.target.value)}
+                            placeholder="무효"
+                            className="border-red-200"
+                          />
+                          <p className="text-xs text-slate-400">이 값이면 is_valid = false</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button onClick={handleAirtableSave} disabled={savingAirtable}>
+                    {savingAirtable ? '저장 중...' : 'Airtable 설정 저장'}
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <p className="mb-2">Airtable 연동이 설정되지 않았습니다.</p>
+                  <p className="text-sm">DB 마이그레이션을 먼저 실행해주세요.</p>
                 </div>
               )}
             </CardContent>

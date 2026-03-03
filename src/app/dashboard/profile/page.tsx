@@ -69,6 +69,17 @@ export default function ProfilePage() {
   const [accountHolder, setAccountHolder] = useState('')
   const [mainChannelLink, setMainChannelLink] = useState('')
 
+  // 소셜 채널
+  const [channelType, setChannelType] = useState('')
+  const [naverBlogUrl, setNaverBlogUrl] = useState('')
+  const [instagramUrl, setInstagramUrl] = useState('')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [threadsUrl, setThreadsUrl] = useState('')
+  const [tiktokUrl, setTiktokUrl] = useState('')
+  const [monthlyPv, setMonthlyPv] = useState('')
+  const [subscriberCount, setSubscriberCount] = useState('')
+  const [savingChannels, setSavingChannels] = useState(false)
+
   useEffect(() => {
     const fetchData = async () => {
       const supabase = createClient()
@@ -87,6 +98,25 @@ export default function ProfilePage() {
           setBankAccount(partnerData.bank_account || '')
           setAccountHolder(partnerData.account_holder || '')
           setMainChannelLink(partnerData.main_channel_link || '')
+          // 소셜 채널
+          const pd = partnerData as typeof partnerData & {
+            channel_type?: string
+            naver_blog_url?: string
+            instagram_url?: string
+            youtube_url?: string
+            threads_url?: string
+            tiktok_url?: string
+            monthly_pv?: number
+            subscriber_count?: number
+          }
+          setChannelType(pd.channel_type || '')
+          setNaverBlogUrl(pd.naver_blog_url || '')
+          setInstagramUrl(pd.instagram_url || '')
+          setYoutubeUrl(pd.youtube_url || '')
+          setThreadsUrl(pd.threads_url || '')
+          setTiktokUrl(pd.tiktok_url || '')
+          setMonthlyPv(pd.monthly_pv ? String(pd.monthly_pv) : '')
+          setSubscriberCount(pd.subscriber_count ? String(pd.subscriber_count) : '')
         }
       }
       setLoading(false)
@@ -121,6 +151,32 @@ export default function ProfilePage() {
       setEditMode(false)
     }
     setSaving(false)
+  }
+
+  const handleChannelSave = async () => {
+    if (!partner) return
+    setSavingChannels(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('partners')
+      .update({
+        channel_type: channelType || null,
+        naver_blog_url: naverBlogUrl || null,
+        instagram_url: instagramUrl || null,
+        youtube_url: youtubeUrl || null,
+        threads_url: threadsUrl || null,
+        tiktok_url: tiktokUrl || null,
+        monthly_pv: monthlyPv ? parseInt(monthlyPv) : null,
+        subscriber_count: subscriberCount ? parseInt(subscriberCount) : null,
+      })
+      .eq('id', partner.id)
+
+    if (!error) {
+      toast.success('채널 정보가 저장되었습니다')
+    } else {
+      toast.error('저장에 실패했습니다')
+    }
+    setSavingChannels(false)
   }
 
   const handleCopy = async () => {
@@ -354,6 +410,107 @@ export default function ProfilePage() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* 소셜 채널 정보 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">소셜 채널 정보</CardTitle>
+          <CardDescription>활동 채널을 등록하면 광고주가 파트너 검토 시 참고합니다</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>채널 유형</Label>
+            <select
+              value={channelType}
+              onChange={(e) => setChannelType(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">선택 안함</option>
+              <option value="blogger">블로거 (네이버 블로그/티스토리)</option>
+              <option value="instagrammer">인스타그래머</option>
+              <option value="youtuber">유튜버</option>
+              <option value="agency">영업 에이전시</option>
+              <option value="offline">오프라인 영업</option>
+              <option value="other">기타</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>네이버 블로그</Label>
+              <Input
+                value={naverBlogUrl}
+                onChange={(e) => setNaverBlogUrl(e.target.value)}
+                placeholder="https://blog.naver.com/yourname"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>인스타그램</Label>
+              <Input
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/yourname"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>유튜브</Label>
+              <Input
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/@yourname"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>쓰레드(Threads)</Label>
+              <Input
+                value={threadsUrl}
+                onChange={(e) => setThreadsUrl(e.target.value)}
+                placeholder="https://threads.net/@yourname"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>틱톡</Label>
+              <Input
+                value={tiktokUrl}
+                onChange={(e) => setTiktokUrl(e.target.value)}
+                placeholder="https://tiktok.com/@yourname"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>월 조회수(PV)</Label>
+              <Input
+                type="number"
+                value={monthlyPv}
+                onChange={(e) => setMonthlyPv(e.target.value)}
+                placeholder="10000"
+                min="0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>구독자/팔로워 수</Label>
+              <Input
+                type="number"
+                value={subscriberCount}
+                onChange={(e) => setSubscriberCount(e.target.value)}
+                placeholder="5000"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleChannelSave}
+            disabled={savingChannels}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {savingChannels ? '저장 중...' : '채널 정보 저장'}
+          </Button>
         </CardContent>
       </Card>
 

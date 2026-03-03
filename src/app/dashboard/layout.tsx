@@ -31,7 +31,6 @@ import {
   ChevronDown,
   Building,
   Mail,
-  Handshake,
 } from 'lucide-react'
 import type { Partner } from '@/types/database'
 import { ProgramProvider, useProgram } from './ProgramContext'
@@ -41,7 +40,6 @@ const NAV_ITEMS = [
   { href: '/dashboard/programs', label: '프로그램', icon: Building },
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
-  { href: '/dashboard/collaborations', label: '콘텐츠 협업', icon: Handshake },
   { href: '/dashboard/messages', label: '메시지', icon: Mail },
   { href: '/dashboard/profile', label: '활동정보', icon: User },
 ]

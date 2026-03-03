@@ -48,6 +48,27 @@ export async function GET() {
       )
     }
 
+    // 이번 달 리드/계약 통계 조회
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+    const { data: monthlyReferrals } = await supabase
+      .from('referrals')
+      .select('partner_id, is_valid, contract_status')
+      .eq('advertiser_id', session.advertiserUuid)
+      .gte('created_at', monthStart)
+
+    // 파트너별 통계 집계
+    const statsMap: Record<string, { lead_count: number; contract_count: number }> = {}
+    for (const ref of (monthlyReferrals || [])) {
+      if (!ref.partner_id) continue
+      if (!statsMap[ref.partner_id]) {
+        statsMap[ref.partner_id] = { lead_count: 0, contract_count: 0 }
+      }
+      if (ref.is_valid) statsMap[ref.partner_id].lead_count++
+      if (ref.contract_status === 'completed') statsMap[ref.partner_id].contract_count++
+    }
+
     // 기존 응답 형태와 호환되게 평탄화
     const partners = (enrollments || []).map(e => {
       const partnerData = e.partners as unknown as {
@@ -57,6 +78,7 @@ export async function GET() {
         main_channel_link: string | null
         created_at: string
       }
+      const monthStats = statsMap[partnerData.id] || { lead_count: 0, contract_count: 0 }
       return {
         ...partnerData,
         status: e.status,
@@ -68,7 +90,16 @@ export async function GET() {
         program_id: e.id,
         applied_at: e.applied_at,
         approved_at: e.approved_at,
+        monthly_lead_count: monthStats.lead_count,
+        monthly_contract_count: monthStats.contract_count,
       }
+    })
+
+    // 승인된 파트너는 이번 달 리드 수 기준으로 정렬 (랭킹)
+    partners.sort((a, b) => {
+      if (a.status === 'approved' && b.status !== 'approved') return -1
+      if (a.status !== 'approved' && b.status === 'approved') return 1
+      return b.monthly_lead_count - a.monthly_lead_count
     })
 
     return NextResponse.json({ partners })

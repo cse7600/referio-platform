@@ -49,6 +49,15 @@ interface ProgramStats {
   total_settlement: number
 }
 
+interface Promotion {
+  id: string
+  title: string
+  description: string | null
+  promotion_type: string
+  reward_description: string | null
+  end_date: string | null
+}
+
 const GUIDES = [
   { title: '블로거를 위한 가이드', href: '/dashboard/guides#blog' },
   { title: '인스타그래머를 위한 가이드', href: '/dashboard/guides#instagram' },
@@ -62,6 +71,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<ProgramStats | null>(null)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [myRank, setMyRank] = useState<{ rank: number; total: number } | null>(null)
   const { selectedProgram, programs, loading: programLoading } = useProgram()
 
   useEffect(() => {
@@ -84,6 +95,52 @@ export default function DashboardPage() {
     }
     fetchPartner()
   }, [])
+
+  // 프로모션 및 랭킹 로드 (선택된 프로그램의 광고주 기준)
+  useEffect(() => {
+    const fetchPromotionsAndRank = async () => {
+      if (!selectedProgram || !partner?.id) return
+      const supabase = createClient()
+      const advertiserId = selectedProgram.advertiser_id
+
+      // 프로모션
+      const { data: promoData } = await supabase
+        .from('partner_promotions')
+        .select('id, title, description, promotion_type, reward_description, end_date')
+        .eq('advertiser_id', advertiserId)
+        .eq('status', 'active')
+        .eq('is_visible_to_partners', true)
+        .order('created_at', { ascending: false })
+        .limit(3)
+
+      setPromotions(promoData || [])
+
+      // 이번 달 랭킹 계산
+      const now = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+      const { data: monthlyReferrals } = await supabase
+        .from('referrals')
+        .select('partner_id, is_valid')
+        .eq('advertiser_id', advertiserId)
+        .eq('is_valid', true)
+        .gte('created_at', monthStart)
+
+      // 파트너별 유효 리드 수 집계
+      const leadCounts: Record<string, number> = {}
+      for (const ref of (monthlyReferrals || [])) {
+        if (!ref.partner_id) continue
+        leadCounts[ref.partner_id] = (leadCounts[ref.partner_id] || 0) + 1
+      }
+
+      // 내 순위 계산
+      const myCount = leadCounts[partner.id] || 0
+      const higherCount = Object.values(leadCounts).filter(c => c > myCount).length
+      const totalPartners = Object.keys(leadCounts).length + (leadCounts[partner.id] === undefined ? 1 : 0)
+      setMyRank({ rank: higherCount + 1, total: totalPartners })
+    }
+    fetchPromotionsAndRank()
+  }, [selectedProgram, partner?.id])
 
   // 선택된 프로그램 기준 통계
   useEffect(() => {
@@ -190,6 +247,39 @@ export default function DashboardPage() {
           {TIER_LABELS[currentTier]}
         </Badge>
       </div>
+
+      {/* 진행 중인 이벤트 배너 */}
+      {promotions.length > 0 && (
+        <div className="space-y-2">
+          {promotions.map((promo) => (
+            <div
+              key={promo.id}
+              className="flex items-start gap-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg"
+            >
+              <div className="text-2xl shrink-0">
+                {promo.promotion_type === 'ranking' ? '🏆' : promo.promotion_type === 'bonus' ? '💰' : '🎉'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-indigo-900">{promo.title}</p>
+                {promo.description && (
+                  <p className="text-sm text-indigo-700 mt-0.5 line-clamp-2">{promo.description}</p>
+                )}
+                {promo.reward_description && (
+                  <p className="text-xs text-indigo-600 mt-1">
+                    <span className="font-medium">리워드:</span> {promo.reward_description}
+                  </p>
+                )}
+              </div>
+              {promo.end_date && (
+                <div className="text-xs text-indigo-500 shrink-0 text-right">
+                  <p>~{promo.end_date}</p>
+                  <p>까지</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 프로그램 미참가 안내 */}
       {hasNoPrograms && (
@@ -361,7 +451,7 @@ export default function DashboardPage() {
       )}
 
       {/* 현재 진행 상황 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-cards">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -423,6 +513,26 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 이번 달 내 순위 */}
+      {myRank && selectedProgram?.status === 'approved' && (
+        <Card className="border-indigo-100 bg-indigo-50/50">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">
+                {myRank.rank === 1 ? '🥇' : myRank.rank === 2 ? '🥈' : myRank.rank === 3 ? '🥉' : '🏅'}
+              </div>
+              <div>
+                <p className="font-semibold text-indigo-900">
+                  이번 달 내 순위: <span className="text-indigo-600">{myRank.rank}위</span>
+                  <span className="text-indigo-400 font-normal text-sm ml-1">/ 전체 {myRank.total}명</span>
+                </p>
+                <p className="text-xs text-indigo-600 mt-0.5">유효 리드 수 기준</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 필독 콘텐츠 */}
       <Card>

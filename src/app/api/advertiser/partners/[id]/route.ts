@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
+import { sendPartnerApprovalEmail } from '@/lib/email'
 
 export async function PATCH(
   request: NextRequest,
@@ -115,6 +116,38 @@ export async function PATCH(
         { error: '파트너 상태 변경에 실패했습니다' },
         { status: 500 }
       )
+    }
+
+    // 승인 시 이메일 알림 발송
+    if (status === 'approved' && program.status !== 'approved') {
+      const { data: partnerData } = await supabase
+        .from('partners')
+        .select('name, email')
+        .eq('id', id)
+        .single()
+
+      const { data: advertiserData } = await supabase
+        .from('advertisers')
+        .select('company_name, program_name')
+        .eq('id', session.advertiserUuid)
+        .single()
+
+      // 업데이트된 프로그램에서 referral_code 조회
+      const { data: updatedProgram } = await supabase
+        .from('partner_programs')
+        .select('referral_code')
+        .eq('id', program.id)
+        .single()
+
+      if (partnerData?.email && advertiserData) {
+        sendPartnerApprovalEmail({
+          partnerEmail: partnerData.email,
+          partnerName: partnerData.name,
+          advertiserCompanyName: advertiserData.company_name,
+          programName: advertiserData.program_name || advertiserData.company_name,
+          referralCode: updatedProgram?.referral_code || '',
+        }).catch(console.error)
+      }
     }
 
     return NextResponse.json({ success: true, ...updateData })

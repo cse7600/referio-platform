@@ -23,6 +23,8 @@ interface Partner {
   channels: string[] | null
   main_channel_link: string | null
   created_at: string
+  monthly_lead_count: number
+  monthly_contract_count: number
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -154,25 +156,36 @@ export default function AdvertiserPartnersPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">순위</TableHead>
               <TableHead>이름</TableHead>
               <TableHead>채널</TableHead>
               <TableHead>상태</TableHead>
               <TableHead>티어</TableHead>
+              <TableHead className="text-center">이번 달 리드</TableHead>
+              <TableHead className="text-center">이번 달 계약</TableHead>
               <TableHead>추천 코드</TableHead>
-              <TableHead>가입일</TableHead>
               <TableHead className="text-right">관리</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPartners.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-slate-500">
+                <TableCell colSpan={9} className="text-center py-12 text-slate-500">
                   {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPartners.map((partner) => (
+              filteredPartners.map((partner) => {
+                const approvedPartners = filteredPartners.filter(p => p.status === 'approved')
+                const rank = partner.status === 'approved'
+                  ? approvedPartners.findIndex(p => p.id === partner.id) + 1
+                  : null
+
+                return (
                 <TableRow key={partner.id}>
+                  <TableCell className="text-center">
+                    {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank ? `${rank}위` : '-'}
+                  </TableCell>
                   <TableCell className="font-medium">{partner.name}</TableCell>
                   <TableCell>
                     {partner.channels && partner.channels.length > 0 ? (
@@ -198,13 +211,20 @@ export default function AdvertiserPartnersPage() {
                       {tierLabels[partner.tier]?.label}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`font-semibold ${(partner.monthly_lead_count || 0) > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                      {partner.monthly_lead_count || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`font-semibold ${(partner.monthly_contract_count || 0) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                      {partner.monthly_contract_count || 0}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <code className="text-xs bg-slate-100 px-2 py-1 rounded">
                       {partner.referral_code}
                     </code>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(partner.created_at).toLocaleDateString('ko-KR')}
                   </TableCell>
                   <TableCell className="text-right">
                     {partner.status === 'pending' && (
@@ -235,7 +255,8 @@ export default function AdvertiserPartnersPage() {
                     )}
                   </TableCell>
                 </TableRow>
-              ))
+              )
+              }))
             )}
           </TableBody>
         </Table>

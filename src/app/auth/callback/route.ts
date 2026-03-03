@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -46,6 +47,14 @@ export async function GET(request: Request) {
             auth_user_id: data.user.id,
             status: 'pending',
           })
+
+          // 환영 이메일 발송 (비동기, 실패해도 가입 진행)
+          if (data.user.email) {
+            sendWelcomeEmail({
+              partnerEmail: data.user.email,
+              partnerName: userName,
+            }).catch(console.error)
+          }
         }
 
         // 신규 또는 연결된 파트너 → 온보딩

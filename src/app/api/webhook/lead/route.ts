@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
+import { sendReferralNotification } from '@/lib/email'
 
 // HMAC-SHA256 서명 검증
 function verifySignature(
@@ -208,6 +209,31 @@ export async function POST(request: NextRequest) {
       request_body: { name, phone: '***masked***', ref_code, source: integration.source },
       response_summary: `referral_id: ${referral.id}`,
     })
+
+    // 파트너 이메일 알림 발송 (파트너가 매칭된 경우)
+    if (partnerId) {
+      const { data: partnerData } = await supabase
+        .from('partners')
+        .select('name, email')
+        .eq('id', partnerId)
+        .single()
+
+      const { data: advertiserData } = await supabase
+        .from('advertisers')
+        .select('company_name, program_name')
+        .eq('id', integration.advertiser_id)
+        .single()
+
+      if (partnerData?.email && advertiserData) {
+        sendReferralNotification({
+          partnerEmail: partnerData.email,
+          partnerName: partnerData.name,
+          leadName: name,
+          advertiserCompanyName: advertiserData.company_name,
+          programName: advertiserData.program_name || advertiserData.company_name,
+        }).catch(console.error)
+      }
+    }
 
     return NextResponse.json({
       success: true,
