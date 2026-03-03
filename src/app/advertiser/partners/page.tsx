@@ -256,7 +256,7 @@ export default function AdvertiserPartnersPage() {
                   </TableCell>
                 </TableRow>
               )
-              }))
+              })
             )}
           </TableBody>
         </Table>
