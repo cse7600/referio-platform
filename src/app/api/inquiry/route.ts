@@ -60,11 +60,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '이미 접수된 문의입니다' }, { status: 409 })
     }
 
+    // referral_code로 파트너 매칭
+    let partnerId: string | null = null
+    if (referral_code) {
+      const { data: enrollment } = await supabase
+        .from('partner_programs')
+        .select('partner_id')
+        .eq('referral_code', referral_code)
+        .eq('advertiser_id', advertiser.id)
+        .eq('status', 'approved')
+        .maybeSingle()
+      partnerId = enrollment?.partner_id ?? null
+    }
+
     // 리드 생성
     const { error: insertError } = await supabase
       .from('referrals')
       .insert({
         advertiser_id: advertiser.id,
+        partner_id: partnerId,
         name,
         phone,
         inquiry: inquiry || null,

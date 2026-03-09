@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -20,110 +21,125 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Users } from 'lucide-react'
+import { Search, Users, CheckCircle, FileCheck } from 'lucide-react'
 import type { Partner, Referral } from '@/types/database'
-import { useProgram } from '../ProgramContext'
+
+interface EnrolledProgram {
+  advertiser_id: string
+  label: string
+}
 
 export default function CustomersPage() {
   const [partner, setPartner] = useState<Partner | null>(null)
   const [referrals, setReferrals] = useState<Referral[]>([])
+  const [enrolledPrograms, setEnrolledPrograms] = useState<EnrolledProgram[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterField, setFilterField] = useState<'name' | 'phone'>('name')
-  const { selectedProgram } = useProgram()
+  const [selectedAdvertiserId, setSelectedAdvertiserId] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchPartner = async () => {
+    const init = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
 
-      if (user) {
-        const { data: partnerData } = await supabase
-          .from('partners')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single()
+      const { data: partnerData } = await supabase
+        .from('partners')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single()
 
-        if (partnerData) {
-          setPartner(partnerData)
-        }
+      if (!partnerData) { setLoading(false); return }
+      setPartner(partnerData)
+
+      // 승인된 참여 프로그램 목록
+      const { data: enrollments } = await supabase
+        .from('partner_programs')
+        .select('advertiser_id, advertisers(company_name, program_name)')
+        .eq('partner_id', partnerData.id)
+        .eq('status', 'approved')
+
+      if (enrollments) {
+        const programs = enrollments.map((e) => {
+          const adv = Array.isArray(e.advertisers) ? e.advertisers[0] : e.advertisers as { company_name: string; program_name: string | null } | null
+          return {
+            advertiser_id: e.advertiser_id,
+            label: adv?.program_name || adv?.company_name || e.advertiser_id,
+          }
+        })
+        setEnrolledPrograms(programs)
       }
-      setLoading(false)
-    }
-    fetchPartner()
-  }, [])
 
-  // 선택된 프로그램 변경 시 referrals 재조회
-  useEffect(() => {
-    const fetchReferrals = async () => {
-      if (!partner?.id) return
-
-      const supabase = createClient()
-      let query = supabase
+      // 전체 referrals
+      const { data: referralsData } = await supabase
         .from('referrals')
         .select('*')
-        .eq('partner_id', partner.id)
+        .eq('partner_id', partnerData.id)
         .order('created_at', { ascending: false })
 
-      if (selectedProgram) {
-        query = query.eq('advertiser_id', selectedProgram.advertiser_id)
-      }
-
-      const { data: referralsData } = await query
-
-      if (referralsData) {
-        setReferrals(referralsData)
-      }
+      if (referralsData) setReferrals(referralsData)
+      setLoading(false)
     }
-    fetchReferrals()
-  }, [partner?.id, selectedProgram])
+    init()
+  }, [])
 
-  // 필터링된 피추천인 목록
-  const filteredReferrals = referrals.filter((referral) => {
+  const displayedReferrals = referrals.filter((r) => {
+    const matchAdv = !selectedAdvertiserId || r.advertiser_id === selectedAdvertiserId
+    if (!matchAdv) return false
     if (!searchTerm) return true
-
-    const searchLower = searchTerm.toLowerCase()
+    const s = searchTerm.toLowerCase()
     if (filterField === 'name') {
-      return referral.name_masked?.toLowerCase().includes(searchLower) ||
-             referral.name?.toLowerCase().includes(searchLower)
-    } else {
-      return referral.phone?.toLowerCase().includes(searchLower)
+      return (r.name_masked || r.name || '').toLowerCase().includes(s)
     }
+    return (r.phone || '').toLowerCase().includes(s)
   })
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+  const baseReferrals = selectedAdvertiserId
+    ? referrals.filter(r => r.advertiser_id === selectedAdvertiserId)
+    : referrals
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
-      </div>
-    )
+    return <div className="flex items-center justify-center h-64"><div className="text-gray-500">로딩 중...</div></div>
   }
-
-  const programLabel = selectedProgram
-    ? (selectedProgram.advertisers as unknown as { program_name: string | null; company_name: string }).program_name ||
-      (selectedProgram.advertisers as unknown as { company_name: string }).company_name
-    : null
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">고객</h1>
-        <p className="text-gray-500 mt-1">
-          {programLabel
-            ? `${programLabel} - 추천으로 유입된 고객 목록`
-            : '내 추천으로 유입된 고객 목록입니다'}
-        </p>
+        <p className="text-gray-500 mt-1">내 추천으로 유입된 고객 목록입니다</p>
+      </div>
+
+      {/* 광고주별 탭 */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={selectedAdvertiserId === null ? 'default' : 'outline'}
+          size="sm"
+          className={selectedAdvertiserId === null ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+          onClick={() => setSelectedAdvertiserId(null)}
+        >
+          전체
+          <span className="ml-1.5 text-xs opacity-70">({referrals.length})</span>
+        </Button>
+        {enrolledPrograms.map((p) => {
+          const count = referrals.filter(r => r.advertiser_id === p.advertiser_id).length
+          const isActive = selectedAdvertiserId === p.advertiser_id
+          return (
+            <Button
+              key={p.advertiser_id}
+              variant={isActive ? 'default' : 'outline'}
+              size="sm"
+              className={isActive ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+              onClick={() => setSelectedAdvertiserId(p.advertiser_id)}
+            >
+              {p.label}
+              <span className="ml-1.5 text-xs opacity-70">({count})</span>
+            </Button>
+          )
+        })}
       </div>
 
       {/* 통계 카드 */}
@@ -136,36 +152,44 @@ export default function CustomersPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">전체 고객</p>
-                <p className="text-xl font-bold">{referrals.length}명</p>
+                <p className="text-xl font-bold">{baseReferrals.length}명</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-xs text-gray-500">유효 고객</p>
-              <p className="text-xl font-bold text-green-600">
-                {referrals.filter(r => r.is_valid).length}명
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">유효 고객</p>
+                <p className="text-xl font-bold text-green-600">
+                  {baseReferrals.filter(r => r.is_valid).length}명
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-xs text-gray-500">계약 완료</p>
-              <p className="text-xl font-bold text-purple-600">
-                {referrals.filter(r => r.contract_status === 'completed').length}명
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <FileCheck className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">계약 완료</p>
+                <p className="text-xl font-bold text-purple-600">
+                  {baseReferrals.filter(r => r.contract_status === 'completed').length}명
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* 검색 및 필터 */}
+      {/* 검색 및 테이블 */}
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -186,16 +210,16 @@ export default function CustomersPage() {
                 <SelectValue placeholder="검색 필드" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">피추천인 이름</SelectItem>
+                <SelectItem value="name">고객 이름</SelectItem>
                 <SelectItem value="phone">연락처</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardHeader>
         <CardContent>
-          {filteredReferrals.length === 0 ? (
+          {displayedReferrals.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              {referrals.length === 0
+              {baseReferrals.length === 0
                 ? '아직 유입된 고객이 없습니다'
                 : '검색 결과가 없습니다'}
             </div>
@@ -206,12 +230,13 @@ export default function CustomersPage() {
                   <TableRow>
                     <TableHead>유입일시</TableHead>
                     <TableHead>고객명</TableHead>
+                    {!selectedAdvertiserId && <TableHead>프로그램</TableHead>}
                     <TableHead>유효여부</TableHead>
                     <TableHead>계약상태</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReferrals.map((referral) => (
+                  {displayedReferrals.map((referral) => (
                     <TableRow key={referral.id}>
                       <TableCell className="text-sm text-gray-500">
                         {formatDate(referral.created_at)}
@@ -219,11 +244,14 @@ export default function CustomersPage() {
                       <TableCell className="font-medium">
                         {referral.name_masked || referral.name}
                       </TableCell>
+                      {!selectedAdvertiserId && (
+                        <TableCell className="text-sm text-gray-500">
+                          {enrolledPrograms.find(p => p.advertiser_id === referral.advertiser_id)?.label || '-'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         {referral.is_valid ? (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                            유효
-                          </Badge>
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">유효</Badge>
                         ) : (
                           <Badge variant="secondary">대기</Badge>
                         )}
@@ -253,12 +281,6 @@ function ContractStatusBadge({ status }: { status: string }) {
     invalid: { label: '무효', className: 'bg-red-100 text-red-700' },
     duplicate: { label: '중복', className: 'bg-yellow-100 text-yellow-700' },
   }
-
   const config = statusConfig[status] || statusConfig.pending
-
-  return (
-    <Badge className={`${config.className} hover:${config.className}`}>
-      {config.label}
-    </Badge>
-  )
+  return <Badge className={`${config.className} hover:${config.className}`}>{config.label}</Badge>
 }
