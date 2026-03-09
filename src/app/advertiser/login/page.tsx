@@ -154,6 +154,15 @@ export default function AdvertiserLoginPage() {
               무료로 시작하기
             </button>
           </div>
+          <div className="text-sm text-slate-400">
+            비밀번호를 잊으셨나요?{' '}
+            <a
+              href="mailto:support@referio.kr?subject=광고주 비밀번호 초기화 요청"
+              className="hover:underline text-slate-500"
+            >
+              고객센터에 문의하세요
+            </a>
+          </div>
           <button
             onClick={() => router.push('/login')}
             className="text-sm text-slate-400 hover:underline"

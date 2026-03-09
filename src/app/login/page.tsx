@@ -140,11 +140,26 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* 테스트 계정 안내 (출시 전 제거) */}
-              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
-                <p className="text-xs font-semibold text-amber-800 mb-1">테스트 계정</p>
-                <p className="text-xs text-amber-700">test-partner@keeper-mate.com</p>
-                <p className="text-xs text-amber-700">Test1234pass</p>
+              <div className="text-center text-sm text-gray-400">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const emailInput = document.getElementById('email') as HTMLInputElement
+                    if (emailInput?.value) {
+                      const supabase = createClient()
+                      await supabase.auth.resetPasswordForEmail(emailInput.value, {
+                        redirectTo: `${window.location.origin}/reset-password`,
+                      })
+                      setError('')
+                      alert('비밀번호 재설정 메일을 발송했습니다. 이메일을 확인해주세요.')
+                    } else {
+                      setError('이메일을 먼저 입력해주세요')
+                    }
+                  }}
+                  className="hover:text-slate-600 transition-colors"
+                >
+                  비밀번호를 잊으셨나요?
+                </button>
               </div>
             </form>
           </CardContent>

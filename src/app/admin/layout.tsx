@@ -13,12 +13,14 @@ import {
   LogOut,
   ArrowLeft,
   Settings,
+  Building2,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
 
 const NAV_ITEMS = [
   { href: '/admin', label: '대시보드', icon: LayoutDashboard },
+  { href: '/admin/advertisers', label: '광고주 관리', icon: Building2 },
   { href: '/admin/partners', label: '파트너 관리', icon: Users },
   { href: '/admin/referrals', label: '피추천인 관리', icon: UserCheck },
   { href: '/admin/settlements', label: '정산 관리', icon: Wallet },
@@ -52,7 +54,19 @@ export default function AdminLayout({
         return
       }
 
-      // 파트너 정보 확인 (승인된 파트너만 접근 가능)
+      // 마스터 계정 이메일 확인 (env var 또는 하드코딩된 목록)
+      const masterAdminEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL
+      const isMasterAdmin = masterAdminEmail
+        ? user.email === masterAdminEmail
+        : false
+
+      if (isMasterAdmin) {
+        setAuthenticated(true)
+        setLoading(false)
+        return
+      }
+
+      // 승인된 파트너만 접근 가능 (기존 로직)
       const { data: partner } = await supabase
         .from('partners')
         .select('id, status')
@@ -126,7 +140,7 @@ export default function AdminLayout({
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b">
             <Link href="/admin" className="text-blue-600 text-xl font-bold">
-              KEEPER Admin
+              Referio 마스터
             </Link>
           </div>
 
@@ -154,7 +168,7 @@ export default function AdminLayout({
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50 flex items-center justify-between px-4">
         <Link href="/admin" className="text-blue-600 text-xl font-bold">
-          KEEPER Admin
+          Referio 마스터
         </Link>
 
         {mounted && (
@@ -167,7 +181,7 @@ export default function AdminLayout({
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b">
-                  <p className="font-bold text-blue-600">KEEPER Admin</p>
+                  <p className="font-bold text-blue-600">Referio 마스터</p>
                   <p className="text-xs text-gray-500">관리자 대시보드</p>
                 </div>
 

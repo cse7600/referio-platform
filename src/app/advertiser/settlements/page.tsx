@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Download } from 'lucide-react'
 
 interface Settlement {
   id: string
@@ -133,6 +134,28 @@ export default function AdvertiserSettlementsPage() {
     .filter(s => selectedIds.includes(s.id))
     .reduce((sum, s) => sum + s.amount, 0)
 
+  const handleExportCsv = () => {
+    const headers = ['생성일', '정산완료일', '파트너', '고객명', '유형', '금액', '상태', '비고']
+    const rows = settlements.map(s => [
+      new Date(s.created_at).toLocaleDateString('ko-KR'),
+      s.settled_at ? new Date(s.settled_at).toLocaleDateString('ko-KR') : '',
+      s.partner_name || '',
+      s.referral_name || '',
+      s.type === 'valid' ? '유효DB' : '계약',
+      s.amount.toString(),
+      s.status === 'pending' ? '대기' : '완료',
+      (s.note || '').replace(/,/g, ' ').replace(/\n/g, ' '),
+    ])
+    const csv = [headers, ...rows].map(row => row.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `정산목록_${new Date().toLocaleDateString('ko-KR').replace(/\./g, '').replace(/ /g, '')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -150,9 +173,19 @@ export default function AdvertiserSettlementsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">정산 관리</h1>
-        <p className="text-slate-500 mt-1">파트너 정산 처리 및 내역 관리</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">정산 관리</h1>
+          <p className="text-slate-500 mt-1">파트너 정산 처리 및 내역 관리</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleExportCsv}
+          disabled={settlements.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          CSV 내보내기
+        </Button>
       </div>
 
       {/* Stats Cards */}

@@ -25,9 +25,12 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { PlusCircle, Loader2, Download } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 
@@ -80,6 +83,11 @@ export default function AdvertiserReferralsPage() {
   const [memoText, setMemoText] = useState('')
   const [labelInput, setLabelInput] = useState('')
 
+  // 리드 수동 등록
+  const [addOpen, setAddOpen] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [addForm, setAddForm] = useState({ name: '', phone: '', inquiry: '', referral_code: '' })
+
   useEffect(() => {
     fetchReferrals()
   }, [])
@@ -96,6 +104,38 @@ export default function AdvertiserReferralsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAddReferral = async () => {
+    if (!addForm.name.trim() || !addForm.phone.trim()) {
+      toast.error('이름과 연락처는 필수입니다')
+      return
+    }
+    setAdding(true)
+    try {
+      const res = await fetch('/api/advertiser/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: addForm.name.trim(),
+          phone: addForm.phone.trim(),
+          inquiry: addForm.inquiry.trim() || null,
+          partner_referral_code: addForm.referral_code.trim() || null,
+        }),
+      })
+      if (res.ok) {
+        toast.success('리드가 등록되었습니다')
+        setAddOpen(false)
+        setAddForm({ name: '', phone: '', inquiry: '', referral_code: '' })
+        await fetchReferrals()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || '등록에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setAdding(false)
   }
 
   const handleStatusChange = async (referralId: string, newStatus: string) => {
@@ -223,6 +263,29 @@ export default function AdvertiserReferralsPage() {
     }
   }
 
+  const handleExportCsv = () => {
+    const headers = ['유입일', '고객명', '연락처', '추천파트너', '계약상태', '유효여부', '우선순위', '메모', '문의내용']
+    const rows = filteredReferrals.map(r => [
+      new Date(r.created_at).toLocaleDateString('ko-KR'),
+      r.name,
+      r.phone || '',
+      r.partner_name || r.referral_code_input || '직접유입',
+      statusLabels[r.contract_status]?.label || r.contract_status,
+      r.is_valid === true ? '유효' : r.is_valid === false ? '무효' : '미정',
+      r.priority || 'normal',
+      (r.memo || '').replace(/,/g, ' ').replace(/\n/g, ' '),
+      (r.inquiry || '').replace(/,/g, ' ').replace(/\n/g, ' '),
+    ])
+    const csv = [headers, ...rows].map(row => row.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `고객목록_${new Date().toLocaleDateString('ko-KR').replace(/\./g, '').replace(/ /g, '')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const openDetail = (referral: Referral) => {
     setSelectedReferral(referral)
     setMemoText(referral.memo || '')
@@ -263,14 +326,104 @@ export default function AdvertiserReferralsPage() {
           <h1 className="text-3xl font-bold text-slate-900">고객 관리</h1>
           <p className="text-slate-500 mt-1">영업 파이프라인 & CRM</p>
         </div>
-        <div className="text-right text-sm">
-          <p className="text-slate-500">총 {referrals.length}건</p>
-          <p className="text-green-600 font-medium">
-            유효 {referrals.filter(r => r.is_valid === true).length} &middot;
-            계약 {referrals.filter(r => r.contract_status === 'completed').length}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="text-right text-sm">
+            <p className="text-slate-500">총 {referrals.length}건</p>
+            <p className="text-green-600 font-medium">
+              유효 {referrals.filter(r => r.is_valid === true).length} &middot;
+              계약 {referrals.filter(r => r.contract_status === 'completed').length}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={filteredReferrals.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            CSV 내보내기
+          </Button>
+          <Button
+            className="bg-indigo-600 hover:bg-indigo-700"
+            onClick={() => setAddOpen(true)}
+          >
+            <PlusCircle className="w-4 h-4 mr-2" />
+            리드 직접 등록
+          </Button>
         </div>
       </div>
+
+      {/* 리드 수동 등록 다이얼로그 */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>리드 직접 등록</DialogTitle>
+            <DialogDescription>
+              파트너 추천 링크를 통하지 않고 수집한 고객 정보를 직접 등록합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="add-name">이름 <span className="text-red-500">*</span></Label>
+              <Input
+                id="add-name"
+                value={addForm.name}
+                onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="홍길동"
+                className="mt-1.5"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-phone">연락처 <span className="text-red-500">*</span></Label>
+              <Input
+                id="add-phone"
+                type="tel"
+                value={addForm.phone}
+                onChange={e => setAddForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="010-1234-5678"
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-referral">파트너 추천 코드 <span className="text-slate-400 font-normal">(선택)</span></Label>
+              <Input
+                id="add-referral"
+                value={addForm.referral_code}
+                onChange={e => setAddForm(f => ({ ...f, referral_code: e.target.value }))}
+                placeholder="파트너 코드 입력 시 해당 파트너에 연결됩니다"
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-inquiry">메모 <span className="text-slate-400 font-normal">(선택)</span></Label>
+              <Textarea
+                id="add-inquiry"
+                value={addForm.inquiry}
+                onChange={e => setAddForm(f => ({ ...f, inquiry: e.target.value }))}
+                placeholder="통화 내용, 관심 서비스 등..."
+                className="mt-1.5 resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={adding}>
+              취소
+            </Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={handleAddReferral}
+              disabled={adding || !addForm.name.trim() || !addForm.phone.trim()}
+            >
+              {adding ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />등록 중...</>
+              ) : (
+                '등록하기'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 영업 퍼널 */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3">

@@ -13,6 +13,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Copy, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Partner {
   id: string
@@ -45,9 +47,16 @@ export default function AdvertiserPartnersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [advertiserUuid, setAdvertiserUuid] = useState<string | null>(null)
+  const [copiedInvite, setCopiedInvite] = useState(false)
 
   useEffect(() => {
     fetchPartners()
+    // 광고주 UUID 조회 (파트너 초대 링크용)
+    fetch('/api/auth/advertiser/me')
+      .then(r => r.json())
+      .then(d => { if (d.advertiser?.id) setAdvertiserUuid(d.advertiser.id) })
+      .catch(() => {})
   }, [])
 
   const fetchPartners = async () => {
@@ -104,11 +113,30 @@ export default function AdvertiserPartnersPage() {
     )
   }
 
+  const handleCopyInviteLink = () => {
+    if (!advertiserUuid) return
+    // 파트너는 마켓플레이스에서 advertiserUuid로 검색하거나, 직접 프로그램 상세 페이지로 이동
+    const link = `${window.location.origin}/dashboard/programs/${advertiserUuid}`
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedInvite(true)
+      toast.success('파트너 초대 링크가 복사되었습니다')
+      setTimeout(() => setCopiedInvite(false), 2000)
+    })
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">파트너 관리</h1>
-        <p className="text-slate-500 mt-1">파트너 목록 및 승인 관리</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">파트너 관리</h1>
+          <p className="text-slate-500 mt-1">파트너 목록 및 승인 관리</p>
+        </div>
+        {advertiserUuid && (
+          <Button variant="outline" onClick={handleCopyInviteLink}>
+            {copiedInvite ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
+            파트너 초대 링크 복사
+          </Button>
+        )}
       </div>
 
       {/* Filters */}

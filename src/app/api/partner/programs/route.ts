@@ -22,13 +22,13 @@ export async function GET() {
     }
 
     // 공개 프로그램 목록
-    const { data: advertisers } = await supabase
+    const { data: advertisers, error: advError } = await supabase
       .from('advertisers')
-      .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url, is_system')
+      .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url')
       .eq('is_public', true)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
-
+    if (advError) console.error('[partner/programs] advertisers query error:', advError.message)
     // 파트너의 참가 현황
     const { data: enrollments } = await supabase
       .from('partner_programs')
@@ -37,13 +37,9 @@ export async function GET() {
 
     const programs = (advertisers || []).map(adv => ({
       ...adv,
+      is_system: false,
       enrollment: enrollments?.find(e => e.advertiser_id === adv.id) || null,
-    })).sort((a, b) => {
-      // is_system programs always first
-      if (a.is_system && !b.is_system) return -1
-      if (!a.is_system && b.is_system) return 1
-      return 0
-    })
+    }))
 
     return NextResponse.json({ programs })
   } catch (error) {

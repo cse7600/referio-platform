@@ -117,6 +117,53 @@ export default function AdvertiserDashboardPage() {
         <p className="text-slate-500 mt-1">파트너 프로그램 현황을 확인하세요</p>
       </div>
 
+      {/* 신규 가입자 시작 가이드 */}
+      {stats && stats.totalPartners === 0 && stats.totalReferrals === 0 && (
+        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-violet-50">
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">🚀</span>
+              <h2 className="text-lg font-bold text-indigo-900">3단계로 시작하기</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div
+                className="bg-white rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow border border-indigo-100"
+                onClick={() => router.push('/advertiser/campaigns')}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <p className="font-semibold text-sm text-slate-800">캠페인 설정</p>
+                </div>
+                <p className="text-xs text-slate-500">수수료 금액과 프로그램 소개를 설정하세요</p>
+                <p className="text-xs text-indigo-600 mt-2 font-medium">캠페인 설정하기 →</p>
+              </div>
+              <div
+                className="bg-white rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow border border-indigo-100"
+                onClick={() => router.push('/advertiser/settings')}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <p className="font-semibold text-sm text-slate-800">문의 폼 링크 확인</p>
+                </div>
+                <p className="text-xs text-slate-500">파트너가 공유할 문의 폼 링크를 확인하고 테스트하세요</p>
+                <p className="text-xs text-indigo-600 mt-2 font-medium">설정 보기 →</p>
+              </div>
+              <div
+                className="bg-white rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow border border-indigo-100"
+                onClick={() => router.push('/advertiser/partners')}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <p className="font-semibold text-sm text-slate-800">파트너 모집</p>
+                </div>
+                <p className="text-xs text-slate-500">파트너 신청을 승인하고 활동을 시작하세요</p>
+                <p className="text-xs text-indigo-600 mt-2 font-medium">파트너 관리 →</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-6 hover:shadow-lg transition-shadow">

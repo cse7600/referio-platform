@@ -90,6 +90,7 @@ export default function AdvertiserLayout({
     { href: '/advertiser/partners', icon: '👥', label: '파트너 관리' },
     { href: '/advertiser/referrals', icon: '📋', label: '고객 관리' },
     { href: '/advertiser/settlements', icon: '💰', label: '정산 관리' },
+    { href: '/advertiser/campaigns', icon: '📢', label: '캠페인 설정' },
     { href: '/advertiser/promotions', icon: '🎉', label: '이벤트' },
     { href: '/advertiser/messages', icon: '💬', label: '파트너 메시지' },
     { href: '/advertiser/settings', icon: '⚙️', label: '설정' },

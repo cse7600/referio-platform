@@ -39,9 +39,10 @@ export async function updateSession(request: NextRequest) {
                        request.nextUrl.pathname.startsWith('/signup')
     const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
     const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
+    const isAdmin = request.nextUrl.pathname.startsWith('/admin')
 
-    // 로그인하지 않은 사용자가 대시보드/온보딩 접근 시
-    if (!user && (isDashboard || isOnboarding)) {
+    // 로그인하지 않은 사용자가 대시보드/온보딩/어드민 접근 시
+    if (!user && (isDashboard || isOnboarding || isAdmin)) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)

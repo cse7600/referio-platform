@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Image, Film, Youtube, Trash2, Upload, Plus } from 'lucide-react'
+import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink } from 'lucide-react'
 
 interface AdvertiserInfo {
   id: string
@@ -89,6 +89,7 @@ export default function AdvertiserSettingsPage() {
   const [airtableInvalidValues, setAirtableInvalidValues] = useState('무효')
   const [airtableContractDateField, setAirtableContractDateField] = useState('계약일')
   const [savingAirtable, setSavingAirtable] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   useEffect(() => {
     fetchAdvertiserInfo()
@@ -423,6 +424,51 @@ export default function AdvertiserSettingsPage() {
 
         {/* 계정 정보 탭 */}
         <TabsContent value="account" className="space-y-6">
+          {/* 문의 폼 링크 */}
+          {advertiser?.id && (
+            <Card className="border-indigo-200 bg-indigo-50">
+              <CardHeader>
+                <CardTitle className="text-base text-indigo-900">내 문의 폼 링크</CardTitle>
+                <CardDescription className="text-indigo-700">
+                  파트너가 고객에게 공유하는 링크입니다. 파트너에게 이 링크를 기반으로 추천 링크를 생성하도록 안내하세요.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'}/inquiry/${advertiser.id}`}
+                    readOnly
+                    className="bg-white text-sm font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {
+                      const url = `${window.location.origin}/inquiry/${advertiser.id}`
+                      navigator.clipboard.writeText(url)
+                      setCopiedLink(true)
+                      setTimeout(() => setCopiedLink(false), 2000)
+                    }}
+                  >
+                    {copiedLink ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => window.open(`/inquiry/${advertiser.id}`, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-indigo-600">
+                  파트너는 이 링크에 <code className="bg-indigo-100 px-1 py-0.5 rounded">?ref=추천코드</code>를 붙여서 고객에게 공유합니다.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">계정 정보</CardTitle>

@@ -109,11 +109,12 @@ export default function ProgramsPage() {
     setApplying(null)
   }
 
-  const handleCopyLink = async (e: React.MouseEvent, refCode: string, programId: string) => {
+  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string) => {
     e.stopPropagation()
-    const link = `https://referio.kr/security?ref=${refCode}`
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'
+    const link = `${origin}/inquiry/${advertiserId}?ref=${refCode}`
     await navigator.clipboard.writeText(link)
-    setCopiedId(programId)
+    setCopiedId(advertiserId)
     toast.success('추천 링크가 복사되었습니다')
     setTimeout(() => setCopiedId(null), 2000)
   }

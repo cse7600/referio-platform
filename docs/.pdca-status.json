@@ -1,0 +1,589 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-03-09T10:11:23.939Z",
+  "activeFeatures": [
+    "inquiry",
+    "security",
+    "dashboard",
+    "programs",
+    "[advertiserId]",
+    "campaigns",
+    "supabase",
+    "referrals",
+    "guides",
+    "settings",
+    "settlements",
+    "partners",
+    "advertiser",
+    "login",
+    "reset-password",
+    "admin",
+    "advertisers"
+  ],
+  "primaryFeature": "inquiry",
+  "features": {
+    "inquiry": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T01:51:28.010Z",
+        "lastUpdated": "2026-03-09T02:42:31.587Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/inquiry/route.ts"
+    },
+    "security": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T01:53:47.614Z",
+        "lastUpdated": "2026-03-09T01:53:47.614Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/security/page.tsx"
+    },
+    "dashboard": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T01:55:19.659Z",
+        "lastUpdated": "2026-03-09T03:15:21.800Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/dashboard/page.tsx"
+    },
+    "programs": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T01:55:57.134Z",
+        "lastUpdated": "2026-03-09T10:11:23.939Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/programs/route.ts"
+    },
+    "[advertiserId]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T02:00:39.130Z",
+        "lastUpdated": "2026-03-09T06:34:57.791Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/inquiry/[advertiserId]/page.tsx"
+    },
+    "campaigns": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T02:01:38.218Z",
+        "lastUpdated": "2026-03-09T02:09:36.056Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/campaigns/page.tsx"
+    },
+    "supabase": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T02:52:01.359Z",
+        "lastUpdated": "2026-03-09T02:52:01.359Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/supabase/middleware.ts"
+    },
+    "referrals": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T02:53:30.331Z",
+        "lastUpdated": "2026-03-09T03:27:45.296Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/referrals/page.tsx"
+    },
+    "guides": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T03:12:54.474Z",
+        "lastUpdated": "2026-03-09T03:12:54.474Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/guides/page.tsx"
+    },
+    "settings": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T03:17:56.248Z",
+        "lastUpdated": "2026-03-09T03:21:30.336Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
+    },
+    "settlements": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T03:30:31.656Z",
+        "lastUpdated": "2026-03-09T03:34:47.568Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settlements/page.tsx"
+    },
+    "partners": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T04:37:36.917Z",
+        "lastUpdated": "2026-03-09T04:38:42.488Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
+    },
+    "advertiser": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T04:40:55.133Z",
+        "lastUpdated": "2026-03-09T04:40:55.133Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/layout.tsx"
+    },
+    "login": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T06:09:02.786Z",
+        "lastUpdated": "2026-03-09T06:35:14.044Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/login/page.tsx"
+    },
+    "reset-password": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T06:55:49.716Z",
+        "lastUpdated": "2026-03-09T06:55:49.716Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/reset-password/page.tsx"
+    },
+    "admin": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T07:16:11.872Z",
+        "lastUpdated": "2026-03-09T07:22:57.705Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/layout.tsx"
+    },
+    "advertisers": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-09T07:40:13.843Z",
+        "lastUpdated": "2026-03-09T07:49:35.669Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/advertisers/page.tsx"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Dynamic",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-03-09T01:07:25.153Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-03-09T10:11:23.939Z"
+  },
+  "history": [
+    {
+      "timestamp": "2026-03-09T01:51:28.010Z",
+      "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T01:53:47.614Z",
+      "feature": "security",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T01:55:19.659Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T01:55:57.134Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T01:57:06.001Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:00:39.130Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:01:38.218Z",
+      "feature": "campaigns",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:04:13.964Z",
+      "feature": "campaigns",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:06:46.324Z",
+      "feature": "campaigns",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:09:36.056Z",
+      "feature": "campaigns",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:15:51.875Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:42:31.587Z",
+      "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:52:01.359Z",
+      "feature": "supabase",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:53:30.331Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:56:11.938Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:56:26.932Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T02:58:52.092Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:00:58.547Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:06:26.961Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:12:54.474Z",
+      "feature": "guides",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:15:21.800Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:17:56.248Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:19:30.152Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:21:30.336Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:23:25.186Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:25:07.995Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:27:45.296Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:30:31.656Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:33:10.131Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T03:34:47.568Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T04:37:36.917Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T04:37:56.998Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T04:38:02.328Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T04:38:42.488Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T04:40:55.133Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:09:02.786Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:19:40.920Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:29:15.139Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:30:56.838Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:34:57.791Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:35:14.044Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T06:55:49.716Z",
+      "feature": "reset-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:16:11.873Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:18:22.653Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:22:38.816Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:22:44.149Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:22:57.705Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:40:13.843Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:49:25.231Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T07:49:35.669Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T10:10:02.911Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T10:10:22.179Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T10:10:26.794Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T10:11:17.267Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-09T10:11:23.939Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}

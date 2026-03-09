@@ -192,8 +192,12 @@ export default function DashboardPage() {
     fetchStats()
   }, [partner?.id, selectedProgram])
 
-  const referralUrl = selectedProgram
-    ? `https://referio.kr/security?ref=${selectedProgram.referral_code}`
+  // 파트너가 고객에게 공유할 추천 URL (광고주별 문의 폼)
+  const referralPath = selectedProgram
+    ? `/inquiry/${selectedProgram.advertiser_id}?ref=${selectedProgram.referral_code}`
+    : null
+  const referralUrl = referralPath
+    ? (typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr') + referralPath
     : partner?.referral_url || null
 
   const handleCopy = async () => {

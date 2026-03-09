@@ -8,7 +8,16 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { PlusCircle, Loader2 } from 'lucide-react'
 
 interface Campaign {
   id: string
@@ -54,6 +63,11 @@ export default function AdvertiserCampaignsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
+  // 캠페인 생성 다이얼로그
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [newCampaignName, setNewCampaignName] = useState('')
+  const [creating, setCreating] = useState(false)
+
   useEffect(() => {
     fetchCampaign()
   }, [])
@@ -72,6 +86,34 @@ export default function AdvertiserCampaignsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCreate = async () => {
+    if (!newCampaignName.trim()) {
+      toast.error('캠페인 이름을 입력해주세요')
+      return
+    }
+    setCreating(true)
+    try {
+      const res = await fetch('/api/advertiser/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCampaignName.trim() }),
+      })
+      if (res.ok) {
+        toast.success('캠페인이 생성되었습니다')
+        setShowCreateDialog(false)
+        setNewCampaignName('')
+        setLoading(true)
+        await fetchCampaign()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || '캠페인 생성에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setCreating(false)
   }
 
   const handleSave = async () => {
@@ -120,19 +162,68 @@ export default function AdvertiserCampaignsPage() {
 
   if (!campaign) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">캠페인 설정</h1>
-          <p className="text-slate-500 mt-1">수수료와 정책을 설정하세요</p>
-        </div>
-        <Card className="p-6">
-          <div className="text-center py-12 text-slate-500">
-            <div className="text-5xl mb-4">📢</div>
-            <p>캠페인이 없습니다. 새 캠페인을 생성하세요.</p>
-            <Button className="mt-4" onClick={() => toast.info('준비 중인 기능입니다')}>캠페인 생성</Button>
+      <>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">캠페인 설정</h1>
+            <p className="text-slate-500 mt-1">수수료와 정책을 설정하세요</p>
           </div>
-        </Card>
-      </div>
+          <Card className="p-6">
+            <div className="text-center py-16 text-slate-500">
+              <div className="text-5xl mb-4">📢</div>
+              <p className="font-medium text-slate-700 mb-1">아직 캠페인이 없습니다</p>
+              <p className="text-sm mb-6">캠페인을 생성하면 파트너 수수료와 정책을 설정할 수 있습니다.</p>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => setShowCreateDialog(true)}
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                첫 캠페인 만들기
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* 캠페인 생성 다이얼로그 */}
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>새 캠페인 생성</DialogTitle>
+              <DialogDescription>
+                캠페인 이름을 입력하세요. 생성 후 수수료와 정책을 자세히 설정할 수 있습니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-2">
+              <Label htmlFor="campaign-name">캠페인 이름</Label>
+              <Input
+                id="campaign-name"
+                value={newCampaignName}
+                onChange={e => setNewCampaignName(e.target.value)}
+                placeholder="예: 파트너 추천 프로그램 2026"
+                className="mt-2"
+                onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCreateDialog(false)} disabled={creating}>
+                취소
+              </Button>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700"
+                onClick={handleCreate}
+                disabled={creating || !newCampaignName.trim()}
+              >
+                {creating ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />생성 중...</>
+                ) : (
+                  '생성하기'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
