@@ -162,7 +162,7 @@ async function processRecord(
   // Lookup partner by referral code — skip if not a Referio-issued code
   const { data: program } = await supabase
     .from('partner_programs')
-    .select('partner_id')
+    .select('partner_id, lead_commission, contract_commission')
     .eq('referral_code', refCode)
     .eq('advertiser_id', integration.advertiser_id)
     .eq('status', 'approved')
@@ -173,6 +173,24 @@ async function processRecord(
   }
 
   const partnerId = program.partner_id
+
+  // Resolve commission amounts: partner_programs first, fallback to campaigns
+  let leadCommission: number = program.lead_commission || 0
+  let contractCommission: number = program.contract_commission || 0
+  if (!leadCommission || !contractCommission) {
+    const { data: campaign } = await supabase
+      .from('campaigns')
+      .select('valid_amount, contract_amount')
+      .eq('advertiser_id', integration.advertiser_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (campaign) {
+      if (!leadCommission) leadCommission = campaign.valid_amount || 0
+      if (!contractCommission) contractCommission = campaign.contract_amount || 0
+    }
+  }
 
   // Determine status action
   let updateData: Record<string, unknown> = {}
@@ -240,12 +258,38 @@ async function processRecord(
       : action === 'invalid' ? false : null,
   }
 
-  const { error } = await supabase.from('referrals').insert(insertData)
+  const { data: inserted, error } = await supabase
+    .from('referrals')
+    .insert(insertData)
+    .select('id')
+    .single()
+
   if (error) {
     if (error.code === '23505') {
       return { id: record.id, action: 'updated', reason: '중복 레코드, insert 스킵' }
     }
     return { id: record.id, action: 'error', error: `insert: ${error.code} ${error.message}` }
   }
+
+  // Update settlements created by DB trigger with correct commission amounts
+  if (inserted?.id && (action === 'valid' || action === 'contract')) {
+    if (leadCommission > 0) {
+      await supabase
+        .from('settlements')
+        .update({ amount: leadCommission })
+        .eq('referral_id', inserted.id)
+        .eq('type', 'valid')
+        .eq('amount', 0)
+    }
+    if (action === 'contract' && contractCommission > 0) {
+      await supabase
+        .from('settlements')
+        .update({ amount: contractCommission })
+        .eq('referral_id', inserted.id)
+        .eq('type', 'contract')
+        .eq('amount', 0)
+    }
+  }
+
   return { id: record.id, action: 'inserted' }
 }
