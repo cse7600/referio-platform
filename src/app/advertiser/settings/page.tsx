@@ -10,7 +10,8 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw } from 'lucide-react'
+import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw, ChevronDown, AlertCircle, Loader2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AdvertiserInfo {
   id: string
@@ -60,6 +61,8 @@ export default function AdvertiserSettingsPage() {
   const [youtubeName, setYoutubeName] = useState('')
 
   // Airtable 연동
+  interface AirtableField { id: string; name: string; type: string }
+  interface AirtableTable { id: string; name: string; fields: AirtableField[] }
   interface AirtableIntegration {
     id: string
     name: string
@@ -68,6 +71,10 @@ export default function AdvertiserSettingsPage() {
     is_active: boolean
     config: {
       airtable?: {
+        pat?: string
+        base_id?: string
+        table_id?: string
+        last_synced_at?: string | null
         name_field: string
         phone_field: string
         ref_code_field: string
@@ -75,20 +82,34 @@ export default function AdvertiserSettingsPage() {
         valid_values: string[]
         contract_values: string[]
         invalid_values: string[]
-        sales_rep_field?: string
         contract_date_field?: string
       }
     }
   }
   const [airtableIntegration, setAirtableIntegration] = useState<AirtableIntegration | null>(null)
+
+  // Easy connect state
+  const [airtableBaseUrl, setAirtableBaseUrl] = useState('')
+  const [airtablePat, setAirtablePat] = useState('')
+  const [airtableTables, setAirtableTables] = useState<AirtableTable[]>([])
+  const [airtableSelectedTable, setAirtableSelectedTable] = useState('')
+  const [airtableSchemaLoading, setAirtableSchemaLoading] = useState(false)
+  const [airtableSchemaError, setAirtableSchemaError] = useState('')
+  const [airtableConnecting, setAirtableConnecting] = useState(false)
+  const [airtableSyncing, setAirtableSyncing] = useState(false)
+  const [airtableEditMode, setAirtableEditMode] = useState(false)
+  const [airtableShowAdvanced, setAirtableShowAdvanced] = useState(false)
+
+  // Field mapping state
   const [airtableNameField, setAirtableNameField] = useState('이름')
   const [airtablePhoneField, setAirtablePhoneField] = useState('전화번호')
   const [airtableRefCodeField, setAirtableRefCodeField] = useState('추천코드')
   const [airtableStatusField, setAirtableStatusField] = useState('영업상태')
   const [airtableValidValues, setAirtableValidValues] = useState('유효')
-  const [airtableContractValues, setAirtableContractValues] = useState('계약')
+  const [airtableContractValues, setAirtableContractValues] = useState('계약완료')
   const [airtableInvalidValues, setAirtableInvalidValues] = useState('무효')
-  const [airtableContractDateField, setAirtableContractDateField] = useState('계약일')
+
+  // Legacy manual webhook state
   const [savingAirtable, setSavingAirtable] = useState(false)
   const [creatingIntegration, setCreatingIntegration] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -135,10 +156,127 @@ export default function AdvertiserSettingsPage() {
           setAirtableValidValues((cfg.valid_values || ['유효']).join(', '))
           setAirtableContractValues((cfg.contract_values || ['계약']).join(', '))
           setAirtableInvalidValues((cfg.invalid_values || ['무효']).join(', '))
-          setAirtableContractDateField(cfg.contract_date_field || '계약일')
+          // contract_date_field no longer tracked in state
         }
       }
     } catch { /* ignore */ }
+  }
+
+  // Extract Airtable base ID from URL like https://airtable.com/appXXX/tblXXX/...
+  const extractBaseId = (url: string): string => {
+    const match = url.match(/app[A-Za-z0-9]+/)
+    return match ? match[0] : url.trim()
+  }
+
+  const fetchAirtableSchema = async () => {
+    const baseId = extractBaseId(airtableBaseUrl)
+    if (!baseId || !airtablePat) {
+      setAirtableSchemaError('Airtable URL과 API 토큰을 입력하세요')
+      return
+    }
+    setAirtableSchemaLoading(true)
+    setAirtableSchemaError('')
+    setAirtableTables([])
+    try {
+      const res = await fetch(`/api/advertiser/integrations/airtable/schema?pat=${encodeURIComponent(airtablePat)}&base_id=${baseId}`)
+      const data = await res.json()
+      if (!res.ok) {
+        setAirtableSchemaError(data.error || '테이블 불러오기 실패')
+        return
+      }
+      setAirtableTables(data.tables || [])
+      if (data.tables?.length === 1) {
+        setAirtableSelectedTable(data.tables[0].id)
+      }
+    } catch {
+      setAirtableSchemaError('서버 오류가 발생했습니다')
+    } finally {
+      setAirtableSchemaLoading(false)
+    }
+  }
+
+  const handleEasyConnect = async () => {
+    const baseId = extractBaseId(airtableBaseUrl)
+    if (!airtableSelectedTable) {
+      toast.error('테이블을 선택하세요')
+      return
+    }
+    setAirtableConnecting(true)
+    try {
+      const res = await fetch('/api/advertiser/integrations/airtable/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pat: airtablePat,
+          base_id: baseId,
+          table_id: airtableSelectedTable,
+          field_config: {
+            name_field: airtableNameField,
+            phone_field: airtablePhoneField,
+            ref_code_field: airtableRefCodeField,
+            status_field: airtableStatusField,
+            valid_values: airtableValidValues.split(',').map(s => s.trim()).filter(Boolean),
+            contract_values: airtableContractValues.split(',').map(s => s.trim()).filter(Boolean),
+            invalid_values: airtableInvalidValues.split(',').map(s => s.trim()).filter(Boolean),
+          },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || '연결 실패')
+        return
+      }
+      toast.success('Airtable 자동 동기화가 시작됩니다!')
+      fetchAirtableIntegration()
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setAirtableConnecting(false)
+    }
+  }
+
+  const handleSyncNow = async () => {
+    setAirtableSyncing(true)
+    try {
+      const res = await fetch('/api/advertiser/integrations/airtable/sync', { method: 'POST' })
+      const data = await res.json()
+      console.log('[Airtable Sync]', JSON.stringify(data, null, 2))
+      if (!res.ok) {
+        toast.error(data.error || '동기화 실패')
+        return
+      }
+      const inserted = data.inserted ?? 0
+      const updated = data.updated ?? 0
+      const skipped = data.skipped ?? 0
+      const errors = data.errors ?? 0
+      toast.success(`동기화 완료 — 신규 ${inserted}건 / 업데이트 ${updated}건 / 스킵 ${skipped}건${errors > 0 ? ` / 오류 ${errors}건` : ''}`)
+      if (skipped > 0 && data.debug?.details) {
+        const firstSkip = data.debug.details.find((d: { action: string; reason?: string }) => d.action === 'skipped')
+        if (firstSkip) console.warn('[Airtable Sync] 스킵 이유:', firstSkip.reason)
+      }
+      fetchAirtableIntegration()
+    } catch (err) {
+      console.error('[Airtable Sync] 오류:', err)
+      toast.error('동기화 중 오류가 발생했습니다')
+    } finally {
+      setAirtableSyncing(false)
+    }
+  }
+
+  const handleDisconnectAirtable = async () => {
+    if (!airtableIntegration) return
+    const supabase = createClient()
+    await supabase
+      .from('webhook_integrations')
+      .update({ is_active: false })
+      .eq('id', airtableIntegration.id)
+    toast.success('연동이 해제됐습니다')
+    setAirtableIntegration(null)
+  }
+
+  const getSelectedTableFields = (): AirtableField[] => {
+    const table = airtableTables.find(t => t.id === airtableSelectedTable)
+    return table?.fields || []
   }
 
   const handleAirtableSave = async (): Promise<boolean> => {
@@ -146,11 +284,14 @@ export default function AdvertiserSettingsPage() {
     setSavingAirtable(true)
     try {
       const supabase = createClient()
+      // Preserve PAT, base_id, table_id, last_synced_at — only update field mapping
+      const existingCfg = airtableIntegration.config.airtable || {}
       const { error } = await supabase
         .from('webhook_integrations')
         .update({
           config: {
             airtable: {
+              ...existingCfg,
               name_field: airtableNameField,
               phone_field: airtablePhoneField,
               ref_code_field: airtableRefCodeField,
@@ -158,7 +299,6 @@ export default function AdvertiserSettingsPage() {
               valid_values: airtableValidValues.split(',').map(s => s.trim()).filter(Boolean),
               contract_values: airtableContractValues.split(',').map(s => s.trim()).filter(Boolean),
               invalid_values: airtableInvalidValues.split(',').map(s => s.trim()).filter(Boolean),
-              contract_date_field: airtableContractDateField,
             },
           },
         })
@@ -168,7 +308,8 @@ export default function AdvertiserSettingsPage() {
         toast.error('Airtable 설정 저장에 실패했습니다')
         return false
       } else {
-        toast.success('Airtable 설정이 저장되었습니다')
+        toast.success('필드 설정이 저장됐습니다')
+        setAirtableEditMode(false)
         fetchAirtableIntegration()
         return true
       }
@@ -964,275 +1105,315 @@ console.log('Referio 응답:', JSON.stringify(result));`
         <TabsContent value="airtable" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Airtable 연동</CardTitle>
+              <CardTitle className="text-lg">Airtable 자동 동기화</CardTitle>
               <CardDescription>
-                Airtable에서 영업 상태가 변경될 때 Referio에 자동으로 반영됩니다.
-                Airtable Automations → "Fetch URL" 액션으로 설정하세요.
+                Airtable Base URL과 API 토큰만 입력하면 5분마다 자동으로 동기화됩니다.
+                별도 설정이나 코드 작업이 필요 없습니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {airtableIntegration ? (
-                <>
-                  {/* 단계 표시 바 */}
-                  <div className="flex items-center mb-2">
-                    {[
-                      { n: 1, label: '연동 확인' },
-                      { n: 2, label: '필드 설정' },
-                      { n: 3, label: '웹사이트 설치' },
-                      { n: 4, label: 'Automation' },
-                    ].map((step, idx) => (
-                      <div key={step.n} className="flex items-center flex-1 min-w-0">
-                        <button
-                          onClick={() => setAirtableStep(step.n)}
-                          className="flex flex-col items-center gap-1 shrink-0"
-                        >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                            airtableStep > step.n
-                              ? 'bg-indigo-600 text-white'
-                              : airtableStep === step.n
-                              ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
-                              : 'bg-slate-200 text-slate-500'
-                          }`}>
-                            {airtableStep > step.n ? '✓' : step.n}
-                          </div>
-                          <span className={`text-xs whitespace-nowrap ${airtableStep === step.n ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                            {step.label}
-                          </span>
-                        </button>
-                        {idx < 3 && (
-                          <div className={`flex-1 h-0.5 mx-2 mb-5 ${airtableStep > step.n ? 'bg-indigo-600' : 'bg-slate-200'}`} />
+              {/* ── 자동 동기화 활성화됨 ── */}
+              {airtableIntegration?.config?.airtable?.pat ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-green-500 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-semibold text-green-900">자동 동기화 활성화됨</p>
+                        <p className="text-sm text-green-700 mt-0.5">
+                          5분마다 Airtable 변경사항이 Referio에 자동 반영됩니다
+                        </p>
+                        {airtableIntegration.config.airtable.last_synced_at && (
+                          <p className="text-xs text-green-600 mt-1">
+                            마지막 동기화: {new Date(airtableIntegration.config.airtable.last_synced_at).toLocaleString('ko-KR')}
+                          </p>
                         )}
                       </div>
-                    ))}
+                    </div>
                   </div>
 
-                  {/* Step 1: 연동 확인 */}
-                  {airtableStep === 1 && (
-                    <div className="space-y-4 pt-2">
-                      <div>
-                        <h3 className="font-semibold text-slate-800">연동이 활성화됐습니다</h3>
-                        <p className="text-sm text-slate-500 mt-1">아래 연동 정보가 생성됐습니다. API 키는 외부에 노출되지 않도록 주의하세요.</p>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-sm text-green-800 font-medium">연동 활성화됨</span>
-                      </div>
-                      <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-                        <p className="text-sm font-semibold text-slate-700">연동 정보</p>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-500 w-24 shrink-0">웹훅 URL</span>
-                            <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono">
-                              https://referio.kr/api/webhook/airtable
-                            </code>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span className="text-slate-500 w-24 shrink-0 mt-1">API 키</span>
-                            <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono break-all">
-                              {airtableIntegration.api_key}
-                            </code>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button onClick={() => setAirtableStep(2)} className="bg-indigo-600 hover:bg-indigo-700">
-                          다음 단계 →
-                        </Button>
-                      </div>
+                  <div className="p-4 bg-slate-50 rounded-lg space-y-2 text-sm">
+                    <div className="flex gap-3">
+                      <span className="text-slate-500 w-20 shrink-0">Base</span>
+                      <code className="text-slate-700 font-mono">{airtableIntegration.config.airtable.base_id}</code>
                     </div>
-                  )}
+                    <div className="flex gap-3">
+                      <span className="text-slate-500 w-20 shrink-0">테이블</span>
+                      <code className="text-slate-700 font-mono">{airtableIntegration.config.airtable.table_id}</code>
+                    </div>
+                  </div>
 
-                  {/* Step 2: 필드 설정 */}
-                  {airtableStep === 2 && (
-                    <div className="space-y-4 pt-2">
-                      <div>
-                        <h3 className="font-semibold text-slate-800">Airtable 필드 이름을 맞춰주세요</h3>
-                        <p className="text-sm text-slate-500 mt-1">Airtable에서 실제로 사용하는 컬럼 이름을 정확히 입력하세요. 저장 후 스크립트가 자동 업데이트됩니다.</p>
-                      </div>
+                  {!airtableEditMode ? (
+                    <div className="flex gap-3 flex-wrap">
+                      <Button
+                        size="sm"
+                        onClick={handleSyncNow}
+                        disabled={airtableSyncing}
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        {airtableSyncing ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />동기화 중...</>
+                        ) : (
+                          <><RefreshCw className="w-4 h-4 mr-2" />지금 동기화</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const cfg = airtableIntegration.config.airtable
+                          if (cfg) {
+                            setAirtableNameField(cfg.name_field || '')
+                            setAirtablePhoneField(cfg.phone_field || '')
+                            setAirtableRefCodeField(cfg.ref_code_field || '')
+                            setAirtableStatusField(cfg.status_field || '')
+                            setAirtableValidValues((cfg.valid_values || []).join(', '))
+                            setAirtableContractValues((cfg.contract_values || []).join(', '))
+                            setAirtableInvalidValues((cfg.invalid_values || []).join(', '))
+                          }
+                          setAirtableEditMode(true)
+                        }}
+                      >
+                        필드 설정 변경
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        onClick={handleDisconnectAirtable}
+                      >
+                        연동 해제
+                      </Button>
+                    </div>
+                  ) : (
+                    /* ── 필드 설정 편집 모드 ── */
+                    <div className="space-y-4 border-t pt-4">
+                      <p className="text-sm font-medium text-slate-700">필드 매핑 수정</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>이름 필드</Label>
-                          <Input value={airtableNameField} onChange={(e) => setAirtableNameField(e.target.value)} placeholder="이름" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>전화번호 필드</Label>
-                          <Input value={airtablePhoneField} onChange={(e) => setAirtablePhoneField(e.target.value)} placeholder="전화번호" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>추천코드 필드</Label>
-                          <Input value={airtableRefCodeField} onChange={(e) => setAirtableRefCodeField(e.target.value)} placeholder="추천코드" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>영업상태 필드</Label>
-                          <Input value={airtableStatusField} onChange={(e) => setAirtableStatusField(e.target.value)} placeholder="영업상태" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>계약일 필드</Label>
-                          <Input value={airtableContractDateField} onChange={(e) => setAirtableContractDateField(e.target.value)} placeholder="계약일" />
-                        </div>
+                        {[
+                          { label: '이름 필드', value: airtableNameField, setter: setAirtableNameField, placeholder: '피추천인이름' },
+                          { label: '연락처 필드', value: airtablePhoneField, setter: setAirtablePhoneField, placeholder: '연락처' },
+                          { label: '추천코드 필드', value: airtableRefCodeField, setter: setAirtableRefCodeField, placeholder: '입력한추천인코드' },
+                          { label: '영업상태 필드', value: airtableStatusField, setter: setAirtableStatusField, placeholder: '계약상태' },
+                        ].map(({ label, value, setter, placeholder }) => (
+                          <div key={label} className="space-y-1.5">
+                            <Label className="text-sm">{label}</Label>
+                            <Input
+                              value={value}
+                              onChange={(e) => setter(e.target.value)}
+                              placeholder={placeholder}
+                              className="font-mono text-sm"
+                            />
+                          </div>
+                        ))}
                       </div>
-                      <div className="space-y-4 border-t pt-4">
-                        <h4 className="text-sm font-medium text-slate-700">영업상태 값 매핑 (쉼표로 구분)</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-green-700">유효 처리 값</Label>
+                      <div className="space-y-3 border-t pt-3">
+                        <p className="text-sm font-medium text-slate-700">상태 값 (쉼표로 구분)</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-green-700 text-xs">유효 처리</Label>
                             <Input value={airtableValidValues} onChange={(e) => setAirtableValidValues(e.target.value)} placeholder="유효" className="border-green-200" />
-                            <p className="text-xs text-slate-400">이 값이면 유효 처리</p>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-blue-700">계약 처리 값</Label>
-                            <Input value={airtableContractValues} onChange={(e) => setAirtableContractValues(e.target.value)} placeholder="계약" className="border-blue-200" />
-                            <p className="text-xs text-slate-400">이 값이면 계약 완료 처리</p>
+                          <div className="space-y-1.5">
+                            <Label className="text-blue-700 text-xs">계약 완료</Label>
+                            <Input value={airtableContractValues} onChange={(e) => setAirtableContractValues(e.target.value)} placeholder="계약완료" className="border-blue-200" />
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-red-700">무효 처리 값</Label>
-                            <Input value={airtableInvalidValues} onChange={(e) => setAirtableInvalidValues(e.target.value)} placeholder="무효" className="border-red-200" />
-                            <p className="text-xs text-slate-400">이 값이면 무효 처리</p>
+                          <div className="space-y-1.5">
+                            <Label className="text-red-700 text-xs">무효 처리</Label>
+                            <Input value={airtableInvalidValues} onChange={(e) => setAirtableInvalidValues(e.target.value)} placeholder="무효, 중복" className="border-red-200" />
                           </div>
                         </div>
                       </div>
-                      <div className="flex justify-between pt-2">
-                        <Button variant="outline" onClick={() => setAirtableStep(1)}>← 이전</Button>
+                      <div className="flex gap-3">
                         <Button
-                          onClick={async () => {
-                            const ok = await handleAirtableSave()
-                            if (ok) setAirtableStep(3)
-                          }}
+                          size="sm"
+                          onClick={handleAirtableSave}
                           disabled={savingAirtable}
                           className="bg-indigo-600 hover:bg-indigo-700"
                         >
-                          {savingAirtable ? '저장 중...' : '저장 후 다음 단계 →'}
+                          {savingAirtable ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />저장 중...</> : '저장'}
                         </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 3: 웹사이트 설치 */}
-                  {airtableStep === 3 && (
-                    <div className="space-y-4 pt-2">
-                      <div>
-                        <h3 className="font-semibold text-slate-800">광고주 웹사이트에 스크립트를 설치하세요</h3>
-                        <p className="text-sm text-slate-500 mt-1">
-                          파트너 추천 링크(<code className="bg-slate-100 px-1 rounded">?ref=코드</code>)에서 추천코드를 자동으로 캡처합니다.
-                          아래 코드를 광고주 웹사이트 문의 페이지의 <code className="bg-slate-100 px-1 rounded">&lt;head&gt;</code>에 삽입하세요.
-                        </p>
-                      </div>
-                      <div className="relative">
-                        <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                          {getRefCaptureScript()}
-                        </pre>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          className="absolute top-3 right-3"
-                          onClick={() => {
-                            navigator.clipboard.writeText(getRefCaptureScript())
-                            setCopiedRefScript(true)
-                            setTimeout(() => setCopiedRefScript(false), 2000)
-                          }}
+                          onClick={() => setAirtableEditMode(false)}
                         >
-                          {copiedRefScript ? <Check className="w-3 h-3 mr-1 text-green-600" /> : <Copy className="w-3 h-3 mr-1" />}
-                          {copiedRefScript ? '복사됨' : '복사'}
-                        </Button>
-                      </div>
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1">
-                        <p className="text-xs font-semibold text-amber-800">Airtable에 추천코드 컬럼 추가 필수</p>
-                        <p className="text-xs text-amber-700">
-                          Airtable 베이스에 <strong>&quot;{airtableRefCodeField || '추천코드'}&quot;</strong> 이름의 텍스트 컬럼을 반드시 추가해야 합니다.
-                          파트너 추천 링크에서 유입된 고객의 코드가 이 컬럼에 저장되어야 파트너에게 실적이 귀속됩니다.
-                        </p>
-                      </div>
-                      <div className="flex justify-between pt-2">
-                        <Button variant="outline" onClick={() => setAirtableStep(2)}>← 이전</Button>
-                        <Button onClick={() => setAirtableStep(4)} className="bg-indigo-600 hover:bg-indigo-700">
-                          다음 단계 →
+                          취소
                         </Button>
                       </div>
                     </div>
                   )}
-
-                  {/* Step 4: Airtable Automation */}
-                  {airtableStep === 4 && (
-                    <div className="space-y-4 pt-2">
-                      <div>
-                        <h3 className="font-semibold text-slate-800">Airtable Automation 스크립트를 설정하세요</h3>
-                        <p className="text-sm text-slate-500 mt-1">
-                          아래 스크립트를 복사해서 Airtable Automations → <strong>Run a script</strong> 액션에 붙여넣으세요.
-                          필드명이 위 설정과 일치하도록 자동으로 생성됩니다.
-                        </p>
-                      </div>
-                      <div className="relative">
-                        <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                          {getAirtableScript(airtableIntegration.api_key, airtableIntegration.api_secret)}
-                        </pre>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="absolute top-3 right-3"
-                          onClick={() => {
-                            navigator.clipboard.writeText(getAirtableScript(airtableIntegration.api_key, airtableIntegration.api_secret))
-                            setCopiedScript(true)
-                            setTimeout(() => setCopiedScript(false), 2000)
-                          }}
-                        >
-                          {copiedScript ? <Check className="w-3 h-3 mr-1 text-green-600" /> : <Copy className="w-3 h-3 mr-1" />}
-                          {copiedScript ? '복사됨' : '복사'}
-                        </Button>
-                      </div>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1">
-                        <p className="text-xs font-semibold text-blue-800">설정 방법</p>
-                        <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                          <li>Airtable에서 Automations 탭 클릭</li>
-                          <li>트리거 설정: &quot;When a record is created&quot; 또는 &quot;When a record matches condition&quot;</li>
-                          <li>액션 추가: <strong>Run a script</strong> 선택</li>
-                          <li>위 스크립트 전체를 붙여넣기</li>
-                          <li>Input variables에 <code className="bg-blue-100 px-1 rounded">record</code> 추가 → 현재 레코드 선택</li>
-                          <li>테스트 실행 후 Referio 리드 목록에서 확인</li>
-                        </ol>
-                      </div>
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center space-y-1">
-                        <p className="font-semibold text-green-800">Airtable 연동 설정이 완료됐습니다!</p>
-                        <p className="text-xs text-green-700">이제 Airtable에서 영업 상태가 변경될 때 Referio에 자동으로 반영됩니다.</p>
-                      </div>
-                      <div className="flex justify-between pt-2">
-                        <Button variant="outline" onClick={() => setAirtableStep(3)}>← 이전</Button>
-                        <Button variant="outline" onClick={() => setAirtableStep(1)} className="text-slate-500">
-                          처음부터 다시 보기
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               ) : (
-                <div className="text-center py-12 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto">
-                    <Zap className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-700">Airtable 연동이 설정되지 않았습니다</p>
-                    <p className="text-sm text-slate-500 mt-1">
-                      연동을 시작하면 API 키가 자동으로 발급됩니다.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleCreateIntegration}
-                    disabled={creatingIntegration}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    {creatingIntegration ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        연동 생성 중...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 mr-2" />
-                        연동 시작하기
-                      </>
+                /* ── 새 연결 폼 ── */
+                <div className="space-y-6">
+                  {/* Step 1: URL + PAT */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>
+                        Airtable Base URL
+                        <span className="text-slate-400 font-normal ml-2 text-xs">
+                          (브라우저 주소창에서 복사)
+                        </span>
+                      </Label>
+                      <Input
+                        value={airtableBaseUrl}
+                        onChange={(e) => setAirtableBaseUrl(e.target.value)}
+                        placeholder="https://airtable.com/appBndWqdWkp8GVvq/tbl..."
+                        className="font-mono text-sm"
+                      />
+                      {airtableBaseUrl && (
+                        <p className="text-xs text-slate-500">
+                          Base ID: <code className="bg-slate-100 px-1 py-0.5 rounded">{airtableBaseUrl.match(/app[A-Za-z0-9]+/)?.[0] || '인식 중...'}</code>
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>
+                        Airtable API 토큰
+                        <a
+                          href="https://airtable.com/create/tokens"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 text-xs text-indigo-600 hover:underline"
+                        >
+                          토큰 만들기 →
+                        </a>
+                      </Label>
+                      <Input
+                        type="password"
+                        value={airtablePat}
+                        onChange={(e) => setAirtablePat(e.target.value)}
+                        placeholder="pat_xxxxxxxxxxxxxxxx..."
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-slate-500">
+                        airtable.com → 계정 아이콘 → Developer Hub → Personal access tokens → Create token
+                        <br />
+                        권한: <code className="bg-slate-100 px-1 rounded">data.records:read</code> + <code className="bg-slate-100 px-1 rounded">schema.bases:read</code>
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={fetchAirtableSchema}
+                      disabled={airtableSchemaLoading || !airtableBaseUrl || !airtablePat}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      {airtableSchemaLoading ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />테이블 불러오는 중...</>
+                      ) : (
+                        <><RefreshCw className="w-4 h-4 mr-2" />테이블 목록 불러오기</>
+                      )}
+                    </Button>
+
+                    {airtableSchemaError && (
+                      <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        {airtableSchemaError}
+                      </div>
                     )}
-                  </Button>
+                  </div>
+
+                  {/* Step 2: 테이블 + 필드 선택 (테이블 로드 후 표시) */}
+                  {airtableTables.length > 0 && (
+                    <div className="space-y-5 border-t pt-5">
+                      <h3 className="font-semibold text-slate-800">테이블 및 필드 선택</h3>
+
+                      <div className="space-y-2">
+                        <Label>연결할 테이블</Label>
+                        <Select value={airtableSelectedTable} onValueChange={setAirtableSelectedTable}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="테이블 선택..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {airtableTables.map(t => (
+                              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {airtableSelectedTable && getSelectedTableFields().length > 0 && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-slate-600">
+                            각 필드가 Airtable의 어떤 컬럼인지 선택하세요
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                              { label: '이름 필드', value: airtableNameField, setter: setAirtableNameField, placeholder: '이름' },
+                              { label: '연락처 필드', value: airtablePhoneField, setter: setAirtablePhoneField, placeholder: '전화번호' },
+                              { label: '추천코드 필드', value: airtableRefCodeField, setter: setAirtableRefCodeField, placeholder: '추천코드' },
+                              { label: '영업상태 필드', value: airtableStatusField, setter: setAirtableStatusField, placeholder: '영업상태' },
+                            ].map(({ label, value, setter, placeholder }) => (
+                              <div key={label} className="space-y-2">
+                                <Label className="text-sm">{label}</Label>
+                                <Select
+                                  value={value}
+                                  onValueChange={setter}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={placeholder} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getSelectedTableFields().map(f => (
+                                      <SelectItem key={f.id} value={f.name}>{f.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="space-y-3 border-t pt-4">
+                            <p className="text-sm font-medium text-slate-700">상태 값 (쉼표로 구분)</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-green-700 text-xs">유효 처리</Label>
+                                <Input value={airtableValidValues} onChange={(e) => setAirtableValidValues(e.target.value)} placeholder="유효" className="border-green-200" />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-blue-700 text-xs">계약 완료</Label>
+                                <Input value={airtableContractValues} onChange={(e) => setAirtableContractValues(e.target.value)} placeholder="계약완료" className="border-blue-200" />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-red-700 text-xs">무효 처리</Label>
+                                <Input value={airtableInvalidValues} onChange={(e) => setAirtableInvalidValues(e.target.value)} placeholder="무효, 중복" className="border-red-200" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <Button
+                            onClick={handleEasyConnect}
+                            disabled={airtableConnecting || !airtableSelectedTable}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base"
+                          >
+                            {airtableConnecting ? (
+                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />연결 중...</>
+                            ) : (
+                              <><Zap className="w-4 h-4 mr-2" />자동 동기화 시작</>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 기존 수동 방식 (접힘) */}
+                  {airtableIntegration && (
+                    <div className="border-t pt-4">
+                      <button
+                        className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+                        onClick={() => setAirtableShowAdvanced(!airtableShowAdvanced)}
+                      >
+                        <ChevronDown className={`w-4 h-4 transition-transform ${airtableShowAdvanced ? 'rotate-180' : ''}`} />
+                        기존 수동 웹훅 방식 보기
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
+
             </CardContent>
           </Card>
         </TabsContent>
