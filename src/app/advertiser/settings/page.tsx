@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink } from 'lucide-react'
+import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw } from 'lucide-react'
 
 interface AdvertiserInfo {
   id: string
@@ -89,7 +89,9 @@ export default function AdvertiserSettingsPage() {
   const [airtableInvalidValues, setAirtableInvalidValues] = useState('무효')
   const [airtableContractDateField, setAirtableContractDateField] = useState('계약일')
   const [savingAirtable, setSavingAirtable] = useState(false)
+  const [creatingIntegration, setCreatingIntegration] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedScript, setCopiedScript] = useState(false)
 
   useEffect(() => {
     fetchAdvertiserInfo()
@@ -170,6 +172,62 @@ export default function AdvertiserSettingsPage() {
     } finally {
       setSavingAirtable(false)
     }
+  }
+
+  const handleCreateIntegration = async () => {
+    setCreatingIntegration(true)
+    try {
+      const res = await fetch('/api/advertiser/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'airtable' }),
+      })
+      if (res.ok) {
+        toast.success('Airtable 연동이 활성화되었습니다')
+        fetchAirtableIntegration()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || '연동 생성에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setCreatingIntegration(false)
+    }
+  }
+
+  const getAirtableScript = (apiKey: string) => {
+    const fields = {
+      name: airtableNameField || '이름',
+      phone: airtablePhoneField || '전화번호',
+      refCode: airtableRefCodeField || '추천코드',
+      status: airtableStatusField || '영업상태',
+      contractDate: airtableContractDateField || '계약일',
+    }
+    return `// Referio 연동 스크립트 (Airtable Automation > Run a script)
+const record = input.config();
+const fields = record.fields || {};
+
+const response = await fetch('https://referio.kr/api/webhook/airtable', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': '${apiKey}'
+  },
+  body: JSON.stringify({
+    record_id: record.id,
+    fields: {
+      '${fields.name}': fields['${fields.name}'],
+      '${fields.phone}': fields['${fields.phone}'],
+      '${fields.refCode}': fields['${fields.refCode}'],
+      '${fields.status}': fields['${fields.status}'],
+      '${fields.contractDate}': fields['${fields.contractDate}'] || null
+    }
+  })
+});
+
+const result = await response.json();
+console.log('Referio 응답:', JSON.stringify(result));`
   }
 
   const fetchMedia = async () => {
@@ -839,39 +897,37 @@ export default function AdvertiserSettingsPage() {
             <CardContent className="space-y-6">
               {airtableIntegration ? (
                 <>
+                  {/* 연동 상태 배지 */}
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="text-sm text-green-800 font-medium">연동 활성화됨</span>
+                  </div>
+
                   {/* API 키 표시 */}
                   <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-                    <p className="text-sm font-semibold text-slate-700">Airtable Automation 설정 정보</p>
+                    <p className="text-sm font-semibold text-slate-700">연동 정보</p>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500 w-24">웹훅 URL</span>
+                        <span className="text-slate-500 w-24 shrink-0">웹훅 URL</span>
                         <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono">
                           https://referio.kr/api/webhook/airtable
                         </code>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500 w-24">API 키</span>
+                        <span className="text-slate-500 w-24 shrink-0">API 키</span>
                         <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono break-all">
                           {airtableIntegration.api_key}
                         </code>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 w-24">헤더 이름</span>
-                        <code className="flex-1 bg-white border rounded px-2 py-1 text-xs font-mono">
-                          X-API-Key
-                        </code>
-                      </div>
                     </div>
-                    <p className="text-xs text-slate-400">
-                      Airtable Automation에서 "Fetch URL" 액션을 추가하고, 위 URL과 헤더를 설정하세요.
-                      요청 본문(JSON)에 아래 필드 매핑에 따른 레코드 데이터를 포함하면 됩니다.
-                    </p>
                   </div>
 
                   {/* 필드 매핑 설정 */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-slate-700">Airtable 필드 이름 매핑</h3>
-                    <p className="text-xs text-slate-500">Airtable에서 사용하는 필드 이름을 정확히 입력하세요</p>
+                    <div>
+                      <h3 className="font-semibold text-sm text-slate-700">Airtable 필드 이름 매핑</h3>
+                      <p className="text-xs text-slate-500 mt-1">Airtable에서 사용하는 필드 이름을 정확히 입력하세요. 저장 후 스크립트가 자동 업데이트됩니다.</p>
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -927,7 +983,7 @@ export default function AdvertiserSettingsPage() {
                             placeholder="유효"
                             className="border-green-200"
                           />
-                          <p className="text-xs text-slate-400">이 값이면 is_valid = true</p>
+                          <p className="text-xs text-slate-400">이 값이면 유효 처리</p>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-blue-700">계약 처리 값</Label>
@@ -947,20 +1003,84 @@ export default function AdvertiserSettingsPage() {
                             placeholder="무효"
                             className="border-red-200"
                           />
-                          <p className="text-xs text-slate-400">이 값이면 is_valid = false</p>
+                          <p className="text-xs text-slate-400">이 값이면 무효 처리</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <Button onClick={handleAirtableSave} disabled={savingAirtable}>
-                    {savingAirtable ? '저장 중...' : 'Airtable 설정 저장'}
+                    {savingAirtable ? '저장 중...' : '설정 저장'}
                   </Button>
+
+                  {/* Airtable Automation 스크립트 */}
+                  <div className="border-t pt-6 space-y-3">
+                    <div>
+                      <h3 className="font-semibold text-sm text-slate-700">Airtable Automation 스크립트</h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        아래 스크립트를 복사해서 Airtable Automations → <strong>Run a script</strong> 액션에 붙여넣으세요.
+                        필드명이 위 설정과 일치하도록 자동으로 생성됩니다.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                        {getAirtableScript(airtableIntegration.api_key)}
+                      </pre>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="absolute top-3 right-3"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getAirtableScript(airtableIntegration.api_key))
+                          setCopiedScript(true)
+                          setTimeout(() => setCopiedScript(false), 2000)
+                        }}
+                      >
+                        {copiedScript ? <Check className="w-3 h-3 mr-1 text-green-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                        {copiedScript ? '복사됨' : '복사'}
+                      </Button>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1">
+                      <p className="text-xs font-semibold text-blue-800">설정 방법</p>
+                      <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                        <li>Airtable에서 Automations 탭 클릭</li>
+                        <li>트리거 설정: &quot;When a record is created&quot; 또는 &quot;When a record matches condition&quot;</li>
+                        <li>액션 추가: <strong>Run a script</strong> 선택</li>
+                        <li>위 스크립트 전체를 붙여넣기</li>
+                        <li>Input variables에 <code className="bg-blue-100 px-1 rounded">record</code> 추가 → 현재 레코드 선택</li>
+                        <li>테스트 실행 후 Referio 리드 목록에서 확인</li>
+                      </ol>
+                    </div>
+                  </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-slate-500">
-                  <p className="mb-2">Airtable 연동이 설정되지 않았습니다.</p>
-                  <p className="text-sm">DB 마이그레이션을 먼저 실행해주세요.</p>
+                <div className="text-center py-12 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto">
+                    <Zap className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-700">Airtable 연동이 설정되지 않았습니다</p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      연동을 시작하면 API 키가 자동으로 발급됩니다.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleCreateIntegration}
+                    disabled={creatingIntegration}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    {creatingIntegration ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        연동 생성 중...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        연동 시작하기
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
             </CardContent>
