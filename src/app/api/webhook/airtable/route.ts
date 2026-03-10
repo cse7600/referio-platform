@@ -167,11 +167,21 @@ export async function POST(request: NextRequest) {
           .eq('id', existingReferral.id)
 
         if (updateError) {
-          console.error('Referral update error:', updateError)
-          return NextResponse.json(
-            { error: '업데이트에 실패했습니다', _debug: updateError.message, _code: updateError.code },
-            { status: 500 }
-          )
+          // 파트너 없는 리드: 정산 트리거 NOT NULL 오류 → is_valid 제외하고 재시도
+          if (updateError.code === '23502' && updateData.is_valid !== undefined) {
+            const updateWithoutValid = { ...updateData }
+            delete updateWithoutValid.is_valid
+            if (Object.keys(updateWithoutValid).length > 0) {
+              await supabase.from('referrals').update(updateWithoutValid).eq('id', existingReferral.id)
+            }
+            console.warn('Referral update: partner_id null, is_valid skipped for', existingReferral.id)
+          } else {
+            console.error('Referral update error:', updateError)
+            return NextResponse.json(
+              { error: '업데이트에 실패했습니다' },
+              { status: 500 }
+            )
+          }
         }
       }
 
