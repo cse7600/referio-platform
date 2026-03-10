@@ -256,7 +256,7 @@ async function processRecord(
         return { id: record.id, action: 'error', error: `update: ${error.code} ${error.message}` }
       }
     }
-    // Fix existing ₩0 settlements with correct commission amounts
+    // Fix ₩0 valid settlement
     if (leadCommission > 0) {
       await supabase
         .from('settlements')
@@ -265,13 +265,35 @@ async function processRecord(
         .eq('type', 'valid')
         .eq('amount', 0)
     }
-    if (contractCommission > 0) {
-      await supabase
+    // Ensure contract settlement exists when action is contract
+    if (action === 'contract') {
+      const { data: existingContract } = await supabase
         .from('settlements')
-        .update({ amount: contractCommission })
+        .select('id')
         .eq('referral_id', existingReferral.id)
         .eq('type', 'contract')
-        .eq('amount', 0)
+        .maybeSingle()
+
+      if (existingContract) {
+        // Update ₩0 contract settlement
+        if (contractCommission > 0) {
+          await supabase
+            .from('settlements')
+            .update({ amount: contractCommission })
+            .eq('id', existingContract.id)
+            .eq('amount', 0)
+        }
+      } else {
+        // Create missing contract settlement
+        await supabase.from('settlements').insert({
+          partner_id: partnerId,
+          advertiser_id: integration.advertiser_id,
+          referral_id: existingReferral.id,
+          type: 'contract',
+          amount: contractCommission,
+          status: 'pending',
+        })
+      }
     }
     return { id: record.id, action: 'updated' }
   }
@@ -302,24 +324,25 @@ async function processRecord(
     return { id: record.id, action: 'error', error: `insert: ${error.code} ${error.message}` }
   }
 
-  // Update settlements created by DB trigger with correct commission amounts
-  if (inserted?.id && (action === 'valid' || action === 'contract')) {
-    if (leadCommission > 0) {
-      await supabase
-        .from('settlements')
-        .update({ amount: leadCommission })
-        .eq('referral_id', inserted.id)
-        .eq('type', 'valid')
-        .eq('amount', 0)
-    }
-    if (action === 'contract' && contractCommission > 0) {
-      await supabase
-        .from('settlements')
-        .update({ amount: contractCommission })
-        .eq('referral_id', inserted.id)
-        .eq('type', 'contract')
-        .eq('amount', 0)
-    }
+  // Fix ₩0 valid settlement created by DB trigger
+  if (inserted?.id && (action === 'valid' || action === 'contract') && leadCommission > 0) {
+    await supabase
+      .from('settlements')
+      .update({ amount: leadCommission })
+      .eq('referral_id', inserted.id)
+      .eq('type', 'valid')
+      .eq('amount', 0)
+  }
+  // Create contract settlement (DB trigger does not create this)
+  if (inserted?.id && action === 'contract') {
+    await supabase.from('settlements').insert({
+      partner_id: partnerId,
+      advertiser_id: integration.advertiser_id,
+      referral_id: inserted.id,
+      type: 'contract',
+      amount: contractCommission,
+      status: 'pending',
+    })
   }
 
   return { id: record.id, action: 'inserted' }
