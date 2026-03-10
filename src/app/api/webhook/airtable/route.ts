@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
         if (updateError) {
           console.error('Referral update error:', updateError)
           return NextResponse.json(
-            { error: '업데이트에 실패했습니다' },
+            { error: '업데이트에 실패했습니다', _debug: updateError.message, _code: updateError.code },
             { status: 500 }
           )
         }
