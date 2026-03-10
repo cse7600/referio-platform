@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
         }
         console.error('Referral creation error:', createError)
         return NextResponse.json(
-          { error: '리드 생성에 실패했습니다' },
+          { error: '리드 생성에 실패했습니다', _debug: createError.message, _code: createError.code },
           { status: 500 }
         )
       }
