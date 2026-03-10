@@ -92,6 +92,7 @@ export default function AdvertiserSettingsPage() {
   const [creatingIntegration, setCreatingIntegration] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedScript, setCopiedScript] = useState(false)
+  const [copiedRefScript, setCopiedRefScript] = useState(false)
 
   useEffect(() => {
     fetchAdvertiserInfo()
@@ -194,6 +195,44 @@ export default function AdvertiserSettingsPage() {
     } finally {
       setCreatingIntegration(false)
     }
+  }
+
+  const getRefCaptureScript = () => {
+    const fieldName = airtableRefCodeField || '추천코드'
+    return `<!-- Referio 추천코드 자동 캡처 스크립트 -->
+<!-- 이 코드를 광고주 웹사이트의 <head> 또는 폼 페이지 하단에 삽입하세요 -->
+<script>
+(function() {
+  // 파트너 추천 링크(?ref=코드)에서 추천코드 자동 캡처
+  var params = new URLSearchParams(window.location.search);
+  var ref = params.get('ref');
+
+  if (ref) {
+    // 30일간 저장 (다른 페이지로 이동해도 유지)
+    localStorage.setItem('referio_ref', ref);
+    localStorage.setItem('referio_ref_exp', Date.now() + 30 * 86400000);
+  }
+
+  // 저장된 코드 불러오기
+  var stored = localStorage.getItem('referio_ref');
+  var exp = localStorage.getItem('referio_ref_exp');
+  if (stored && exp && Date.now() < Number(exp)) {
+    ref = ref || stored;
+  }
+
+  // 폼의 추천코드 필드에 자동 입력
+  // Airtable 필드명 "${fieldName}"과 동일한 input name을 가진 필드에 삽입
+  function fill() {
+    var fields = document.querySelectorAll(
+      'input[name="${fieldName}"], input[data-referio="ref"], [placeholder*="추천코드"]'
+    );
+    fields.forEach(function(el) { if (ref) el.value = ref; });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fill);
+  } else { fill(); }
+})();
+</script>`
   }
 
   const getAirtableScript = (apiKey: string) => {
@@ -1013,11 +1052,53 @@ console.log('Referio 응답:', JSON.stringify(result));`
                     {savingAirtable ? '저장 중...' : '설정 저장'}
                   </Button>
 
-                  {/* Airtable Automation 스크립트 */}
+                  {/* STEP 1: 웹사이트 ref 코드 캡처 스크립트 */}
                   <div className="border-t pt-6 space-y-3">
                     <div>
-                      <h3 className="font-semibold text-sm text-slate-700">Airtable Automation 스크립트</h3>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-white bg-slate-600 rounded px-2 py-0.5">STEP 1</span>
+                        <h3 className="font-semibold text-sm text-slate-700">광고주 웹사이트 설치 스크립트</h3>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        파트너 추천 링크(<code className="bg-slate-100 px-1 rounded">?ref=코드</code>)에서 추천코드를 자동으로 캡처합니다.
+                        아래 코드를 광고주 웹사이트 문의 페이지의 <code className="bg-slate-100 px-1 rounded">&lt;head&gt;</code>에 삽입하세요.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                        {getRefCaptureScript()}
+                      </pre>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="absolute top-3 right-3"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getRefCaptureScript())
+                          setCopiedRefScript(true)
+                          setTimeout(() => setCopiedRefScript(false), 2000)
+                        }}
+                      >
+                        {copiedRefScript ? <Check className="w-3 h-3 mr-1 text-green-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                        {copiedRefScript ? '복사됨' : '복사'}
+                      </Button>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1">
+                      <p className="text-xs font-semibold text-amber-800">Airtable에 추천코드 컬럼 추가 필수</p>
+                      <p className="text-xs text-amber-700">
+                        Airtable 베이스에 <strong>&quot;{airtableRefCodeField || '추천코드'}&quot;</strong> 이름의 텍스트 컬럼을 반드시 추가해야 합니다.
+                        파트너 추천 링크에서 유입된 고객의 코드가 이 컬럼에 저장되어야 파트너에게 실적이 귀속됩니다.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* STEP 2: Airtable Automation 스크립트 */}
+                  <div className="border-t pt-6 space-y-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-white bg-slate-600 rounded px-2 py-0.5">STEP 2</span>
+                        <h3 className="font-semibold text-sm text-slate-700">Airtable Automation 스크립트</h3>
+                      </div>
+                      <p className="text-xs text-slate-500">
                         아래 스크립트를 복사해서 Airtable Automations → <strong>Run a script</strong> 액션에 붙여넣으세요.
                         필드명이 위 설정과 일치하도록 자동으로 생성됩니다.
                       </p>
