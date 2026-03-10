@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
@@ -112,6 +113,22 @@ export async function POST(request: NextRequest) {
       await supabase.from('advertisers').delete().eq('id', advertiser.id)
       return NextResponse.json({ error: '가입에 실패했습니다' }, { status: 500 })
     }
+
+    // 기본 캠페인 자동 생성 (RLS 우회 위해 adminClient 사용)
+    const adminSupabase = createAdminClient()
+    await adminSupabase.from('campaigns').insert({
+      advertiser_id: advertiser.id,
+      name: `${companyName} 파트너 프로그램`,
+      is_active: true,
+      valid_amount: 0,
+      contract_amount: 0,
+      tier_pricing_enabled: false,
+      commission_rate: 0,
+      min_settlement: 0,
+      duplicate_check_days: 90,
+      valid_deadline_days: 7,
+      contract_deadline_days: 30,
+    })
 
     // 세션 생성 (자동 로그인)
     const token = randomBytes(32).toString('hex')

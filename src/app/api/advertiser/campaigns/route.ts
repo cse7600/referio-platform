@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 
 export async function GET() {
@@ -13,7 +13,7 @@ export async function GET() {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 캠페인 조회 (활성 캠페인 우선)
     const { data: campaign, error: campaignError } = await supabase
@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 해당 광고주의 캠페인인지 확인
     const { data: existingCampaign, error: checkError } = await supabase
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 새 캠페인 생성
     const { data: campaign, error } = await supabase

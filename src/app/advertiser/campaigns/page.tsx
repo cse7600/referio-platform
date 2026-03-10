@@ -249,9 +249,7 @@ export default function AdvertiserCampaignsPage() {
       <Tabs defaultValue="basic">
         <TabsList>
           <TabsTrigger value="basic">기본 설정</TabsTrigger>
-          <TabsTrigger value="tier">티어별 단가</TabsTrigger>
           <TabsTrigger value="policy">정책 설정</TabsTrigger>
-          <TabsTrigger value="promotions">프로모션</TabsTrigger>
         </TabsList>
 
         {/* 기본 설정 */}
@@ -326,158 +324,6 @@ export default function AdvertiserCampaignsPage() {
               </div>
             </div>
 
-            <div className="border-t pt-6">
-              <h4 className="font-medium mb-4">수수료 설정</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>정산 대행 수수료율 (%)</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={campaign.commission_rate}
-                      onChange={(e) =>
-                        setCampaign({ ...campaign, commission_rate: parseFloat(e.target.value) || 0 })
-                      }
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>최소 정산 금액 (원)</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₩</span>
-                    <Input
-                      type="number"
-                      className="pl-8"
-                      value={campaign.min_settlement}
-                      onChange={(e) =>
-                        setCampaign({ ...campaign, min_settlement: parseInt(e.target.value) || 0 })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* 티어별 단가 */}
-        <TabsContent value="tier">
-          <Card className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">티어별 단가 차등 적용</h3>
-                <p className="text-sm text-slate-500">
-                  활성화 시 파트너 티어에 따라 다른 단가가 적용됩니다
-                </p>
-              </div>
-              <Switch
-                checked={campaign.tier_pricing_enabled}
-                onCheckedChange={(checked) =>
-                  setCampaign({ ...campaign, tier_pricing_enabled: checked })
-                }
-              />
-            </div>
-
-            {campaign.tier_pricing_enabled && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-4 gap-4 text-sm font-medium text-slate-500 px-4">
-                  <div>티어</div>
-                  <div>유효 단가</div>
-                  <div>계약 단가</div>
-                  <div>최소 계약수</div>
-                </div>
-
-                {['authorized', 'silver', 'gold', 'platinum'].map((tier) => {
-                  const rule = tierRules.find(r => r.tier === tier)
-                  const tierLabels: Record<string, string> = {
-                    authorized: 'Authorized',
-                    silver: 'Silver',
-                    gold: 'Gold',
-                    platinum: 'Platinum',
-                  }
-
-                  return (
-                    <div key={tier} className="grid grid-cols-4 gap-4 items-center p-4 bg-slate-50 rounded-lg">
-                      <div>
-                        <Badge>{tierLabels[tier]}</Badge>
-                      </div>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₩</span>
-                        <Input
-                          type="number"
-                          className="pl-8"
-                          value={rule?.valid_amount ?? campaign.valid_amount}
-                          onChange={(e) => {
-                            const newRules = [...tierRules]
-                            const index = newRules.findIndex(r => r.tier === tier)
-                            if (index >= 0) {
-                              newRules[index] = { ...newRules[index], valid_amount: parseInt(e.target.value) || null }
-                            } else {
-                              newRules.push({
-                                id: '',
-                                tier,
-                                min_contracts: 0,
-                                valid_amount: parseInt(e.target.value) || null,
-                                contract_amount: null,
-                              })
-                            }
-                            setTierRules(newRules)
-                          }}
-                        />
-                      </div>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₩</span>
-                        <Input
-                          type="number"
-                          className="pl-8"
-                          value={rule?.contract_amount ?? campaign.contract_amount}
-                          onChange={(e) => {
-                            const newRules = [...tierRules]
-                            const index = newRules.findIndex(r => r.tier === tier)
-                            if (index >= 0) {
-                              newRules[index] = { ...newRules[index], contract_amount: parseInt(e.target.value) || null }
-                            } else {
-                              newRules.push({
-                                id: '',
-                                tier,
-                                min_contracts: 0,
-                                valid_amount: null,
-                                contract_amount: parseInt(e.target.value) || null,
-                              })
-                            }
-                            setTierRules(newRules)
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={rule?.min_contracts ?? 0}
-                          onChange={(e) => {
-                            const newRules = [...tierRules]
-                            const index = newRules.findIndex(r => r.tier === tier)
-                            if (index >= 0) {
-                              newRules[index] = { ...newRules[index], min_contracts: parseInt(e.target.value) || 0 }
-                            } else {
-                              newRules.push({
-                                id: '',
-                                tier,
-                                min_contracts: parseInt(e.target.value) || 0,
-                                valid_amount: null,
-                                contract_amount: null,
-                              })
-                            }
-                            setTierRules(newRules)
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
           </Card>
         </TabsContent>
 
@@ -526,49 +372,6 @@ export default function AdvertiserCampaignsPage() {
           </Card>
         </TabsContent>
 
-        {/* 프로모션 */}
-        <TabsContent value="promotions">
-          <Card className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium">진행 중인 프로모션</h3>
-              <Button variant="outline" size="sm" onClick={() => toast.info('준비 중인 기능입니다')}>
-                + 프로모션 추가
-              </Button>
-            </div>
-
-            {promotions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <div className="text-4xl mb-4">🎉</div>
-                <p>진행 중인 프로모션이 없습니다</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {promotions.map((promo) => (
-                  <div key={promo.id} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{promo.name}</h4>
-                        <p className="text-sm text-slate-500">
-                          {promo.start_date} ~ {promo.end_date}
-                        </p>
-                      </div>
-                      <Badge className={promo.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {promo.is_active ? '진행중' : '종료'}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-4 text-sm">
-                      <span>유효 +₩{formatCurrency(promo.valid_bonus)}</span>
-                      <span>계약 +₩{formatCurrency(promo.contract_bonus)}</span>
-                      {promo.target_count && (
-                        <span>{promo.target_count}건 이상 시 +₩{formatCurrency(promo.target_bonus || 0)}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   )

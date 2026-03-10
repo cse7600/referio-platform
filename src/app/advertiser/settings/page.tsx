@@ -913,33 +913,8 @@ console.log('Referio 응답:', JSON.stringify(result));`
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>기본 유효 DB 커미션 (원)</Label>
-                  <Input
-                    type="number"
-                    value={defaultLeadCommission}
-                    onChange={(e) => setDefaultLeadCommission(e.target.value)}
-                    placeholder="15000"
-                    min="0"
-                  />
-                  <p className="text-xs text-slate-500">
-                    신규 파트너에게 적용되는 기본 유효 DB 단가
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>기본 계약 커미션 (원)</Label>
-                  <Input
-                    type="number"
-                    value={defaultContractCommission}
-                    onChange={(e) => setDefaultContractCommission(e.target.value)}
-                    placeholder="200000"
-                    min="0"
-                  />
-                  <p className="text-xs text-slate-500">
-                    신규 파트너에게 적용되는 기본 계약 단가
-                  </p>
-                </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                수수료 단가는 <a href="/advertiser/campaigns" className="text-indigo-600 font-medium underline underline-offset-2">캠페인 설정</a>에서 관리합니다.
               </div>
 
               {/* 파트너 가이드 섹션 */}
