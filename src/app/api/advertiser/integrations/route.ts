@@ -80,6 +80,8 @@ export async function POST(request: Request) {
       },
     }
 
+    const apiSecret = 'ref_secret_' + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
+
     const { data: integration, error } = await supabase
       .from('webhook_integrations')
       .insert({
@@ -87,6 +89,7 @@ export async function POST(request: Request) {
         name: integrationName,
         source,
         api_key: apiKey,
+        api_secret: apiSecret,
         is_active: true,
         config: defaultConfig,
       })
