@@ -64,6 +64,7 @@ export default function AdvertiserSettingsPage() {
     id: string
     name: string
     api_key: string
+    api_secret: string | null
     is_active: boolean
     config: {
       airtable?: {
@@ -118,7 +119,7 @@ export default function AdvertiserSettingsPage() {
 
       const { data } = await supabase
         .from('webhook_integrations')
-        .select('id, name, api_key, is_active, config')
+        .select('id, name, api_key, api_secret, is_active, config')
         .eq('advertiser_id', adv.id)
         .eq('source', 'airtable')
         .single()
@@ -239,34 +240,66 @@ export default function AdvertiserSettingsPage() {
 </script>`
   }
 
-  const getAirtableScript = (apiKey: string) => {
+  const getAirtableScript = (apiKey: string, apiSecret: string | null) => {
     const fields = {
       name: airtableNameField || '이름',
       phone: airtablePhoneField || '전화번호',
       refCode: airtableRefCodeField || '추천코드',
       status: airtableStatusField || '영업상태',
-      contractDate: airtableContractDateField || '계약일',
     }
+    const secretLine = apiSecret ? `\nconst API_SECRET = '${apiSecret}';` : ''
+    const hmacBlock = apiSecret ? `
+// INT-03: HMAC-SHA256 서명 생성
+async function sign(secret, timestamp, body) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const buf = await crypto.subtle.sign('HMAC', key, enc.encode(timestamp + '.' + body));
+  return 'sha256=' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const timestamp = String(Math.floor(Date.now() / 1000));
+const bodyStr = JSON.stringify(payload);
+const signature = await sign(API_SECRET, timestamp, bodyStr);
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-API-Key': API_KEY,
+  'X-Timestamp': timestamp,
+  'X-Signature': signature,
+};` : `
+const timestamp = String(Math.floor(Date.now() / 1000));
+const bodyStr = JSON.stringify(payload);
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-API-Key': API_KEY,
+  'X-Timestamp': timestamp,
+};`
+
     return `// Referio 연동 스크립트 (Airtable Automation > Run a script)
+// Input variables: record (현재 레코드)
 const record = input.config();
 const fields = record.fields || {};
+const API_KEY = '${apiKey}';${secretLine}
+
+const payload = {
+  record_id: record.id,
+  fields: {
+    '${fields.name}': fields['${fields.name}'],
+    '${fields.phone}': fields['${fields.phone}'],
+    '${fields.refCode}': fields['${fields.refCode}'],
+    '${fields.status}': fields['${fields.status}'],
+  }
+};
+${hmacBlock}
 
 const response = await fetch('https://referio.kr/api/webhook/airtable', {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': '${apiKey}'
-  },
-  body: JSON.stringify({
-    record_id: record.id,
-    fields: {
-      '${fields.name}': fields['${fields.name}'],
-      '${fields.phone}': fields['${fields.phone}'],
-      '${fields.refCode}': fields['${fields.refCode}'],
-      '${fields.status}': fields['${fields.status}'],
-      '${fields.contractDate}': fields['${fields.contractDate}'] || null
-    }
-  })
+  headers,
+  body: bodyStr,
 });
 
 const result = await response.json();
@@ -1130,14 +1163,14 @@ console.log('Referio 응답:', JSON.stringify(result));`
                       </div>
                       <div className="relative">
                         <pre className="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                          {getAirtableScript(airtableIntegration.api_key)}
+                          {getAirtableScript(airtableIntegration.api_key, airtableIntegration.api_secret)}
                         </pre>
                         <Button
                           variant="secondary"
                           size="sm"
                           className="absolute top-3 right-3"
                           onClick={() => {
-                            navigator.clipboard.writeText(getAirtableScript(airtableIntegration.api_key))
+                            navigator.clipboard.writeText(getAirtableScript(airtableIntegration.api_key, airtableIntegration.api_secret))
                             setCopiedScript(true)
                             setTimeout(() => setCopiedScript(false), 2000)
                           }}

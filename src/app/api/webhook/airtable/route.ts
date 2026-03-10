@@ -16,14 +16,51 @@ interface AirtableConfig {
 interface WebhookIntegration {
   id: string
   advertiser_id: string
+  api_secret: string | null
   config: {
     airtable?: AirtableConfig
   }
 }
 
+// INT-02: 타임스탬프 유효성 검증 (5분 윈도우)
+function verifyTimestamp(timestamp: string): boolean {
+  const ts = parseInt(timestamp, 10)
+  if (isNaN(ts)) return false
+  const diffSeconds = Math.abs(Date.now() / 1000 - ts)
+  return diffSeconds <= 300
+}
+
+// INT-03: HMAC-SHA256 서명 검증
+// 서명 형식: sha256=<hex>
+// 서명 대상: `${timestamp}.${bodyText}`
+async function verifyHmacSignature(
+  bodyText: string,
+  timestamp: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder()
+    const keyData = encoder.encode(secret)
+    const msgData = encoder.encode(`${timestamp}.${bodyText}`)
+
+    const key = await crypto.subtle.importKey(
+      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    )
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, msgData)
+    const computedHex = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+
+    const providedHex = signature.replace(/^sha256=/, '')
+    return computedHex === providedHex
+  } catch {
+    return false
+  }
+}
+
 // Airtable Automation에서 호출되는 웹훅 엔드포인트
-// 설정 방법: Airtable → Automations → Fetch URL → https://referio.kr/api/webhook/airtable
-// 헤더: X-API-Key: [발급된 API 키]
+// 헤더: X-API-Key, X-Timestamp (Unix 초), X-Signature (sha256=..., 선택)
 export async function POST(request: NextRequest) {
   try {
     const apiKey = request.headers.get('X-API-Key')
@@ -35,12 +72,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // INT-02: 타임스탬프 헤더가 있으면 즉시 검증 (body 읽기 전)
+    const timestamp = request.headers.get('X-Timestamp')
+    if (timestamp && !verifyTimestamp(timestamp)) {
+      return NextResponse.json(
+        { error: '요청이 만료됐습니다 (5분 초과)' },
+        { status: 401 }
+      )
+    }
+
+    // body를 텍스트로 먼저 읽어둠 (HMAC 검증 + JSON 파싱 모두 사용)
+    const bodyText = await request.text()
+
     const supabase = await createClient()
 
-    // API 키로 웹훅 통합 설정 조회 (airtable 타입만)
+    // API 키로 웹훅 통합 설정 조회 (api_secret 포함)
     const { data: integration, error: integrationError } = await supabase
       .from('webhook_integrations')
-      .select('id, advertiser_id, config')
+      .select('id, advertiser_id, api_secret, config')
       .eq('api_key', apiKey)
       .eq('source', 'airtable')
       .eq('is_active', true)
@@ -53,7 +102,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
+    // INT-03: HMAC 서명 검증 (헤더 + api_secret 모두 있을 때만 강제)
+    const signature = request.headers.get('X-Signature')
+    if (signature && integration.api_secret) {
+      if (!timestamp) {
+        return NextResponse.json(
+          { error: 'X-Signature 사용 시 X-Timestamp가 필요합니다' },
+          { status: 401 }
+        )
+      }
+      const valid = await verifyHmacSignature(bodyText, timestamp, signature, integration.api_secret)
+      if (!valid) {
+        return NextResponse.json(
+          { error: '서명 검증에 실패했습니다' },
+          { status: 401 }
+        )
+      }
+    }
+
+    const body = JSON.parse(bodyText)
 
     // Airtable 레코드 데이터 추출
     const record = body.record || body
@@ -74,9 +141,6 @@ export async function POST(request: NextRequest) {
     const phone = fields[airtableConfig.phone_field]
     const refCode = fields[airtableConfig.ref_code_field]
     const status = fields[airtableConfig.status_field]
-    const contractDate = airtableConfig.contract_date_field
-      ? fields[airtableConfig.contract_date_field]
-      : null
 
     if (!name && !phone && !refCode) {
       return NextResponse.json(
@@ -265,7 +329,7 @@ export async function OPTIONS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
+      'Access-Control-Allow-Headers': 'Content-Type, X-API-Key, X-Timestamp, X-Signature',
     },
   })
 }
