@@ -163,7 +163,76 @@ export async function sendPartnerApprovalEmail(options: {
   })
 }
 
-// 3. 파트너 가입 환영 이메일 - Referio에 처음 가입했을 때
+// 3. 광고주 새 리드 알림 - 문의폼 또는 Airtable 웹훅으로 리드가 생성됐을 때
+export async function sendAdvertiserNewLeadEmail(options: {
+  advertiserEmail: string
+  companyName: string
+  leadName: string
+  leadPhone: string
+  referralCode?: string | null
+  partnerMatched: boolean
+  source: 'inquiry' | 'airtable'
+}): Promise<boolean> {
+  const { advertiserEmail, companyName, leadName, leadPhone, referralCode, partnerMatched, source } = options
+
+  const sourceLabel = source === 'inquiry' ? '문의 폼' : 'Airtable'
+  const partnerLine = partnerMatched
+    ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">파트너</td><td style="padding:6px 0;color:#4f46e5;font-size:13px;font-weight:600;">✅ 추천코드 ${referralCode} — 파트너 자동 귀속</td></tr>`
+    : referralCode
+    ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">파트너</td><td style="padding:6px 0;color:#f59e0b;font-size:13px;">⚠️ 추천코드 ${referralCode} 입력됐지만 매칭 파트너 없음</td></tr>`
+    : ''
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">새 리드가 접수됐습니다</h1>
+      <p style="margin:4px 0 0;color:#c7d2fe;font-size:14px;">${companyName}</p>
+    </div>
+    <div style="padding:32px;">
+      <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-bottom:24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0;color:#6b7280;font-size:13px;width:90px;">이름</td>
+            <td style="padding:6px 0;color:#111827;font-size:13px;font-weight:600;">${leadName}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#6b7280;font-size:13px;">연락처</td>
+            <td style="padding:6px 0;color:#111827;font-size:13px;font-weight:600;">${leadPhone}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#6b7280;font-size:13px;">유입 경로</td>
+            <td style="padding:6px 0;color:#111827;font-size:13px;">${sourceLabel}</td>
+          </tr>
+          ${partnerLine}
+        </table>
+      </div>
+      <a href="https://referio.kr/advertiser/referrals"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        리드 관리 바로가기 →
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio에서 자동 발송됩니다.
+        수신 설정은 <a href="https://referio.kr/advertiser/settings" style="color:#6b7280;">설정 페이지</a>에서 변경하세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  return sendEmail({
+    to: advertiserEmail,
+    subject: `[Referio] 새 리드 접수 — ${leadName}`,
+    html,
+  })
+}
+
+// 4. 파트너 가입 환영 이메일 - Referio에 처음 가입했을 때
 export async function sendWelcomeEmail(options: {
   partnerEmail: string
   partnerName: string

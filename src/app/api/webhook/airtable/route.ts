@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendAdvertiserNewLeadEmail } from '@/lib/email'
 
 interface AirtableConfig {
   name_field: string
@@ -302,6 +303,25 @@ export async function POST(request: NextRequest) {
           { error: '리드 생성에 실패했습니다' },
           { status: 500 }
         )
+      }
+
+      // 광고주 이메일 알림 (비동기, 실패해도 응답 유지)
+      const { data: adv } = await supabase
+        .from('advertisers')
+        .select('contact_email, company_name')
+        .eq('id', integration.advertiser_id)
+        .maybeSingle()
+
+      if (adv?.contact_email) {
+        sendAdvertiserNewLeadEmail({
+          advertiserEmail: adv.contact_email,
+          companyName: adv.company_name || '',
+          leadName: name || '이름 없음',
+          leadPhone: phone || '',
+          referralCode: refCode || null,
+          partnerMatched: !!partnerId,
+          source: 'airtable',
+        }).catch(() => {})
       }
 
       return NextResponse.json({

@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-10T01:31:40.950Z",
+  "lastUpdated": "2026-03-10T04:42:58.668Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -21,24 +21,23 @@
     "advertisers",
     "customers",
     "airtable",
-    "integrations"
+    "integrations",
+    "referio-platform"
   ],
   "primaryFeature": "inquiry",
   "features": {
     "inquiry": {
-      "phase": "completed",
-      "phaseNumber": 6,
+      "phase": "do",
       "matchRate": 100,
       "iterationCount": 0,
-      "requirements": [],
-      "documents": {
-        "report": "docs/04-report/inquiry.report.md"
-      },
+      "startedAt": "2026-03-09T01:51:28.010Z",
+      "archivedAt": "2026-03-10T02:10:00.000Z",
+      "archivedTo": "docs/archive/2026-03/inquiry/",
+      "phaseNumber": 3,
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/inquiry/route.ts",
       "timestamps": {
-        "started": "2026-03-09T01:51:28.010Z",
-        "lastUpdated": "2026-03-10T02:00:00.000Z"
-      },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
+        "lastUpdated": "2026-03-10T04:42:44.423Z"
+      }
     },
     "security": {
       "phase": "do",
@@ -153,7 +152,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:17:56.248Z",
-        "lastUpdated": "2026-03-10T01:31:40.950Z"
+        "lastUpdated": "2026-03-10T01:44:56.410Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
     },
@@ -270,7 +269,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T00:34:08.632Z",
-        "lastUpdated": "2026-03-10T01:16:34.602Z"
+        "lastUpdated": "2026-03-10T04:42:58.668Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/webhook/airtable/route.ts"
     },
@@ -286,6 +285,19 @@
         "lastUpdated": "2026-03-10T01:03:03.104Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/integrations/route.ts"
+    },
+    "referio-platform": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-10T04:42:22.140Z",
+        "lastUpdated": "2026-03-10T04:42:22.140Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     }
   },
   "pipeline": {
@@ -296,7 +308,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-10T01:31:40.950Z"
+    "lastActivity": "2026-03-10T04:42:58.668Z"
   },
   "history": [
     {
@@ -764,6 +776,66 @@
     {
       "timestamp": "2026-03-10T01:31:40.950Z",
       "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:44:11.858Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:44:23.542Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:44:31.081Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:44:47.206Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:44:56.410Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T04:42:22.140Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T04:42:36.632Z",
+      "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T04:42:44.423Z",
+      "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T04:42:48.699Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T04:42:58.668Z",
+      "feature": "airtable",
       "phase": "do",
       "action": "updated"
     }

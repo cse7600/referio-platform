@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { sendAdvertiserNewLeadEmail } from '@/lib/email'
 
 // UUID 패턴 확인
 function isUuid(str: string): boolean {
@@ -17,20 +18,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // 광고주 확인 (UUID 또는 text advertiser_id 둘 다 지원)
-    let advertiser: { id: string; inquiry_form_enabled: boolean | null } | null = null
+    // 광고주 확인 (UUID 또는 text advertiser_id 둘 다 지원) + 이메일 알림용 필드 포함
+    let advertiser: { id: string; inquiry_form_enabled: boolean | null; contact_email: string | null; company_name: string | null } | null = null
 
     if (isUuid(advertiser_id)) {
       const { data } = await supabase
         .from('advertisers')
-        .select('id, inquiry_form_enabled')
+        .select('id, inquiry_form_enabled, contact_email, company_name')
         .eq('id', advertiser_id)
         .maybeSingle()
       advertiser = data
     } else {
       const { data } = await supabase
         .from('advertisers')
-        .select('id, inquiry_form_enabled')
+        .select('id, inquiry_form_enabled, contact_email, company_name')
         .eq('advertiser_id', advertiser_id)
         .maybeSingle()
       advertiser = data
@@ -89,6 +90,19 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('Inquiry insert error:', insertError)
       return NextResponse.json({ error: '문의 접수에 실패했습니다' }, { status: 500 })
+    }
+
+    // 광고주 이메일 알림 (비동기, 실패해도 리드 접수 성공 응답 유지)
+    if (advertiser.contact_email) {
+      sendAdvertiserNewLeadEmail({
+        advertiserEmail: advertiser.contact_email,
+        companyName: advertiser.company_name || '',
+        leadName: name,
+        leadPhone: phone,
+        referralCode: referral_code || null,
+        partnerMatched: !!partnerId,
+        source: 'inquiry',
+      }).catch(() => {})
     }
 
     return NextResponse.json({ success: true, message: '문의가 접수되었습니다' }, { status: 201 })
