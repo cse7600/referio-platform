@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     // Airtable 레코드 데이터 추출
     const record = body.record || body
     const fields = record.fields || record
+    const airtableRecordId: string | null = body.record_id || record.id || null
 
     const airtableConfig: AirtableConfig = integration.config?.airtable || {
       name_field: '이름',
@@ -84,10 +85,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 기존 referral 조회 (추천코드 또는 전화번호로)
+    // 기존 referral 조회 순서: record_id → 추천코드 → 전화번호
     let existingReferral = null
 
-    if (refCode) {
+    // 1순위: airtable record_id (가장 정확, 멱등성 보장)
+    if (airtableRecordId) {
+      const { data } = await supabase
+        .from('referrals')
+        .select('id, partner_id, contract_status, is_valid, airtable_record_id')
+        .eq('airtable_record_id', airtableRecordId)
+        .eq('advertiser_id', integration.advertiser_id)
+        .maybeSingle()
+      existingReferral = data
+    }
+
+    // 2순위: 추천코드
+    if (!existingReferral && refCode) {
       const { data } = await supabase
         .from('referrals')
         .select('id, partner_id, contract_status, is_valid')
@@ -95,10 +108,11 @@ export async function POST(request: NextRequest) {
         .eq('advertiser_id', integration.advertiser_id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
       existingReferral = data
     }
 
+    // 3순위: 전화번호
     if (!existingReferral && phone) {
       const { data } = await supabase
         .from('referrals')
@@ -107,7 +121,7 @@ export async function POST(request: NextRequest) {
         .eq('advertiser_id', integration.advertiser_id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
       existingReferral = data
     }
 
@@ -131,7 +145,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingReferral) {
-      // 기존 리드 업데이트
+      // 동일 record_id로 이미 처리된 신규 리드 이벤트 → 멱등 처리
+      if (
+        airtableRecordId &&
+        'airtable_record_id' in existingReferral &&
+        existingReferral.airtable_record_id === airtableRecordId &&
+        action === 'none'
+      ) {
+        return NextResponse.json({
+          success: true,
+          action: 'duplicate_ignored',
+          referral_id: existingReferral.id,
+          message: '이미 처리된 이벤트입니다',
+        })
+      }
+
+      // 상태 업데이트
       if (action !== 'none') {
         const { error: updateError } = await supabase
           .from('referrals')
@@ -163,7 +192,7 @@ export async function POST(request: NextRequest) {
           .eq('referral_code', refCode)
           .eq('advertiser_id', integration.advertiser_id)
           .eq('status', 'approved')
-          .single()
+          .maybeSingle()
 
         if (program) {
           partnerId = program.partner_id
@@ -178,6 +207,7 @@ export async function POST(request: NextRequest) {
           phone: phone || null,
           referral_code_input: refCode || null,
           partner_id: partnerId,
+          airtable_record_id: airtableRecordId || null,
           contract_status: action === 'contract' ? 'completed' : 'pending',
           is_valid: action === 'valid' || action === 'contract' ? true
             : action === 'invalid' ? false : null,
@@ -187,6 +217,14 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (createError) {
+        // unique constraint 위반 → 멱등 처리 (race condition 방어)
+        if (createError.code === '23505') {
+          return NextResponse.json({
+            success: true,
+            action: 'duplicate_ignored',
+            message: '이미 처리된 이벤트입니다 (중복 방지)',
+          })
+        }
         console.error('Referral creation error:', createError)
         return NextResponse.json(
           { error: '리드 생성에 실패했습니다' },
