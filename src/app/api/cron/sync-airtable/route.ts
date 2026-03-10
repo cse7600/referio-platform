@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface AirtableConfig {
   pat: string
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '권한 없음' }, { status: 401 })
   }
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Get all active airtable integrations that have PAT (auto-sync mode)
   const { data: integrations } = await supabase
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 }
 
 async function updateLastSynced(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createAdminClient>,
   integration: Integration,
   cfg: AirtableConfig
 ) {
@@ -120,7 +120,7 @@ async function updateLastSynced(
 }
 
 async function processRecord(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createAdminClient>,
   integration: Integration,
   cfg: AirtableConfig,
   record: AirtableRecord

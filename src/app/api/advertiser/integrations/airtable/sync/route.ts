@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession } from '@/lib/auth'
 
 interface AirtableConfig {
@@ -37,7 +37,7 @@ export async function POST() {
       return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: integration } = await supabase
       .from('webhook_integrations')
@@ -143,7 +143,7 @@ export async function POST() {
 }
 
 async function processRecord(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   integration: { id: string; advertiser_id: string; config: Record<string, unknown> },
   cfg: AirtableConfig,
   record: AirtableRecord
