@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-10T00:34:27.870Z",
+  "lastUpdated": "2026-03-10T01:31:40.950Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -20,7 +20,8 @@
     "admin",
     "advertisers",
     "customers",
-    "airtable"
+    "airtable",
+    "integrations"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -35,9 +36,9 @@
       },
       "timestamps": {
         "started": "2026-03-09T01:51:28.010Z",
-        "lastUpdated": "2026-03-10T00:40:00.000Z"
+        "lastUpdated": "2026-03-10T02:00:00.000Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/webhook/airtable/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
     },
     "security": {
       "phase": "do",
@@ -152,7 +153,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:17:56.248Z",
-        "lastUpdated": "2026-03-09T03:21:30.336Z"
+        "lastUpdated": "2026-03-10T01:31:40.950Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
     },
@@ -269,9 +270,22 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T00:34:08.632Z",
-        "lastUpdated": "2026-03-10T00:34:27.870Z"
+        "lastUpdated": "2026-03-10T01:16:34.602Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/webhook/airtable/route.ts"
+    },
+    "integrations": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-10T00:51:47.816Z",
+        "lastUpdated": "2026-03-10T01:03:03.104Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/integrations/route.ts"
     }
   },
   "pipeline": {
@@ -282,7 +296,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-10T00:34:27.870Z"
+    "lastActivity": "2026-03-10T01:31:40.950Z"
   },
   "history": [
     {
@@ -636,6 +650,120 @@
     {
       "timestamp": "2026-03-10T00:34:27.870Z",
       "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:51:47.816Z",
+      "feature": "integrations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:51:54.266Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:51:58.211Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:52:09.423Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:52:55.303Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T00:59:46.182Z",
+      "feature": "integrations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:03:03.104Z",
+      "feature": "integrations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:08:48.011Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:10:20.930Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:10:26.379Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:10:31.923Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:13:29.908Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:16:34.602Z",
+      "feature": "airtable",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:25:06.458Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:25:16.873Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:25:37.222Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:27:04.803Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:30:23.999Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-10T01:31:40.950Z",
+      "feature": "settings",
       "phase": "do",
       "action": "updated"
     }
