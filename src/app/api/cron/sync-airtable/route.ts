@@ -119,6 +119,47 @@ async function updateLastSynced(
     .eq('id', integration.id)
 }
 
+async function resolveCommission(
+  supabase: ReturnType<typeof createAdminClient>,
+  advertiserId: string,
+  programLead: number,
+  programContract: number
+): Promise<{ leadCommission: number; contractCommission: number }> {
+  let leadCommission = programLead
+  let contractCommission = programContract
+
+  // Fallback 1: active campaign
+  if (!leadCommission || !contractCommission) {
+    const { data: campaign } = await supabase
+      .from('campaigns')
+      .select('valid_amount, contract_amount')
+      .eq('advertiser_id', advertiserId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (campaign) {
+      if (!leadCommission) leadCommission = campaign.valid_amount || 0
+      if (!contractCommission) contractCommission = campaign.contract_amount || 0
+    }
+  }
+
+  // Fallback 2: advertiser defaults
+  if (!leadCommission || !contractCommission) {
+    const { data: advertiser } = await supabase
+      .from('advertisers')
+      .select('default_lead_commission, default_contract_commission')
+      .eq('id', advertiserId)
+      .maybeSingle()
+    if (advertiser) {
+      if (!leadCommission) leadCommission = advertiser.default_lead_commission || 0
+      if (!contractCommission) contractCommission = advertiser.default_contract_commission || 0
+    }
+  }
+
+  return { leadCommission, contractCommission }
+}
+
 async function processRecord(
   supabase: ReturnType<typeof createAdminClient>,
   integration: Integration,
@@ -136,7 +177,7 @@ async function processRecord(
 
   const { data: program } = await supabase
     .from('partner_programs')
-    .select('partner_id')
+    .select('partner_id, lead_commission, contract_commission')
     .eq('referral_code', refCode)
     .eq('advertiser_id', integration.advertiser_id)
     .eq('status', 'approved')
@@ -145,6 +186,14 @@ async function processRecord(
   if (!program) return 'skipped'
 
   const partnerId = program.partner_id
+
+  // Resolve commission with fallback chain
+  const { leadCommission, contractCommission } = await resolveCommission(
+    supabase,
+    integration.advertiser_id,
+    program.lead_commission || 0,
+    program.contract_commission || 0
+  )
 
   // Determine status action
   let updateData: Record<string, unknown> = {}
@@ -196,10 +245,47 @@ async function processRecord(
         return 'error'
       }
     }
+    // Fix ₩0 valid settlement
+    if (leadCommission > 0) {
+      await supabase
+        .from('settlements')
+        .update({ amount: leadCommission })
+        .eq('referral_id', existingReferral.id)
+        .eq('type', 'valid')
+        .eq('amount', 0)
+    }
+    // Ensure contract settlement exists when action is contract
+    if (action === 'contract') {
+      const { data: existingContract } = await supabase
+        .from('settlements')
+        .select('id')
+        .eq('referral_id', existingReferral.id)
+        .eq('type', 'contract')
+        .maybeSingle()
+
+      if (existingContract) {
+        if (contractCommission > 0) {
+          await supabase
+            .from('settlements')
+            .update({ amount: contractCommission })
+            .eq('id', existingContract.id)
+            .eq('amount', 0)
+        }
+      } else {
+        await supabase.from('settlements').insert({
+          partner_id: partnerId,
+          advertiser_id: integration.advertiser_id,
+          referral_id: existingReferral.id,
+          type: 'contract',
+          amount: contractCommission,
+          status: 'pending',
+        })
+      }
+    }
     return 'updated'
   }
 
-  // Insert — partnerId is always non-null here
+  // Insert new referral
   const insertData: Record<string, unknown> = {
     advertiser_id: integration.advertiser_id,
     name: name || '이름 없음',
@@ -212,10 +298,37 @@ async function processRecord(
       : action === 'invalid' ? false : null,
   }
 
-  const { error } = await supabase.from('referrals').insert(insertData)
+  const { data: inserted, error } = await supabase
+    .from('referrals')
+    .insert(insertData)
+    .select('id')
+    .single()
+
   if (error) {
     if (error.code !== '23505') console.error('Referral insert error:', error)
     return error.code === '23505' ? 'updated' : 'error'
   }
+
+  // Fix ₩0 valid settlement created by DB trigger
+  if (inserted?.id && (action === 'valid' || action === 'contract') && leadCommission > 0) {
+    await supabase
+      .from('settlements')
+      .update({ amount: leadCommission })
+      .eq('referral_id', inserted.id)
+      .eq('type', 'valid')
+      .eq('amount', 0)
+  }
+  // Create contract settlement
+  if (inserted?.id && action === 'contract') {
+    await supabase.from('settlements').insert({
+      partner_id: partnerId,
+      advertiser_id: integration.advertiser_id,
+      referral_id: inserted.id,
+      type: 'contract',
+      amount: contractCommission,
+      status: 'pending',
+    })
+  }
+
   return 'inserted'
 }
