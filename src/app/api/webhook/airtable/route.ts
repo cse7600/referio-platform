@@ -136,7 +136,6 @@ export async function POST(request: NextRequest) {
       updateData = {
         is_valid: true,
         contract_status: 'completed',
-        contract_date: contractDate || null,
       }
       action = 'contract'
     } else if (status && airtableConfig.invalid_values.includes(status)) {
@@ -211,7 +210,6 @@ export async function POST(request: NextRequest) {
           contract_status: action === 'contract' ? 'completed' : 'pending',
           is_valid: action === 'valid' || action === 'contract' ? true
             : action === 'invalid' ? false : null,
-          contract_date: action === 'contract' ? (contractDate || null) : null,
         })
         .select()
         .single()
@@ -227,7 +225,7 @@ export async function POST(request: NextRequest) {
         }
         console.error('Referral creation error:', createError)
         return NextResponse.json(
-          { error: '리드 생성에 실패했습니다', _debug: createError.message, _code: createError.code },
+          { error: '리드 생성에 실패했습니다' },
           { status: 500 }
         )
       }
