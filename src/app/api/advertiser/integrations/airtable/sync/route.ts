@@ -174,9 +174,10 @@ async function processRecord(
 
   const partnerId = program.partner_id
 
-  // Resolve commission amounts: partner_programs first, fallback to campaigns
+  // Resolve commission: partner_programs → campaigns → advertisers.default_*
   let leadCommission: number = program.lead_commission || 0
   let contractCommission: number = program.contract_commission || 0
+
   if (!leadCommission || !contractCommission) {
     const { data: campaign } = await supabase
       .from('campaigns')
@@ -189,6 +190,19 @@ async function processRecord(
     if (campaign) {
       if (!leadCommission) leadCommission = campaign.valid_amount || 0
       if (!contractCommission) contractCommission = campaign.contract_amount || 0
+    }
+  }
+
+  // Final fallback: advertisers.default_lead_commission / default_contract_commission
+  if (!leadCommission || !contractCommission) {
+    const { data: advertiser } = await supabase
+      .from('advertisers')
+      .select('default_lead_commission, default_contract_commission')
+      .eq('id', integration.advertiser_id)
+      .maybeSingle()
+    if (advertiser) {
+      if (!leadCommission) leadCommission = advertiser.default_lead_commission || 0
+      if (!contractCommission) contractCommission = advertiser.default_contract_commission || 0
     }
   }
 
@@ -241,6 +255,23 @@ async function processRecord(
       if (error) {
         return { id: record.id, action: 'error', error: `update: ${error.code} ${error.message}` }
       }
+    }
+    // Fix existing ₩0 settlements with correct commission amounts
+    if (leadCommission > 0) {
+      await supabase
+        .from('settlements')
+        .update({ amount: leadCommission })
+        .eq('referral_id', existingReferral.id)
+        .eq('type', 'valid')
+        .eq('amount', 0)
+    }
+    if (contractCommission > 0) {
+      await supabase
+        .from('settlements')
+        .update({ amount: contractCommission })
+        .eq('referral_id', existingReferral.id)
+        .eq('type', 'contract')
+        .eq('amount', 0)
     }
     return { id: record.id, action: 'updated' }
   }
