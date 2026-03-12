@@ -80,11 +80,13 @@ export default function SignupPage() {
             .update({ auth_user_id: data.user.id })
             .eq('id', partnerByEmail.id)
         } else {
+          const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
           await supabase.from('partners').insert({
             name,
             email: data.user.email,
             auth_user_id: data.user.id,
             status: 'pending',
+            referral_code: referralCode,
           })
         }
       }
@@ -125,11 +127,13 @@ export default function SignupPage() {
               .update({ auth_user_id: user.id })
               .eq('id', partnerByEmail.id)
           } else {
+            const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
             await supabase.from('partners').insert({
               name,
               email,
               auth_user_id: user.id,
               status: 'pending',
+              referral_code: referralCode,
             })
           }
         }

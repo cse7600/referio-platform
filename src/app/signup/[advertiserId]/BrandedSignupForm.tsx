@@ -170,10 +170,10 @@ export default function BrandedSignupForm({ advertiser }: Props) {
           <p className="text-white/80 text-lg whitespace-pre-wrap">{welcomeMessage}</p>
         </div>
 
-        <div className="text-white/50 text-sm">
+        <a href="https://referio.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
           Powered by{' '}
-          <span className="text-white/70 font-medium">Referio</span>
-        </div>
+          <span className="font-medium">Referio</span>
+        </a>
       </div>
 
       {/* 우측 가입 폼 */}

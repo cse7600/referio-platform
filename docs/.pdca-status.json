@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-12T01:42:31.950Z",
+  "lastUpdated": "2026-03-12T02:37:58.059Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -94,9 +94,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T02:00:39.130Z",
-        "lastUpdated": "2026-03-12T01:41:55.157Z"
+        "lastUpdated": "2026-03-12T02:35:15.395Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/[advertiserId]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/[advertiserId]/BrandedSignupForm.tsx"
     },
     "campaigns": {
       "phase": "do",
@@ -159,7 +159,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:17:56.248Z",
-        "lastUpdated": "2026-03-12T01:20:37.293Z"
+        "lastUpdated": "2026-03-12T02:37:58.059Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
     },
@@ -385,33 +385,12 @@
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/page.tsx"
     },
     "branded-partner-signup": {
-      "phase": "plan",
-      "phaseNumber": 1,
-      "matchRate": null,
+      "phase": "archived",
+      "matchRate": 90,
       "iterationCount": 0,
-      "requirements": [
-        "FR-01",
-        "FR-02",
-        "FR-03",
-        "FR-04",
-        "FR-05",
-        "FR-06",
-        "FR-07",
-        "FR-08",
-        "FR-09",
-        "FR-10",
-        "FR-11",
-        "FR-12",
-        "FR-13"
-      ],
-      "documents": {
-        "plan": "docs/01-plan/features/branded-partner-signup.plan.md"
-      },
-      "timestamps": {
-        "started": "2026-03-12T09:00:00.000Z",
-        "lastUpdated": "2026-03-12T09:00:00.000Z"
-      },
-      "lastFile": "docs/01-plan/features/branded-partner-signup.plan.md"
+      "startedAt": "2026-03-12T09:00:00.000Z",
+      "archivedAt": "2026-03-12T10:00:00.000Z",
+      "archivedTo": "docs/archive/2026-03/branded-partner-signup/"
     },
     "onboarding": {
       "phase": "do",
@@ -435,7 +414,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-12T01:42:31.950Z"
+    "lastActivity": "2026-03-12T02:37:58.059Z"
   },
   "history": [
     {
@@ -1383,6 +1362,18 @@
     {
       "timestamp": "2026-03-12T01:42:31.950Z",
       "feature": "onboarding",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-12T02:35:15.395Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-12T02:37:58.059Z",
+      "feature": "settings",
       "phase": "do",
       "action": "updated"
     }

@@ -1472,7 +1472,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
                   disabled={!partnerSignupEnabled}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  미리보기
+                  새 탭으로 열기
                 </Button>
               </div>
               {!partnerSignupEnabled && (
@@ -1481,55 +1481,109 @@ console.log('Referio 응답:', JSON.stringify(result));`
             </CardContent>
           </Card>
 
-          {/* 설정 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">파트너 모집 설정</CardTitle>
-              <CardDescription>
-                가입 페이지 좌측 패널에 표시되는 브랜딩 정보를 설정하세요. 로고와 브랜드 색상은 &quot;브랜드 설정&quot; 탭에서 관리됩니다.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {/* 활성화 토글 */}
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div>
-                  <p className="font-medium text-sm">파트너 모집 활성화</p>
-                  <p className="text-xs text-slate-500 mt-0.5">ON으로 설정해야 가입 링크가 작동합니다</p>
+          {/* 설정 + 실시간 미리보기 */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            {/* 좌측: 설정 폼 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">파트너 모집 설정</CardTitle>
+                <CardDescription>
+                  가입 페이지 좌측 패널에 표시되는 브랜딩 정보를 설정하세요. 로고와 브랜드 색상은 &quot;브랜드 설정&quot; 탭에서 관리됩니다.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {/* 활성화 토글 */}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <p className="font-medium text-sm">파트너 모집 활성화</p>
+                    <p className="text-xs text-slate-500 mt-0.5">ON으로 설정해야 가입 링크가 작동합니다</p>
+                  </div>
+                  <Switch
+                    checked={partnerSignupEnabled}
+                    onCheckedChange={setPartnerSignupEnabled}
+                  />
                 </div>
-                <Switch
-                  checked={partnerSignupEnabled}
-                  onCheckedChange={setPartnerSignupEnabled}
-                />
-              </div>
 
-              {/* 환영 제목 */}
-              <div className="space-y-2">
-                <Label>환영 제목</Label>
-                <Input
-                  placeholder="예: 함께 성장할 파트너를 찾습니다"
-                  value={signupWelcomeTitle}
-                  onChange={(e) => setSignupWelcomeTitle(e.target.value)}
-                />
-                <p className="text-xs text-slate-400">비워두면 &quot;{advertiser?.companyName} 파트너가 되세요&quot;가 기본으로 표시됩니다</p>
-              </div>
+                {/* 환영 제목 */}
+                <div className="space-y-2">
+                  <Label>환영 제목</Label>
+                  <Input
+                    placeholder="예: 함께 성장할 파트너를 찾습니다"
+                    value={signupWelcomeTitle}
+                    onChange={(e) => setSignupWelcomeTitle(e.target.value)}
+                  />
+                  <p className="text-xs text-slate-400">비워두면 &quot;{advertiser?.companyName} 파트너가 되세요&quot;가 기본으로 표시됩니다</p>
+                </div>
 
-              {/* 환영 메시지 */}
-              <div className="space-y-2">
-                <Label>환영 메시지</Label>
-                <Textarea
-                  placeholder="예: 저희 파트너 프로그램에 참여하면 계약 성사 시 커미션을 받으실 수 있습니다. 지금 바로 시작하세요!"
-                  value={signupWelcomeMessage}
-                  onChange={(e) => setSignupWelcomeMessage(e.target.value)}
-                  rows={4}
-                />
-                <p className="text-xs text-slate-400">커미션 정보, 혜택 등 파트너를 유치할 메시지를 자유롭게 입력하세요</p>
-              </div>
+                {/* 환영 메시지 */}
+                <div className="space-y-2">
+                  <Label>환영 메시지</Label>
+                  <Textarea
+                    placeholder="예: 저희 파트너 프로그램에 참여하면 계약 성사 시 커미션을 받으실 수 있습니다. 지금 바로 시작하세요!"
+                    value={signupWelcomeMessage}
+                    onChange={(e) => setSignupWelcomeMessage(e.target.value)}
+                    rows={4}
+                  />
+                  <p className="text-xs text-slate-400">커미션 정보, 혜택 등 파트너를 유치할 메시지를 자유롭게 입력하세요</p>
+                </div>
 
-              <Button onClick={handlePartnerSignupUpdate} disabled={saving}>
-                {saving ? '저장 중...' : '설정 저장'}
-              </Button>
-            </CardContent>
-          </Card>
+                <Button onClick={handlePartnerSignupUpdate} disabled={saving}>
+                  {saving ? '저장 중...' : '설정 저장'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* 우측: 실시간 미리보기 */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
+                실시간 미리보기
+              </p>
+              <div className="rounded-xl border overflow-hidden shadow-sm" style={{ minHeight: '460px' }}>
+                {/* 미리보기: 브랜딩 패널 */}
+                <div
+                  className="h-full flex flex-col justify-between p-8"
+                  style={{
+                    background: `linear-gradient(135deg, ${primaryColor}ee 0%, ${primaryColor}99 100%)`,
+                    minHeight: '460px',
+                  }}
+                >
+                  {/* 로고 영역 */}
+                  <div className="flex items-center gap-2">
+                    {advertiser?.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={advertiser.logoUrl} alt={advertiser.companyName} className="h-7 object-contain" />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20"
+                      >
+                        <span className="text-white font-bold text-sm">
+                          {advertiser?.companyName?.charAt(0) ?? 'B'}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-white font-semibold text-base">{advertiser?.companyName ?? '브랜드명'}</span>
+                  </div>
+
+                  {/* 환영 텍스트 */}
+                  <div className="text-white">
+                    <h2 className="text-2xl font-bold mb-3 leading-snug">
+                      {signupWelcomeTitle || `${advertiser?.companyName ?? '브랜드'} 파트너가 되세요`}
+                    </h2>
+                    <p className="text-white/80 text-sm whitespace-pre-wrap leading-relaxed">
+                      {signupWelcomeMessage || '환영 메시지를 입력하면 이곳에 표시됩니다.'}
+                    </p>
+                  </div>
+
+                  {/* Powered by */}
+                  <p className="text-white/50 text-xs">
+                    Powered by <span className="text-white/70 font-medium">Referio</span>
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 text-center">실제 가입 페이지의 좌측 패널 모습입니다</p>
+            </div>
+          </div>
         </TabsContent>
 
         {/* 비밀번호 변경 탭 */}
