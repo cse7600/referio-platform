@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { User, Phone, Link as LinkIcon, CheckCircle } from 'lucide-react'
+import { User, Phone, Link as LinkIcon, CheckCircle, PartyPopper } from 'lucide-react'
 
 const CHANNELS = [
   { id: 'blog', label: '네이버 블로그' },
@@ -18,8 +18,11 @@ const CHANNELS = [
   { id: 'other', label: '기타' },
 ]
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromAdvertiser = searchParams.get('from')
+  const companyName = searchParams.get('company')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -107,9 +110,13 @@ export default function OnboardingPage() {
         <Card className="w-full max-w-md text-center">
           <CardContent className="pt-8 pb-8">
             <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold mb-2">가입 신청이 완료되었습니다!</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {companyName ? `${companyName} 파트너 신청 완료!` : '가입 신청이 완료되었습니다!'}
+            </h2>
             <p className="text-gray-600 mb-4">
-              관리자 승인 후 활동을 시작하실 수 있습니다.
+              {companyName
+                ? `${companyName} 담당자 승인 후 활동을 시작하실 수 있습니다.`
+                : '관리자 승인 후 활동을 시작하실 수 있습니다.'}
             </p>
             <p className="text-sm text-gray-500">
               승인이 완료되면 이메일로 안내해 드릴게요.
@@ -126,6 +133,21 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-lg mx-auto">
+        {/* 브랜드 가입 경로 안내 배너 */}
+        {fromAdvertiser && companyName && (
+          <div className="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-start gap-3">
+            <PartyPopper className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                {companyName} 파트너 프로그램 가입 신청이 접수되었습니다!
+              </p>
+              <p className="text-xs text-green-700 mt-0.5">
+                아래 정보를 입력하면 더 빠른 승인이 가능합니다.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
@@ -239,5 +261,13 @@ export default function OnboardingPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <OnboardingContent />
+    </Suspense>
   )
 }

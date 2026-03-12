@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw, ChevronDown, AlertCircle, Loader2 } from 'lucide-react'
+import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw, ChevronDown, AlertCircle, Loader2, Users } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AdvertiserInfo {
@@ -59,6 +59,12 @@ export default function AdvertiserSettingsPage() {
   const [uploading, setUploading] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [youtubeName, setYoutubeName] = useState('')
+
+  // 파트너 모집 설정
+  const [partnerSignupEnabled, setPartnerSignupEnabled] = useState(false)
+  const [signupWelcomeTitle, setSignupWelcomeTitle] = useState('')
+  const [signupWelcomeMessage, setSignupWelcomeMessage] = useState('')
+  const [copiedSignupLink, setCopiedSignupLink] = useState(false)
 
   // Airtable 연동
   interface AirtableField { id: string; name: string; type: string }
@@ -532,7 +538,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
         const supabase = createClient()
         const { data: adv } = await supabase
           .from('advertisers')
-          .select('company_name, contact_email, contact_phone, primary_color, program_name, program_description, default_lead_commission, default_contract_commission, is_public, category, homepage_url, activity_guide, content_sources, prohibited_activities, precautions')
+          .select('company_name, contact_email, contact_phone, primary_color, program_name, program_description, default_lead_commission, default_contract_commission, is_public, category, homepage_url, activity_guide, content_sources, prohibited_activities, precautions, partner_signup_enabled, signup_welcome_title, signup_welcome_message')
           .eq('advertiser_id', data.advertiser.advertiserId)
           .single()
 
@@ -552,6 +558,9 @@ console.log('Referio 응답:', JSON.stringify(result));`
           setContentSources(adv.content_sources || '')
           setProhibitedActivities(adv.prohibited_activities || '')
           setPrecautions(adv.precautions || '')
+          setPartnerSignupEnabled(adv.partner_signup_enabled || false)
+          setSignupWelcomeTitle(adv.signup_welcome_title || '')
+          setSignupWelcomeMessage(adv.signup_welcome_message || '')
         }
       }
     } catch {
@@ -630,6 +639,39 @@ console.log('Referio 응답:', JSON.stringify(result));`
     }
   }
 
+  const handlePartnerSignupUpdate = async () => {
+    setSaving(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('advertisers')
+        .update({
+          partner_signup_enabled: partnerSignupEnabled,
+          signup_welcome_title: signupWelcomeTitle || null,
+          signup_welcome_message: signupWelcomeMessage || null,
+        })
+        .eq('advertiser_id', advertiser?.advertiserId)
+
+      if (error) {
+        toast.error('설정 저장에 실패했습니다')
+      } else {
+        toast.success('파트너 모집 설정이 저장되었습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCopySignupLink = () => {
+    if (!advertiser?.advertiserId) return
+    const link = `${window.location.origin}/signup/${advertiser.advertiserId}`
+    navigator.clipboard.writeText(link)
+    setCopiedSignupLink(true)
+    setTimeout(() => setCopiedSignupLink(false), 2000)
+  }
+
   const handleProgramUpdate = async () => {
     setSaving(true)
     try {
@@ -693,6 +735,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
           <TabsTrigger value="account">계정 정보</TabsTrigger>
           <TabsTrigger value="brand">브랜드 설정</TabsTrigger>
           <TabsTrigger value="program">프로그램 설정</TabsTrigger>
+          <TabsTrigger value="partner-recruit">파트너 모집</TabsTrigger>
           <TabsTrigger value="airtable">Airtable 연동</TabsTrigger>
           <TabsTrigger value="password">비밀번호 변경</TabsTrigger>
         </TabsList>
@@ -1389,6 +1432,102 @@ console.log('Referio 응답:', JSON.stringify(result));`
                 </div>
               )}
 
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 파트너 모집 탭 */}
+        <TabsContent value="partner-recruit" className="space-y-6">
+          {/* 가입 링크 */}
+          <Card className="border-indigo-200 bg-indigo-50">
+            <CardHeader>
+              <CardTitle className="text-base text-indigo-900 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                전용 파트너 가입 링크
+              </CardTitle>
+              <CardDescription className="text-indigo-700">
+                이 링크를 파트너에게 공유하면 귀사 브랜딩이 적용된 가입 페이지로 이동합니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 text-sm text-indigo-800 bg-white rounded-md px-3 py-2 border border-indigo-200 font-mono truncate">
+                  {typeof window !== 'undefined' ? `${window.location.origin}/signup/${advertiser?.advertiserId}` : `/signup/${advertiser?.advertiserId}`}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-indigo-300 text-indigo-700 hover:bg-indigo-100 shrink-0"
+                  onClick={handleCopySignupLink}
+                  disabled={!partnerSignupEnabled}
+                >
+                  {copiedSignupLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedSignupLink ? '복사됨' : '복사'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-indigo-300 text-indigo-700 hover:bg-indigo-100 shrink-0"
+                  onClick={() => window.open(`/signup/${advertiser?.advertiserId}`, '_blank')}
+                  disabled={!partnerSignupEnabled}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  미리보기
+                </Button>
+              </div>
+              {!partnerSignupEnabled && (
+                <p className="text-xs text-indigo-600 mt-2">⚠ 아래에서 파트너 모집을 활성화해야 링크가 작동합니다</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 설정 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">파트너 모집 설정</CardTitle>
+              <CardDescription>
+                가입 페이지 좌측 패널에 표시되는 브랜딩 정보를 설정하세요. 로고와 브랜드 색상은 &quot;브랜드 설정&quot; 탭에서 관리됩니다.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* 활성화 토글 */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div>
+                  <p className="font-medium text-sm">파트너 모집 활성화</p>
+                  <p className="text-xs text-slate-500 mt-0.5">ON으로 설정해야 가입 링크가 작동합니다</p>
+                </div>
+                <Switch
+                  checked={partnerSignupEnabled}
+                  onCheckedChange={setPartnerSignupEnabled}
+                />
+              </div>
+
+              {/* 환영 제목 */}
+              <div className="space-y-2">
+                <Label>환영 제목</Label>
+                <Input
+                  placeholder="예: 함께 성장할 파트너를 찾습니다"
+                  value={signupWelcomeTitle}
+                  onChange={(e) => setSignupWelcomeTitle(e.target.value)}
+                />
+                <p className="text-xs text-slate-400">비워두면 &quot;{advertiser?.companyName} 파트너가 되세요&quot;가 기본으로 표시됩니다</p>
+              </div>
+
+              {/* 환영 메시지 */}
+              <div className="space-y-2">
+                <Label>환영 메시지</Label>
+                <Textarea
+                  placeholder="예: 저희 파트너 프로그램에 참여하면 계약 성사 시 커미션을 받으실 수 있습니다. 지금 바로 시작하세요!"
+                  value={signupWelcomeMessage}
+                  onChange={(e) => setSignupWelcomeMessage(e.target.value)}
+                  rows={4}
+                />
+                <p className="text-xs text-slate-400">커미션 정보, 혜택 등 파트너를 유치할 메시지를 자유롭게 입력하세요</p>
+              </div>
+
+              <Button onClick={handlePartnerSignupUpdate} disabled={saving}>
+                {saving ? '저장 중...' : '설정 저장'}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
