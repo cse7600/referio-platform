@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
@@ -15,9 +16,10 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient()
+    const admin = createAdminClient()
 
-    // advertiser_users에서 user_id로 조회
-    const { data: user, error: userError } = await supabase
+    // advertiser_users에서 user_id로 조회 (RLS 우회 — 로그인은 인증 전이므로 admin 사용)
+    const { data: user, error: userError } = await admin
       .from('advertiser_users')
       .select('*')
       .eq('user_id', loginId)
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     if (userError || !user) {
       // 기존 advertisers 테이블에서도 시도 (마이그레이션 호환성)
-      const { data: legacyUser, error: legacyError } = await supabase
+      const { data: legacyUser, error: legacyError } = await admin
         .from('advertisers')
         .select('*')
         .eq('user_id', loginId)
@@ -53,8 +55,8 @@ export async function POST(request: NextRequest) {
       }, password)
     }
 
-    // 광고주 정보 조회 (id 포함)
-    const { data: advertiser } = await supabase
+    // 광고주 정보 조회 (id 포함, RLS 우회)
+    const { data: advertiser } = await admin
       .from('advertisers')
       .select('id, company_name, logo_url, primary_color')
       .eq('advertiser_id', user.advertiser_id)
