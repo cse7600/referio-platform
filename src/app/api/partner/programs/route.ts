@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // GET: 공개 프로그램 목록 + 참가 상태
 export async function GET() {
@@ -21,8 +22,9 @@ export async function GET() {
       return NextResponse.json({ error: '파트너를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    // 공개 프로그램 목록
-    const { data: advertisers, error: advError } = await supabase
+    // 공개 프로그램 목록 — admin client으로 RLS 우회 (advertisers는 USING false)
+    const admin = createAdminClient()
+    const { data: advertisers, error: advError } = await admin
       .from('advertisers')
       .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url')
       .eq('is_public', true)
@@ -74,8 +76,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '광고주 ID가 필요합니다' }, { status: 400 })
     }
 
-    // 광고주가 공개 상태인지 확인
-    const { data: advertiser } = await supabase
+    // 광고주가 공개 상태인지 확인 — admin client으로 RLS 우회
+    const admin = createAdminClient()
+    const { data: advertiser } = await admin
       .from('advertisers')
       .select('id, default_lead_commission, default_contract_commission, auto_approve_partners')
       .eq('id', advertiser_id)

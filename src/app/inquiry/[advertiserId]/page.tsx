@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,10 +15,6 @@ interface AdvertiserInfo {
   primary_color: string | null
   contact_phone: string | null
   program_description: string | null
-}
-
-function isUuid(str: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
 }
 
 function InquiryForm({ advertiserId }: { advertiserId: string }) {
@@ -36,18 +31,11 @@ function InquiryForm({ advertiserId }: { advertiserId: string }) {
   useEffect(() => {
     const fetchAdvertiser = async () => {
       try {
-        const supabase = createClient()
-        const query = supabase
-          .from('advertisers')
-          .select('company_name, program_name, logo_url, primary_color, contact_phone, program_description')
-
-        const { data } = await (
-          isUuid(advertiserId)
-            ? query.eq('id', advertiserId)
-            : query.eq('advertiser_id', advertiserId)
-        ).single()
-
-        if (data) setAdvertiser(data)
+        const res = await fetch(`/api/public/advertiser?id=${encodeURIComponent(advertiserId)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.advertiser) setAdvertiser(data.advertiser)
+        }
       } catch {
         // 광고주 정보 없어도 폼은 표시
       }

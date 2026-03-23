@@ -102,7 +102,6 @@ export async function PATCH(
 
     // 정산 자동 생성: 상태가 변경되어 정산 조건을 충족할 때
     const newStatus = updateData.contract_status as string | undefined ?? referral.contract_status
-    const newIsValid = updateData.is_valid as boolean | null | undefined ?? referral.is_valid
 
     // is_valid=true로 변경되었거나, contract_status=completed로 변경된 경우 정산 생성 시도
     const shouldCreateSettlement =
@@ -110,7 +109,7 @@ export async function PATCH(
       (contract_status === 'completed' && referral.contract_status !== 'completed')
 
     if (shouldCreateSettlement && referral.partner_id) {
-      // 파트너의 커미션 조회
+      // 파트너의 커미션 조회 (partner_programs 우선, fallback: campaigns)
       const { data: enrollment } = await supabase
         .from('partner_programs')
         .select('lead_commission, contract_commission')
@@ -119,40 +118,89 @@ export async function PATCH(
         .eq('status', 'approved')
         .single()
 
-      if (enrollment) {
-        // is_valid=true일 때: 유효 정산 생성
-        if (newIsValid === true && is_valid === true) {
-          const { error: settError } = await supabase
+      // fallback: partner_programs 값이 없거나 0/null이면 campaigns에서 가져오기
+      let leadCommission = enrollment?.lead_commission || 0
+      let contractCommission = enrollment?.contract_commission || 0
+
+      if (!leadCommission || !contractCommission) {
+        const { data: campaign } = await supabase
+          .from('campaigns')
+          .select('valid_amount, contract_amount')
+          .eq('advertiser_id', session.advertiserUuid)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        if (campaign) {
+          if (!leadCommission) leadCommission = campaign.valid_amount || 0
+          if (!contractCommission) contractCommission = campaign.contract_amount || 0
+        }
+      }
+
+      // contract_status=completed 처리: is_valid가 true가 아니면 자동으로 true로 설정
+      if (contract_status === 'completed' && referral.contract_status !== 'completed') {
+        if (referral.is_valid !== true && updateData.is_valid !== true) {
+          updateData.is_valid = true
+          // DB에도 반영 (앞서 실행한 update와 별도로 is_valid 보정)
+          await supabase
+            .from('referrals')
+            .update({ is_valid: true })
+            .eq('id', id)
+            .eq('advertiser_id', session.advertiserUuid)
+        }
+      }
+
+      // is_valid=true일 때: 유효 정산 생성
+      const effectiveIsValid = updateData.is_valid === true || referral.is_valid === true
+      if (is_valid === true && referral.is_valid !== true) {
+        const { error: settError } = await supabase
+          .from('settlements')
+          .insert({
+            partner_id: referral.partner_id,
+            advertiser_id: session.advertiserUuid,
+            referral_id: id,
+            type: 'valid',
+            amount: leadCommission,
+            status: 'pending',
+          })
+        // ON CONFLICT 대신 에러 무시 (이미 존재하면 skip)
+        if (settError && !settError.message.includes('duplicate') && !settError.message.includes('unique')) {
+          console.error('Valid settlement create error:', settError)
+        }
+      }
+
+      // contract_status=completed일 때: 계약 정산 생성 (is_valid 조건 제거)
+      if (newStatus === 'completed' && contract_status === 'completed') {
+        // completed 전환 시 is_valid도 true로 처리되므로, valid settlement가 아직 없으면 함께 생성
+        if (!effectiveIsValid) {
+          const { error: validSettError } = await supabase
             .from('settlements')
             .insert({
               partner_id: referral.partner_id,
               advertiser_id: session.advertiserUuid,
               referral_id: id,
               type: 'valid',
-              amount: enrollment.lead_commission || 0,
+              amount: leadCommission,
               status: 'pending',
             })
-          // ON CONFLICT 대신 에러 무시 (이미 존재하면 skip)
-          if (settError && !settError.message.includes('duplicate') && !settError.message.includes('unique')) {
-            console.error('Valid settlement create error:', settError)
+          if (validSettError && !validSettError.message.includes('duplicate') && !validSettError.message.includes('unique')) {
+            console.error('Auto valid settlement create error:', validSettError)
           }
         }
 
-        // contract_status=completed일 때: 계약 정산 생성
-        if (newStatus === 'completed' && contract_status === 'completed' && newIsValid === true) {
-          const { error: settError } = await supabase
-            .from('settlements')
-            .insert({
-              partner_id: referral.partner_id,
-              advertiser_id: session.advertiserUuid,
-              referral_id: id,
-              type: 'contract',
-              amount: enrollment.contract_commission || 0,
-              status: 'pending',
-            })
-          if (settError && !settError.message.includes('duplicate') && !settError.message.includes('unique')) {
-            console.error('Contract settlement create error:', settError)
-          }
+        const { error: settError } = await supabase
+          .from('settlements')
+          .insert({
+            partner_id: referral.partner_id,
+            advertiser_id: session.advertiserUuid,
+            referral_id: id,
+            type: 'contract',
+            amount: contractCommission,
+            status: 'pending',
+          })
+        if (settError && !settError.message.includes('duplicate') && !settError.message.includes('unique')) {
+          console.error('Contract settlement create error:', settError)
         }
       }
     }

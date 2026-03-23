@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import BrandedSignupForm from './BrandedSignupForm'
 import type { Metadata } from 'next'
 
@@ -13,9 +13,9 @@ interface PageProps {
 
 export default async function BrandedSignupPage({ params }: PageProps) {
   const { advertiserId } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: advertiser } = await supabase
+  const { data: advertiser } = await admin
     .from('advertisers')
     .select('id, advertiser_id, company_name, logo_url, primary_color, program_name, program_description, signup_welcome_title, signup_welcome_message, partner_signup_enabled')
     .eq('advertiser_id', advertiserId)
