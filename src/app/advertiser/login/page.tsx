@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { Building2, User, Lock } from 'lucide-react'
+import { Building2, Lock } from 'lucide-react'
 
 export default function AdvertiserLoginPage() {
   const router = useRouter()
-  const [advertiserId, setAdvertiserId] = useState('')
-  const [userId, setUserId] = useState('')
+  const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -25,7 +24,7 @@ export default function AdvertiserLoginPage() {
       const response = await fetch('/api/auth/advertiser/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ advertiserId, userId, password }),
+        body: JSON.stringify({ loginId, password }),
       })
 
       const data = await response.json()
@@ -59,39 +58,18 @@ export default function AdvertiserLoginPage() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
-          {/* 광고주 ID */}
+          {/* 로그인 ID */}
           <div className="space-y-2">
-            <Label htmlFor="advertiserId" className="flex items-center gap-2">
+            <Label htmlFor="loginId" className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-slate-400" />
-              광고주 ID
+              로그인 ID
             </Label>
             <Input
-              id="advertiserId"
+              id="loginId"
               type="text"
-              placeholder="hanwha_vision"
-              value={advertiserId}
-              onChange={(e) => setAdvertiserId(e.target.value)}
-              required
-              disabled={loading}
-              className="h-11"
-            />
-            <p className="text-xs text-slate-400">
-              담당자에게 발급받은 광고주 식별 코드
-            </p>
-          </div>
-
-          {/* 사용자 ID */}
-          <div className="space-y-2">
-            <Label htmlFor="userId" className="flex items-center gap-2">
-              <User className="w-4 h-4 text-slate-400" />
-              사용자 ID
-            </Label>
-            <Input
-              id="userId"
-              type="text"
-              placeholder="admin"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+              placeholder="가입 시 설정한 로그인 ID"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
               required
               disabled={loading}
               className="h-11"
@@ -131,18 +109,6 @@ export default function AdvertiserLoginPage() {
           </Button>
         </form>
 
-        {process.env.NODE_ENV === 'development' && (
-        <div className="pt-4 border-t border-slate-200">
-          <div className="bg-slate-50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-medium text-slate-600">데모 계정 (개발 전용)</p>
-            <div className="text-xs text-slate-500 space-y-1">
-              <p>광고주 ID: <code className="bg-slate-200 px-1 rounded">hanwha_vision</code></p>
-              <p>사용자 ID: <code className="bg-slate-200 px-1 rounded">admin</code></p>
-              <p>비밀번호: <code className="bg-slate-200 px-1 rounded">password123</code></p>
-            </div>
-          </div>
-        </div>
-        )}
 
         <div className="text-center space-y-2">
           <div className="text-sm text-slate-600">

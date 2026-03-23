@@ -5,24 +5,22 @@ import { randomBytes } from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
-    const { advertiserId, userId, password } = await request.json()
+    const { loginId, password } = await request.json()
 
-    // 3가지 필드 모두 필수
-    if (!advertiserId || !userId || !password) {
+    if (!loginId || !password) {
       return NextResponse.json(
-        { error: '광고주 ID, 사용자 ID, 비밀번호를 모두 입력해주세요' },
+        { error: '로그인 ID와 비밀번호를 입력해주세요' },
         { status: 400 }
       )
     }
 
     const supabase = await createClient()
 
-    // advertiser_users 테이블에서 조회 (멀티테넌트 + 멀티유저)
+    // advertiser_users에서 user_id로 조회
     const { data: user, error: userError } = await supabase
       .from('advertiser_users')
       .select('*')
-      .eq('advertiser_id', advertiserId)
-      .eq('user_id', userId)
+      .eq('user_id', loginId)
       .single()
 
     if (userError || !user) {
@@ -30,13 +28,12 @@ export async function POST(request: NextRequest) {
       const { data: legacyUser, error: legacyError } = await supabase
         .from('advertisers')
         .select('*')
-        .eq('advertiser_id', advertiserId)
-        .eq('user_id', userId)
+        .eq('user_id', loginId)
         .single()
 
       if (legacyError || !legacyUser) {
         return NextResponse.json(
-          { error: '광고주 ID, 사용자 ID 또는 비밀번호가 일치하지 않습니다' },
+          { error: '로그인 ID 또는 비밀번호가 일치하지 않습니다' },
           { status: 401 }
         )
       }
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
     const { data: advertiser } = await supabase
       .from('advertisers')
       .select('id, company_name, logo_url, primary_color')
-      .eq('advertiser_id', advertiserId)
+      .eq('advertiser_id', user.advertiser_id)
       .single()
 
     return handleLogin(supabase, {
@@ -72,7 +69,7 @@ export async function POST(request: NextRequest) {
       name: user.name,
       role: user.role,
       status: user.status,
-      companyName: advertiser?.company_name || advertiserId,
+      companyName: advertiser?.company_name || loginId,
       logoUrl: advertiser?.logo_url,
       primaryColor: advertiser?.primary_color,
     }, password)

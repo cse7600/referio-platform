@@ -31,13 +31,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // advertiser_id 생성 (회사명 기반 slug)
-    const advertiserId = companyName
-      .toLowerCase()
-      .replace(/[^a-z0-9가-힣]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '')
-      .substring(0, 30) + '_' + Date.now().toString(36)
+    // advertiser_id = loginId (가입 시 설정한 로그인 ID와 동일)
+    const advertiserId = loginId
 
     // 이메일 중복 체크
     const { data: existingEmail } = await supabase
