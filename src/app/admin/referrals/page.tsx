@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -91,21 +90,16 @@ export default function AdminReferralsPage() {
   }, [])
 
   const fetchReferrals = async () => {
-    const supabase = createClient()
-    const query = supabase
-      .from('referrals')
-      .select(`
-        *,
-        partners (
-          name,
-          email
-        )
-      `)
-      .order('created_at', { ascending: false })
-
-    const { data } = await query
-    setReferrals(data || [])
-    setLoading(false)
+    try {
+      const res = await fetch('/api/admin/referrals')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setReferrals(data.referrals || [])
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -113,13 +107,13 @@ export default function AdminReferralsPage() {
   }, [])
 
   const handleValidChange = async (referralId: string, isValid: boolean | null) => {
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('referrals')
-      .update({ is_valid: isValid })
-      .eq('id', referralId)
+    const res = await fetch('/api/admin/referrals', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referralId, updates: { is_valid: isValid } }),
+    })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('상태 변경에 실패했습니다')
       return
     }
@@ -129,13 +123,13 @@ export default function AdminReferralsPage() {
   }
 
   const handleContractChange = async (referralId: string, status: string) => {
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('referrals')
-      .update({ contract_status: status })
-      .eq('id', referralId)
+    const res = await fetch('/api/admin/referrals', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referralId, updates: { contract_status: status } }),
+    })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('계약 상태 변경에 실패했습니다')
       return
     }

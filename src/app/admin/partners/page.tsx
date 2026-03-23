@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -137,84 +136,39 @@ export default function AdminPartnersPage() {
   }, [])
 
   const fetchPartners = async () => {
-    const supabase = createClient()
+    try {
+      const res = await fetch('/api/admin/partners')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      let partnersWithStats: PartnerWithStats[] = data.partners || []
 
-    // 파트너 기본 정보
-    let query = supabase
-      .from('partners')
-      .select('*')
-      .order('created_at', { ascending: false })
+      // Apply status filter client-side
+      if (statusFilter !== 'all') {
+        partnersWithStats = partnersWithStats.filter(p => p.status === statusFilter)
+      }
 
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter)
-    }
+      // Apply sort
+      let finalSorted = partnersWithStats
+      if (sortBy === 'rank') {
+        finalSorted = [...partnersWithStats].sort((a, b) => a.rank - b.rank)
+      } else if (sortBy === 'referrals') {
+        finalSorted = [...partnersWithStats].sort((a, b) => b.total_referrals - a.total_referrals)
+      } else if (sortBy === 'conversion') {
+        finalSorted = [...partnersWithStats].sort((a, b) => b.conversion_rate - a.conversion_rate)
+      } else if (sortBy === 'recent') {
+        finalSorted = [...partnersWithStats].sort((a, b) => {
+          if (!a.last_referral_at) return 1
+          if (!b.last_referral_at) return -1
+          return new Date(b.last_referral_at).getTime() - new Date(a.last_referral_at).getTime()
+        })
+      }
 
-    const { data: partnersData } = await query
-
-    if (!partnersData) {
-      setPartners([])
+      setPartners(finalSorted)
+    } catch {
+      toast.error('데이터 로딩에 실패했습니다')
+    } finally {
       setLoading(false)
-      return
     }
-
-    // 각 파트너별 통계 계산
-    const partnersWithStats: PartnerWithStats[] = await Promise.all(
-      partnersData.map(async (partner) => {
-        // 해당 파트너의 referrals 조회
-        const { data: referrals } = await supabase
-          .from('referrals')
-          .select('id, is_valid, contract_status, created_at')
-          .eq('partner_id', partner.id)
-
-        const total_referrals = referrals?.length || 0
-        const valid_referrals = referrals?.filter(r => r.is_valid === true).length || 0
-        const completed_contracts = referrals?.filter(r => r.contract_status === 'completed').length || 0
-        const conversion_rate = total_referrals > 0
-          ? Math.round((completed_contracts / total_referrals) * 100)
-          : 0
-
-        // 마지막 referral 날짜
-        const sortedReferrals = referrals?.sort((a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-        const last_referral_at = sortedReferrals?.[0]?.created_at || null
-
-        return {
-          ...partner,
-          total_referrals,
-          valid_referrals,
-          completed_contracts,
-          conversion_rate,
-          last_referral_at,
-          rank: 0, // 나중에 계산
-        }
-      })
-    )
-
-    // 랭킹 계산 (계약 완료 수 기준)
-    const sorted = [...partnersWithStats].sort((a, b) => b.completed_contracts - a.completed_contracts)
-    sorted.forEach((p, i) => {
-      p.rank = i + 1
-    })
-
-    // 정렬 적용
-    let finalSorted = partnersWithStats
-    if (sortBy === 'rank') {
-      finalSorted = [...partnersWithStats].sort((a, b) => a.rank - b.rank)
-    } else if (sortBy === 'referrals') {
-      finalSorted = [...partnersWithStats].sort((a, b) => b.total_referrals - a.total_referrals)
-    } else if (sortBy === 'conversion') {
-      finalSorted = [...partnersWithStats].sort((a, b) => b.conversion_rate - a.conversion_rate)
-    } else if (sortBy === 'recent') {
-      finalSorted = [...partnersWithStats].sort((a, b) => {
-        if (!a.last_referral_at) return 1
-        if (!b.last_referral_at) return -1
-        return new Date(b.last_referral_at).getTime() - new Date(a.last_referral_at).getTime()
-      })
-    }
-
-    setPartners(finalSorted)
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -222,13 +176,13 @@ export default function AdminPartnersPage() {
   }, [statusFilter, sortBy])
 
   const handleStatusChange = async (partnerId: string, newStatus: 'approved' | 'rejected') => {
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('partners')
-      .update({ status: newStatus })
-      .eq('id', partnerId)
+    const res = await fetch('/api/admin/partners', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerId, updates: { status: newStatus } }),
+    })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('상태 변경에 실패했습니다')
       return
     }
@@ -238,13 +192,13 @@ export default function AdminPartnersPage() {
   }
 
   const handleTierChange = async (partnerId: string, newTier: string) => {
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('partners')
-      .update({ tier: newTier })
-      .eq('id', partnerId)
+    const res = await fetch('/api/admin/partners', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerId, updates: { tier: newTier } }),
+    })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('티어 변경에 실패했습니다')
       return
     }

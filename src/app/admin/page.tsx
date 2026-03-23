@@ -1,8 +1,7 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Users,
   UserCheck,
@@ -10,82 +9,42 @@ import {
   Wallet,
   TrendingUp,
   Clock,
-} from 'lucide-react'
+} from 'lucide-react';
 
-interface AdminStats {
-  totalPartners: number
-  pendingPartners: number
-  approvedPartners: number
-  totalReferrals: number
-  validReferrals: number
-  contractedReferrals: number
-  totalSettlements: number
-  pendingSettlements: number
-  completedSettlements: number
-  totalSettlementAmount: number
-}
+export default async function AdminDashboardPage() {
+  // Server-side auth check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<AdminStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const supabase = createClient()
-
-      // 파트너 통계
-      const { data: partners } = await supabase
-        .from('partners')
-        .select('id, status')
-
-      const totalPartners = partners?.length || 0
-      const pendingPartners = partners?.filter(p => p.status === 'pending').length || 0
-      const approvedPartners = partners?.filter(p => p.status === 'approved').length || 0
-
-      // 피추천인 통계
-      const { data: referrals } = await supabase
-        .from('referrals')
-        .select('id, is_valid, contract_status')
-
-      const totalReferrals = referrals?.length || 0
-      const validReferrals = referrals?.filter(r => r.is_valid === true).length || 0
-      const contractedReferrals = referrals?.filter(r => r.contract_status === 'contracted').length || 0
-
-      // 정산 통계
-      const { data: settlements } = await supabase
-        .from('settlements')
-        .select('id, status, amount')
-
-      const totalSettlements = settlements?.length || 0
-      const pendingSettlements = settlements?.filter(s => s.status === 'pending').length || 0
-      const completedSettlements = settlements?.filter(s => s.status === 'completed').length || 0
-      const totalSettlementAmount = settlements?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0
-
-      setStats({
-        totalPartners,
-        pendingPartners,
-        approvedPartners,
-        totalReferrals,
-        validReferrals,
-        contractedReferrals,
-        totalSettlements,
-        pendingSettlements,
-        completedSettlements,
-        totalSettlementAmount,
-      })
-      setLoading(false)
-    }
-
-    fetchStats()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
-      </div>
-    )
+  if (!user || user.email !== process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL) {
+    redirect('/dashboard');
   }
+
+  // Use service_role client — bypasses RLS
+  const admin = createAdminClient();
+
+  const [partnersRes, referralsRes, settlementsRes] = await Promise.all([
+    admin.from('partners').select('id, status'),
+    admin.from('referrals').select('id, is_valid, contract_status'),
+    admin.from('settlements').select('id, status, amount'),
+  ]);
+
+  const partners = partnersRes.data || [];
+  const referrals = referralsRes.data || [];
+  const settlements = settlementsRes.data || [];
+
+  const stats = {
+    totalPartners: partners.length,
+    pendingPartners: partners.filter(p => p.status === 'pending').length,
+    approvedPartners: partners.filter(p => p.status === 'approved').length,
+    totalReferrals: referrals.length,
+    validReferrals: referrals.filter(r => r.is_valid === true).length,
+    contractedReferrals: referrals.filter(r => r.contract_status === 'completed').length,
+    totalSettlements: settlements.length,
+    pendingSettlements: settlements.filter(s => s.status === 'pending').length,
+    completedSettlements: settlements.filter(s => s.status === 'completed').length,
+    totalSettlementAmount: settlements.reduce((sum, s) => sum + (s.amount || 0), 0),
+  };
 
   return (
     <div className="space-y-6">
@@ -106,7 +65,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">전체 파트너</p>
-                  <p className="text-2xl font-bold">{stats?.totalPartners}명</p>
+                  <p className="text-2xl font-bold">{stats.totalPartners}명</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" />
@@ -120,7 +79,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">승인 대기</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats?.pendingPartners}명</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.pendingPartners}명</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
                   <Clock className="w-6 h-6 text-orange-600" />
@@ -134,7 +93,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">승인 완료</p>
-                  <p className="text-2xl font-bold text-green-600">{stats?.approvedPartners}명</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.approvedPartners}명</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-green-600" />
@@ -157,7 +116,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">전체 DB</p>
-                  <p className="text-2xl font-bold">{stats?.totalReferrals}건</p>
+                  <p className="text-2xl font-bold">{stats.totalReferrals}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
                   <FileCheck className="w-6 h-6 text-purple-600" />
@@ -171,7 +130,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">유효 DB</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats?.validReferrals}건</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.validReferrals}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -185,7 +144,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">계약 완료</p>
-                  <p className="text-2xl font-bold text-green-600">{stats?.contractedReferrals}건</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.contractedReferrals}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-green-600" />
@@ -208,7 +167,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">전체 정산</p>
-                  <p className="text-2xl font-bold">{stats?.totalSettlements}건</p>
+                  <p className="text-2xl font-bold">{stats.totalSettlements}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                   <Wallet className="w-6 h-6 text-gray-600" />
@@ -222,7 +181,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">대기 중</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats?.pendingSettlements}건</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.pendingSettlements}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
                   <Clock className="w-6 h-6 text-orange-600" />
@@ -236,7 +195,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">완료</p>
-                  <p className="text-2xl font-bold text-green-600">{stats?.completedSettlements}건</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.completedSettlements}건</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-green-600" />
@@ -250,7 +209,7 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="text-sm text-gray-500">총 정산액</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  ₩{(stats?.totalSettlementAmount || 0).toLocaleString()}
+                  ₩{(stats.totalSettlementAmount || 0).toLocaleString()}
                 </p>
               </div>
             </CardContent>
@@ -258,5 +217,5 @@ export default function AdminDashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -109,53 +108,32 @@ export default function AdminSettlementsPage() {
   }, [])
 
   const fetchSettlements = async () => {
-    const supabase = createClient()
-    let query = supabase
-      .from('settlements')
-      .select(`
-        *,
-        partners (
-          id,
-          name,
-          email,
-          bank_name,
-          bank_account,
-          account_holder
-        ),
-        referrals (
-          name
-        )
-      `)
-      .order('created_at', { ascending: false })
-
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter)
+    try {
+      const res = await fetch(`/api/admin/settlements?status=${statusFilter}`)
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setSettlements(data.settlements || [])
+      setPartners(data.partners || [])
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false)
     }
-
-    const { data } = await query
-    setSettlements(data || [])
-    setLoading(false)
   }
 
   const fetchPartners = async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('partners')
-      .select('*')
-      .eq('status', 'approved')
-      .order('name')
-    setPartners(data || [])
+    // Partners are already fetched in fetchSettlements
   }
 
   const fetchReferrals = async (partnerId: string) => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('referrals')
-      .select('*')
-      .eq('partner_id', partnerId)
-      .eq('is_valid', true)
-      .order('created_at', { ascending: false })
-    setReferrals(data || [])
+    try {
+      const res = await fetch(`/api/admin/settlements/referrals?partner_id=${partnerId}`)
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setReferrals(data.referrals || [])
+    } catch {
+      setReferrals([])
+    }
   }
 
   useEffect(() => {
@@ -172,7 +150,6 @@ export default function AdminSettlementsPage() {
   }, [newSettlement.partner_id])
 
   const handleStatusChange = async (settlementId: string, newStatus: 'pending' | 'completed') => {
-    const supabase = createClient()
     const updateData: { status: string; settled_at?: string | null } = { status: newStatus }
 
     if (newStatus === 'completed') {
@@ -181,12 +158,13 @@ export default function AdminSettlementsPage() {
       updateData.settled_at = null
     }
 
-    const { error } = await supabase
-      .from('settlements')
-      .update(updateData)
-      .eq('id', settlementId)
+    const res = await fetch('/api/admin/settlements', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settlementId, updates: updateData }),
+    })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('상태 변경에 실패했습니다')
       return
     }
@@ -212,15 +190,17 @@ export default function AdminSettlementsPage() {
       return
     }
 
-    const supabase = createClient()
-    const { error } = await supabase.from('settlements').insert({
-      partner_id: newSettlement.partner_id,
-      referral_id: newSettlement.referral_id || null,
-      amount: amount,
-      status: 'pending',
+    const res = await fetch('/api/admin/settlements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partner_id: newSettlement.partner_id,
+        referral_id: newSettlement.referral_id || null,
+        amount: amount,
+      }),
     })
 
-    if (error) {
+    if (!res.ok) {
       toast.error('정산 생성에 실패했습니다')
       return
     }

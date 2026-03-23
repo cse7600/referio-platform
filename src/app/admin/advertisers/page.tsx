@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -70,87 +69,16 @@ export default function AdminAdvertisersPage() {
   }, [])
 
   const fetchAdvertisers = async () => {
-    const supabase = createClient()
-
-    // 광고주 목록
-    const { data: adList } = await supabase
-      .from('advertisers')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (!adList) {
+    try {
+      const res = await fetch('/api/admin/advertisers')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setAdvertisers(data.advertisers || [])
+    } catch {
+      // silently fail
+    } finally {
       setLoading(false)
-      return
     }
-
-    // 각 광고주별 집계
-    const rows: AdvertiserRow[] = await Promise.all(
-      adList.map(async (ad) => {
-        // 파트너 참여 수
-        const { count: partnerCount } = await supabase
-          .from('partner_programs')
-          .select('*', { count: 'exact', head: true })
-          .eq('advertiser_id', ad.id)
-
-        // 리드 집계
-        const { data: referrals } = await supabase
-          .from('referrals')
-          .select('id, is_valid, contract_status')
-          .eq('advertiser_id', ad.id)
-
-        const referral_count = referrals?.length || 0
-        const valid_count = referrals?.filter(r => r.is_valid === true).length || 0
-        const contract_count = referrals?.filter(r => r.contract_status === 'completed').length || 0
-
-        // 정산 집계
-        const { data: settlements } = await supabase
-          .from('settlements')
-          .select('status, amount')
-          .eq('advertiser_id', ad.id)
-
-        const pending_settlement = settlements
-          ?.filter(s => s.status === 'pending')
-          .reduce((sum, s) => sum + (s.amount || 0), 0) || 0
-        const completed_settlement = settlements
-          ?.filter(s => s.status === 'completed')
-          .reduce((sum, s) => sum + (s.amount || 0), 0) || 0
-
-        // 캠페인 정보
-        const { data: campaign } = await supabase
-          .from('campaigns')
-          .select('name, valid_amount, contract_amount, is_active')
-          .eq('advertiser_id', ad.id)
-          .eq('is_active', true)
-          .maybeSingle()
-
-        return {
-          id: ad.id,
-          advertiser_id: ad.advertiser_id,
-          company_name: ad.company_name,
-          logo_url: ad.logo_url,
-          primary_color: ad.primary_color,
-          inquiry_form_enabled: ad.inquiry_form_enabled,
-          program_name: ad.program_name,
-          program_description: ad.program_description,
-          contact_phone: ad.contact_phone,
-          contact_email: ad.contact_email,
-          created_at: ad.created_at,
-          partner_count: partnerCount || 0,
-          referral_count,
-          valid_count,
-          contract_count,
-          pending_settlement,
-          completed_settlement,
-          campaign_name: campaign?.name || null,
-          valid_amount: campaign?.valid_amount || null,
-          contract_amount: campaign?.contract_amount || null,
-          campaign_active: campaign?.is_active || null,
-        }
-      })
-    )
-
-    setAdvertisers(rows)
-    setLoading(false)
   }
 
   const filtered = searchTerm
@@ -347,62 +275,17 @@ function AdvertiserDetailDialog({
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-
-      // 참여 파트너
-      const { data: pp } = await supabase
-        .from('partner_programs')
-        .select(`
-          partner_id,
-          referral_code,
-          status,
-          partners (id, name, email, status, tier)
-        `)
-        .eq('advertiser_id', advertiser.id)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPartners(
-        (pp || []).map((p: any) => {
-          const partner = Array.isArray(p.partners) ? p.partners[0] : p.partners
-          return {
-            id: p.partner_id,
-            name: partner?.name || '-',
-            email: partner?.email || '-',
-            status: p.status || partner?.status || '-',
-            tier: partner?.tier || '-',
-            referral_code: p.referral_code,
-          }
-        })
-      )
-
-      // 리드
-      const { data: refs } = await supabase
-        .from('referrals')
-        .select(`
-          id, name, phone, contract_status, is_valid, created_at,
-          partners (name)
-        `)
-        .eq('advertiser_id', advertiser.id)
-        .order('created_at', { ascending: false })
-        .limit(50)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setReferrals(
-        (refs || []).map((r: any) => {
-          const partner = Array.isArray(r.partners) ? r.partners[0] : r.partners
-          return {
-            id: r.id,
-            name: r.name,
-            phone: r.phone,
-            contract_status: r.contract_status,
-            is_valid: r.is_valid,
-            created_at: r.created_at,
-            partner_name: partner?.name || null,
-          }
-        })
-      )
-
-      setLoading(false)
+      try {
+        const res = await fetch(`/api/admin/advertisers/detail?id=${advertiser.id}`)
+        if (!res.ok) throw new Error('Failed to fetch')
+        const data = await res.json()
+        setPartners(data.partners || [])
+        setReferrals(data.referrals || [])
+      } catch {
+        // silently fail
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [advertiser.id])
