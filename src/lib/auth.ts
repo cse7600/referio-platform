@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
 
 export interface AdvertiserUser {
@@ -26,10 +26,10 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
       return null
     }
 
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
-    // 세션 조회
-    const { data: session, error: sessionError } = await supabase
+    // 세션 조회 (RLS 우회 — 쿠키 기반 광고주 인증)
+    const { data: session, error: sessionError } = await admin
       .from('advertiser_sessions')
       .select(`
         id,
@@ -53,7 +53,7 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
     }
 
     // 사용자 정보 조회
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await admin
       .from('advertiser_users')
       .select('*')
       .eq('id', session.user_id)

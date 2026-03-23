@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
-    // 세션 조회 및 만료 확인
-    const { data: session, error: sessionError } = await supabase
+    // 세션 조회 및 만료 확인 (RLS 우회 — 쿠키 인증 기반)
+    const { data: session, error: sessionError } = await admin
       .from('advertiser_sessions')
       .select('*, advertisers(*)')
       .eq('token', token)
