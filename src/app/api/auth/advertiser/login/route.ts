@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 레거시 로그인 처리
-      return handleLogin(supabase, {
+      return handleLogin(supabase, admin, {
         id: legacyUser.id,
         advertiserId: legacyUser.advertiser_id,
         userId: legacyUser.user_id,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       .eq('advertiser_id', user.advertiser_id)
       .single()
 
-    return handleLogin(supabase, {
+    return handleLogin(supabase, admin, {
       id: user.id,
       advertiserUuid: advertiser?.id,  // advertisers.id (외래키용)
       advertiserId: user.advertiser_id,
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
 
 async function handleLogin(
   supabase: Awaited<ReturnType<typeof createClient>>,
+  admin: ReturnType<typeof createAdminClient>,
   userData: {
     id: string
     advertiserUuid?: string  // advertisers.id (세션 외래키용)
@@ -129,8 +130,8 @@ async function handleLogin(
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7) // 7일 유효
 
-  // 세션 저장 - advertiser_id는 advertisers.id 사용 (외래키)
-  const { error: sessionError } = await supabase
+  // 세션 저장 - admin client로 RLS 우회
+  const { error: sessionError } = await admin
     .from('advertiser_sessions')
     .insert({
       advertiser_id: userData.advertiserUuid || userData.id,  // advertisers.id
@@ -148,7 +149,7 @@ async function handleLogin(
   }
 
   // 마지막 로그인 시간 업데이트
-  await supabase
+  await admin
     .from('advertiser_users')
     .update({ last_login_at: new Date().toISOString() })
     .eq('id', userData.id)
