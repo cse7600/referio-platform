@@ -529,19 +529,18 @@ console.log('Referio 응답:', JSON.stringify(result));`
 
   const fetchAdvertiserInfo = async () => {
     try {
-      const response = await fetch('/api/auth/advertiser/me')
-      if (response.ok) {
-        const data = await response.json()
+      const [meRes, settingsRes] = await Promise.all([
+        fetch('/api/auth/advertiser/me'),
+        fetch('/api/advertiser/settings'),
+      ])
+
+      if (meRes.ok) {
+        const data = await meRes.json()
         setAdvertiser(data.advertiser)
+      }
 
-        // Supabase에서 상세 정보 가져오기
-        const supabase = createClient()
-        const { data: adv } = await supabase
-          .from('advertisers')
-          .select('company_name, contact_email, contact_phone, primary_color, program_name, program_description, default_lead_commission, default_contract_commission, is_public, category, homepage_url, activity_guide, content_sources, prohibited_activities, precautions, partner_signup_enabled, signup_welcome_title, signup_welcome_message')
-          .eq('advertiser_id', data.advertiser.advertiserId)
-          .single()
-
+      if (settingsRes.ok) {
+        const { settings: adv } = await settingsRes.json()
         if (adv) {
           setCompanyName(adv.company_name || '')
           setContactEmail(adv.contact_email || '')
@@ -616,18 +615,18 @@ console.log('Referio 응답:', JSON.stringify(result));`
 
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('advertisers')
-        .update({
+      const res = await fetch('/api/advertiser/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           company_name: companyName,
           contact_email: contactEmail || null,
           contact_phone: contactPhone || null,
           primary_color: primaryColor,
-        })
-        .eq('advertiser_id', advertiser?.advertiserId)
+        }),
+      })
 
-      if (error) {
+      if (!res.ok) {
         toast.error('설정 저장에 실패했습니다')
       } else {
         toast.success('설정이 저장되었습니다')
@@ -642,17 +641,17 @@ console.log('Referio 응답:', JSON.stringify(result));`
   const handlePartnerSignupUpdate = async () => {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('advertisers')
-        .update({
+      const res = await fetch('/api/advertiser/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           partner_signup_enabled: partnerSignupEnabled,
           signup_welcome_title: signupWelcomeTitle || null,
           signup_welcome_message: signupWelcomeMessage || null,
-        })
-        .eq('advertiser_id', advertiser?.advertiserId)
+        }),
+      })
 
-      if (error) {
+      if (!res.ok) {
         toast.error('설정 저장에 실패했습니다')
       } else {
         toast.success('파트너 모집 설정이 저장되었습니다')
@@ -675,10 +674,10 @@ console.log('Referio 응답:', JSON.stringify(result));`
   const handleProgramUpdate = async () => {
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('advertisers')
-        .update({
+      const res = await fetch('/api/advertiser/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           program_name: programName || null,
           program_description: programDescription || null,
           default_lead_commission: parseFloat(defaultLeadCommission) || 0,
@@ -690,10 +689,10 @@ console.log('Referio 응답:', JSON.stringify(result));`
           content_sources: contentSources || null,
           prohibited_activities: prohibitedActivities || null,
           precautions: precautions || null,
-        })
-        .eq('advertiser_id', advertiser?.advertiserId)
+        }),
+      })
 
-      if (error) {
+      if (!res.ok) {
         toast.error('프로그램 설정 저장에 실패했습니다')
       } else {
         toast.success('프로그램 설정이 저장되었습니다')
