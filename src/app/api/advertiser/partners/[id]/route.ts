@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 import { sendPartnerApprovalEmail } from '@/lib/email'
 
@@ -29,7 +29,7 @@ export async function PATCH(
     const body = await request.json()
     const { status, tier, lead_commission, contract_commission } = body
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // partner_programs에서 해당 파트너의 프로그램 참가 레코드 확인
     const { data: program, error: programError } = await supabase
@@ -176,7 +176,7 @@ export async function GET(
     }
 
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: program, error } = await supabase
       .from('partner_programs')
