@@ -47,15 +47,15 @@ export default function AdvertiserPartnersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [advertiserUuid, setAdvertiserUuid] = useState<string | null>(null)
+  const [advertiserId, setAdvertiserId] = useState<string | null>(null)
   const [copiedInvite, setCopiedInvite] = useState(false)
 
   useEffect(() => {
     fetchPartners()
-    // 광고주 UUID 조회 (파트너 초대 링크용)
+    // 광고주 slug 조회 (파트너 초대 링크용)
     fetch('/api/auth/advertiser/me')
       .then(r => r.json())
-      .then(d => { if (d.advertiser?.id) setAdvertiserUuid(d.advertiser.id) })
+      .then(d => { if (d.advertiser?.advertiserId) setAdvertiserId(d.advertiser.advertiserId) })
       .catch(() => {})
   }, [])
 
@@ -114,9 +114,9 @@ export default function AdvertiserPartnersPage() {
   }
 
   const handleCopyInviteLink = () => {
-    if (!advertiserUuid) return
-    // 파트너는 마켓플레이스에서 advertiserUuid로 검색하거나, 직접 프로그램 상세 페이지로 이동
-    const link = `${window.location.origin}/dashboard/programs/${advertiserUuid}`
+    if (!advertiserId) return
+    // Partner signup URL using advertiser slug
+    const link = `${window.location.origin}/signup/${advertiserId}`
     navigator.clipboard.writeText(link).then(() => {
       setCopiedInvite(true)
       toast.success('파트너 초대 링크가 복사되었습니다')
@@ -131,7 +131,7 @@ export default function AdvertiserPartnersPage() {
           <h1 className="text-3xl font-bold text-slate-900">파트너 관리</h1>
           <p className="text-slate-500 mt-1">파트너 목록 및 승인 관리</p>
         </div>
-        {advertiserUuid && (
+        {advertiserId && (
           <Button variant="outline" onClick={handleCopyInviteLink}>
             {copiedInvite ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
             파트너 초대 링크 복사
