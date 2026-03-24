@@ -26,7 +26,7 @@ export async function GET() {
     const admin = createAdminClient()
     const { data: advertisers, error: advError } = await admin
       .from('advertisers')
-      .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url')
+      .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url, landing_url')
       .eq('is_public', true)
       .eq('status', 'active')
       .order('created_at', { ascending: false })

@@ -12,7 +12,7 @@ export async function GET() {
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('advertisers')
-      .select('company_name, contact_email, contact_phone, primary_color, program_name, program_description, default_lead_commission, default_contract_commission, is_public, category, homepage_url, activity_guide, content_sources, prohibited_activities, precautions, partner_signup_enabled, signup_welcome_title, signup_welcome_message, signup_bg_image_url')
+      .select('company_name, contact_email, contact_phone, primary_color, program_name, program_description, default_lead_commission, default_contract_commission, is_public, category, homepage_url, landing_url, activity_guide, content_sources, prohibited_activities, precautions, partner_signup_enabled, signup_welcome_title, signup_welcome_message, signup_bg_image_url')
       .eq('advertiser_id', session.advertiserId)
       .single()
 

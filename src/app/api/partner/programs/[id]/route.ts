@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // GET: 프로그램 상세 정보
 export async function GET(
@@ -25,12 +26,13 @@ export async function GET(
       return NextResponse.json({ error: '파트너를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    // 광고주(프로그램) 상세 정보
-    const { data: advertiser } = await supabase
+    // 광고주(프로그램) 상세 정보 — admin client으로 RLS 우회
+    const admin = createAdminClient()
+    const { data: advertiser } = await admin
       .from('advertisers')
       .select(`
         id, company_name, program_name, program_description,
-        logo_url, primary_color, category, homepage_url,
+        logo_url, primary_color, category, homepage_url, landing_url,
         default_lead_commission, default_contract_commission,
         activity_guide, content_sources, prohibited_activities, precautions
       `)

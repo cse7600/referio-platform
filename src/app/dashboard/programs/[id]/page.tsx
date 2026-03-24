@@ -48,6 +48,7 @@ interface ProgramDetail {
   primary_color: string | null
   category: string | null
   homepage_url: string | null
+  landing_url: string | null
   default_lead_commission: number
   default_contract_commission: number
   activity_guide: string | null
@@ -135,9 +136,24 @@ export default function ProgramDetailPage() {
     setApplying(false)
   }
 
+  const buildReferralLink = () => {
+    if (!program?.enrollment?.referral_code) return ''
+    const refCode = program.enrollment.referral_code
+    if (program.landing_url) {
+      let base = program.landing_url
+      if (!base.startsWith('http://') && !base.startsWith('https://')) {
+        base = `https://${base}`
+      }
+      const url = new URL(base)
+      url.searchParams.set('ref', refCode)
+      return url.toString()
+    }
+    return `https://referio.kr/inquiry/${program.id}?ref=${refCode}`
+  }
+
   const handleCopyLink = async () => {
     if (!program?.enrollment?.referral_code) return
-    const link = `https://referio.kr/security?ref=${program.enrollment.referral_code}`
+    const link = buildReferralLink()
     await navigator.clipboard.writeText(link)
     setCopied(true)
     toast.success('추천 링크가 복사되었습니다')
@@ -268,7 +284,7 @@ export default function ProgramDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-sm text-green-800 bg-green-100 px-3 py-2 rounded truncate">
-                  https://referio.kr/security?ref={program.enrollment!.referral_code}
+                  {buildReferralLink()}
                 </code>
                 <Button
                   size="sm"

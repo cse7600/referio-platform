@@ -18,6 +18,7 @@ interface ProgramItem {
   logo_url: string | null
   primary_color: string | null
   homepage_url: string | null
+  landing_url: string | null
   default_lead_commission: number
   default_contract_commission: number
   category: string | null
@@ -109,10 +110,25 @@ export default function ProgramsPage() {
     setApplying(null)
   }
 
-  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string) => {
-    e.stopPropagation()
+  const buildReferralLink = (refCode: string, landingUrl: string | null, advertiserId: string) => {
+    if (landingUrl) {
+      // Ensure landing_url has protocol
+      let base = landingUrl
+      if (!base.startsWith('http://') && !base.startsWith('https://')) {
+        base = `https://${base}`
+      }
+      const url = new URL(base)
+      url.searchParams.set('ref', refCode)
+      return url.toString()
+    }
+    // Fallback to inquiry page
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'
-    const link = `${origin}/inquiry/${advertiserId}?ref=${refCode}`
+    return `${origin}/inquiry/${advertiserId}?ref=${refCode}`
+  }
+
+  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string, landingUrl: string | null) => {
+    e.stopPropagation()
+    const link = buildReferralLink(refCode, landingUrl, advertiserId)
     await navigator.clipboard.writeText(link)
     setCopiedId(advertiserId)
     toast.success('추천 링크가 복사되었습니다')
@@ -283,7 +299,7 @@ export default function ProgramsPage() {
                     <Button
                       className="w-full bg-green-600 hover:bg-green-700"
                       size="sm"
-                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id)}
+                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id, program.landing_url)}
                     >
                       {copiedId === program.id ? (
                         <><Check className="w-3.5 h-3.5 mr-1.5" />복사 완료</>

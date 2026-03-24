@@ -48,6 +48,7 @@ export default function AdvertiserSettingsPage() {
   const [isPublic, setIsPublic] = useState(false)
   const [category, setCategory] = useState('')
   const [homepageUrl, setHomepageUrl] = useState('')
+  const [landingUrl, setLandingUrl] = useState('')
   const [activityGuide, setActivityGuide] = useState('')
   const [contentSources, setContentSources] = useState('')
   const [prohibitedActivities, setProhibitedActivities] = useState('')
@@ -553,6 +554,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
           setIsPublic(adv.is_public || false)
           setCategory(adv.category || '')
           setHomepageUrl(adv.homepage_url || '')
+          setLandingUrl(adv.landing_url || '')
           setActivityGuide(adv.activity_guide || '')
           setContentSources(adv.content_sources || '')
           setProhibitedActivities(adv.prohibited_activities || '')
@@ -685,6 +687,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
           is_public: isPublic,
           category: category || null,
           homepage_url: homepageUrl || null,
+          landing_url: landingUrl || null,
           activity_guide: activityGuide || null,
           content_sources: contentSources || null,
           prohibited_activities: prohibitedActivities || null,
@@ -943,6 +946,18 @@ console.log('Referio 응답:', JSON.stringify(result));`
                   onChange={(e) => setHomepageUrl(e.target.value)}
                   placeholder="https://www.example.com"
                 />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label>추천 랜딩 URL</Label>
+                <Input
+                  value={landingUrl}
+                  onChange={(e) => setLandingUrl(e.target.value)}
+                  placeholder="https://www.example.com/landing"
+                />
+                <p className="text-xs text-slate-500">
+                  파트너의 추천 링크가 이 URL로 생성됩니다. 비워두면 기본 문의 페이지가 사용됩니다.
+                </p>
               </div>
 
               <div className="space-y-2">
