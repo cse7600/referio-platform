@@ -13,20 +13,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { UserPlus, Mail, CheckCircle, Clock } from 'lucide-react'
+import { ShieldCheck, Mail, CheckCircle, Clock, Crown, ShieldOff } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface UserRow {
+interface AdminUser {
   id: string
   email: string
   createdAt: string
   lastSignIn: string | null
   confirmed: boolean
   invitedAt: string | null
+  isMaster: boolean
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([])
+  const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -66,7 +67,11 @@ export default function AdminUsersPage() {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success(`${inviteEmail}로 초대 이메일을 발송했습니다`)
+        if (data.existing) {
+          toast.success(`${inviteEmail} 계정에 어드민 액세스를 부여했습니다`)
+        } else {
+          toast.success(`${inviteEmail}로 어드민 초대 이메일을 발송했습니다`)
+        }
         setInviteEmail('')
         fetchUsers()
       } else {
@@ -76,6 +81,29 @@ export default function AdminUsersPage() {
       toast.error('서버 오류가 발생했습니다')
     } finally {
       setInviting(false)
+    }
+  }
+
+  const handleRevoke = async (userId: string, email: string) => {
+    if (!confirm(`${email}의 어드민 액세스를 취소하시겠습니까?`)) return
+
+    try {
+      const res = await fetch('/api/admin/invite-user', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success('어드민 액세스가 취소되었습니다')
+        fetchUsers()
+      } else {
+        toast.error(data.error || '액세스 취소에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
     }
   }
 
@@ -91,21 +119,21 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">유저 관리</h1>
-        <p className="text-gray-500 mt-1">플랫폼 사용자 초대 및 관리</p>
+        <h1 className="text-2xl font-bold">어드민 액세스 관리</h1>
+        <p className="text-gray-500 mt-1">Referio 마스터 패널 접근 권한을 관리합니다</p>
       </div>
 
-      {/* 유저 초대 */}
+      {/* 어드민 초대 */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <UserPlus className="w-5 h-5" />
-            새 유저 초대
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            어드민 초대
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-500 mb-4">
-            이메일 주소로 초대장을 발송합니다. 초대받은 유저는 이메일의 링크를 통해 비밀번호를 설정하고 가입을 완료합니다.
+            이메일 주소로 어드민 액세스를 부여합니다. 신규 이메일은 초대장을 발송하고, 기존 계정은 즉시 어드민 권한이 부여됩니다.
           </p>
           <div className="flex gap-3">
             <Input
@@ -122,31 +150,32 @@ export default function AdminUsersPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Mail className="w-4 h-4 mr-2" />
-              {inviting ? '발송 중...' : '초대장 발송'}
+              {inviting ? '처리 중...' : '액세스 부여'}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* 유저 목록 */}
+      {/* 어드민 목록 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">전체 유저 ({users.length}명)</CardTitle>
+          <CardTitle className="text-lg">어드민 목록 ({users.length}명)</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8 text-gray-500">로딩 중...</div>
           ) : users.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">유저가 없습니다</div>
+            <div className="text-center py-8 text-gray-400">어드민이 없습니다</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>이메일</TableHead>
+                  <TableHead>역할</TableHead>
                   <TableHead>상태</TableHead>
-                  <TableHead>가입일</TableHead>
-                  <TableHead>초대일</TableHead>
+                  <TableHead>액세스 부여일</TableHead>
                   <TableHead>마지막 로그인</TableHead>
+                  <TableHead className="w-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -154,10 +183,23 @@ export default function AdminUsersPage() {
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell>
+                      {u.isMaster ? (
+                        <Badge className="bg-purple-100 text-purple-700 flex items-center gap-1 w-fit">
+                          <Crown className="w-3 h-3" />
+                          마스터
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-100 text-blue-700 flex items-center gap-1 w-fit">
+                          <ShieldCheck className="w-3 h-3" />
+                          어드민
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {u.confirmed ? (
                         <Badge className="bg-green-100 text-green-700 flex items-center gap-1 w-fit">
                           <CheckCircle className="w-3 h-3" />
-                          가입 완료
+                          활성
                         </Badge>
                       ) : (
                         <Badge className="bg-yellow-100 text-yellow-700 flex items-center gap-1 w-fit">
@@ -167,13 +209,22 @@ export default function AdminUsersPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
-                      {formatDate(u.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {formatDate(u.invitedAt)}
+                      {formatDate(u.invitedAt || u.createdAt)}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {formatDate(u.lastSignIn)}
+                    </TableCell>
+                    <TableCell>
+                      {!u.isMaster && (
+                        <button
+                          onClick={() => handleRevoke(u.id, u.email || '')}
+                          className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
+                          title="액세스 취소"
+                        >
+                          <ShieldOff className="w-3.5 h-3.5" />
+                          취소
+                        </button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
