@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Settings,
   Building2,
+  UserPlus,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: '/admin/referrals', label: '피추천인 관리', icon: UserCheck },
   { href: '/admin/settlements', label: '정산 관리', icon: Wallet },
   { href: '/admin/campaigns', label: '캠페인 설정', icon: Settings },
+  { href: '/admin/users', label: '유저 관리', icon: UserPlus },
 ]
 
 export default function AdminNav({ children }: { children: React.ReactNode }) {

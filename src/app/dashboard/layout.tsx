@@ -30,7 +30,7 @@ import {
   LogOut,
   ChevronDown,
   Building,
-  Mail,
+  Megaphone,
 } from 'lucide-react'
 import type { Partner } from '@/types/database'
 import { ProgramProvider, useProgram } from './ProgramContext'
@@ -40,7 +40,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/programs', label: '프로그램', icon: Building },
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
-  { href: '/dashboard/messages', label: '메시지', icon: Mail },
+  { href: '/dashboard/activity', label: '활동 지원', icon: Megaphone },
   { href: '/dashboard/profile', label: '활동정보', icon: User },
 ]
 
@@ -143,7 +143,7 @@ function DashboardContent({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <aside className="hidden lg:fixed lg:top-8 lg:bottom-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r">
           {/* Logo */}
           <div className="flex items-center h-16 px-6 border-b">
@@ -206,7 +206,7 @@ function DashboardContent({
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50 flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-8 left-0 right-0 h-16 bg-white border-b z-50 flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-xs">R</span>
@@ -260,7 +260,7 @@ function DashboardContent({
       </header>
 
       {/* Main Content */}
-      <main className="lg:pl-64 pt-16 lg:pt-0">
+      <main className="lg:pl-64 pt-24 lg:pt-0">
         <div className="p-4 lg:p-8">
           {children}
         </div>

@@ -86,12 +86,23 @@ export async function GET(
       is_read: readMessageIds.has(a.id),
     }))
 
+    // 게시판 게시물 (최근 20개)
+    const { data: boardPosts } = await admin
+      .from('activity_posts')
+      .select('id, title, content, post_type, created_at')
+      .eq('advertiser_id', id)
+      .eq('post_type', 'board')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
     return NextResponse.json({
       program: {
         ...advertiser,
         enrollment: enrollment || null,
         media: media || [],
         announcements: announcementsWithRead,
+        boardPosts: boardPosts || [],
       },
     })
   } catch (error) {

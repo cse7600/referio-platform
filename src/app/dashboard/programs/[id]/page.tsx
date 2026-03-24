@@ -78,6 +78,13 @@ interface ProgramDetail {
     sent_at: string
     is_read: boolean
   }>
+  boardPosts: Array<{
+    id: string
+    title: string
+    content: string
+    post_type: string
+    created_at: string
+  }>
 }
 
 export default function ProgramDetailPage() {
@@ -242,7 +249,7 @@ export default function ProgramDetailPage() {
             </div>
             {program.homepage_url && (
               <a
-                href={program.homepage_url}
+                href={program.homepage_url.startsWith('http') ? program.homepage_url : `https://${program.homepage_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
@@ -385,6 +392,11 @@ export default function ProgramDetailPage() {
         </div>
       )}
 
+      {/* 게시판 */}
+      {program.boardPosts && program.boardPosts.length > 0 && (
+        <BoardSection posts={program.boardPosts} />
+      )}
+
       {/* 상세 정보 섹션들 */}
       <div className="mt-6 space-y-4">
         {program.activity_guide && (
@@ -525,6 +537,60 @@ export default function ProgramDetailPage() {
               참가 반려
             </Badge>
           )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BoardSection({
+  posts,
+}: {
+  posts: Array<{ id: string; title: string; content: string; post_type: string; created_at: string }>
+}) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  return (
+    <div className="mt-6 rounded-xl border border-indigo-100 bg-white overflow-hidden">
+      <div className="p-5 sm:p-6">
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <Megaphone className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold">파트너 활동 지원</h3>
+          <span className="text-xs text-gray-400">{posts.length}개</span>
+        </div>
+        <div className="ml-[38px] space-y-2">
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="rounded-lg border border-gray-100"
+            >
+              <button
+                className="w-full text-left p-3 flex items-start justify-between gap-2"
+                onClick={() => setExpandedId((prev) => (prev === post.id ? null : post.id))}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{post.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
+                {expandedId === post.id ? (
+                  <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                )}
+              </button>
+              {expandedId === post.id && (
+                <div className="px-3 pb-3 border-t border-gray-100 pt-3">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {post.content}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
