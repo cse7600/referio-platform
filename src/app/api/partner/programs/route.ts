@@ -108,12 +108,15 @@ export async function POST(request: NextRequest) {
     // 자동 승인 여부 확인 (기본값: true)
     const autoApprove = advertiser.auto_approve_partners !== false
 
-    // 참가 신청 생성 (referral_code는 트리거가 자동 생성)
+    // Generate a unique referral code for this enrollment
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
     const { data: enrollment, error: insertError } = await supabase
       .from('partner_programs')
       .insert({
         partner_id: partner.id,
         advertiser_id,
+        referral_code: referralCode,
         status: autoApprove ? 'approved' : 'pending',
         lead_commission: advertiser.default_lead_commission || 0,
         contract_commission: advertiser.default_contract_commission || 0,

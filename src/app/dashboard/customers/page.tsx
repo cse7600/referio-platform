@@ -53,22 +53,21 @@ export default function CustomersPage() {
       if (!partnerData) { setLoading(false); return }
       setPartner(partnerData)
 
-      // 승인된 참여 프로그램 목록
-      const { data: enrollments } = await supabase
-        .from('partner_programs')
-        .select('advertiser_id, advertisers(company_name, program_name)')
-        .eq('partner_id', partnerData.id)
-        .eq('status', 'approved')
-
-      if (enrollments) {
-        const programs = enrollments.map((e) => {
-          const adv = Array.isArray(e.advertisers) ? e.advertisers[0] : e.advertisers as { company_name: string; program_name: string | null } | null
-          return {
-            advertiser_id: e.advertiser_id,
-            label: adv?.program_name || adv?.company_name || e.advertiser_id,
-          }
-        })
-        setEnrolledPrograms(programs)
+      // Fetch enrolled programs via API (admin client bypasses advertisers RLS)
+      try {
+        const res = await fetch('/api/partner/programs')
+        if (res.ok) {
+          const { programs } = await res.json()
+          const enrolled = (programs || [])
+            .filter((p: { enrollment?: { status: string } | null }) => p.enrollment?.status === 'approved')
+            .map((p: { id: string; program_name?: string | null; company_name?: string }) => ({
+              advertiser_id: p.id,
+              label: p.program_name || p.company_name || p.id,
+            }))
+          setEnrolledPrograms(enrolled)
+        }
+      } catch {
+        // Fallback: programs will be empty
       }
 
       // 전체 referrals
