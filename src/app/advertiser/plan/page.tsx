@@ -26,10 +26,10 @@ export default function PlanPage() {
             비즈니스 규모와 운영 방식에 맞는 조건을 담당자가 직접 안내드립니다.
             아래 이메일로 문의해주세요.
           </p>
-          <a href="mailto:sales@referio.kr">
+          <a href="mailto:referio@puzl.co.kr">
             <Button className="bg-indigo-600 hover:bg-indigo-700 gap-2">
               <MessageSquare className="w-4 h-4" />
-              sales@referio.kr 문의하기
+              referio@puzl.co.kr 문의하기
             </Button>
           </a>
           <p className="text-slate-400 text-xs mt-4">평일 09:00–18:00, 24시간 내 회신</p>

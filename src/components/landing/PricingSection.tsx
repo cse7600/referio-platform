@@ -55,7 +55,7 @@ export default function PricingSection() {
                 계약 전 무료 상담을 통해 Referio가 우리 비즈니스에 맞는지 먼저 확인해보세요.
               </p>
               <div className="space-y-3">
-                <Link href="mailto:sales@referio.kr">
+                <Link href="mailto:referio@puzl.co.kr">
                   <Button className="w-full bg-indigo-600 hover:bg-indigo-700 gap-2">
                     <MessageSquare className="w-4 h-4" />
                     이메일로 문의하기
@@ -70,10 +70,10 @@ export default function PricingSection() {
                 <span className="font-medium text-slate-900 text-sm">영업 문의</span>
               </div>
               <a
-                href="mailto:sales@referio.kr"
+                href="mailto:referio@puzl.co.kr"
                 className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
               >
-                sales@referio.kr
+                referio@puzl.co.kr
               </a>
               <p className="text-slate-400 text-xs mt-2">평일 09:00–18:00, 24시간 내 회신</p>
             </div>

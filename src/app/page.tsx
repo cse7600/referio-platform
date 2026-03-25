@@ -96,7 +96,7 @@ export default function Home() {
             도입 문의부터 온보딩까지, 담당자가 직접 안내해드립니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="mailto:sales@referio.kr">
+            <Link href="mailto:referio@puzl.co.kr">
               <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 text-lg px-8 h-14 gap-2">
                 도입 문의하기 <ArrowRight className="w-5 h-5" />
               </Button>
@@ -142,7 +142,7 @@ export default function Home() {
             <div>
               <h4 className="text-white font-medium mb-4">문의</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="mailto:sales@referio.kr" className="hover:text-white transition-colors">sales@referio.kr</a></li>
+                <li><a href="mailto:referio@puzl.co.kr" className="hover:text-white transition-colors">referio@puzl.co.kr</a></li>
               </ul>
             </div>
           </div>
