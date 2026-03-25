@@ -10,6 +10,30 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, User, Lock } from 'lucide-react'
 
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function deleteCookie(name: string) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+}
+
+async function trackAffiliateConversion(eventType: string, meta: Record<string, string>) {
+  const ref = getCookie('affiliate_ref');
+  if (!ref) return;
+  try {
+    await fetch('/api/affiliate/convert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ short_code: ref, event_type: eventType, metadata: meta }),
+    });
+    deleteCookie('affiliate_ref');
+  } catch {
+    // Non-critical — don't block signup flow
+  }
+}
+
 export default function SignupPage() {
   const router = useRouter()
   const [name, setName] = useState('')
@@ -91,6 +115,8 @@ export default function SignupPage() {
         }
       }
 
+      // Track affiliate conversion if came from affiliate link
+      await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
       router.push('/onboarding')
       return
     }
@@ -138,6 +164,8 @@ export default function SignupPage() {
           }
         }
       }
+      // Track affiliate conversion if came from affiliate link
+      await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
       router.push('/onboarding')
       return
     }
