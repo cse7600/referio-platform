@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-25T01:56:27.892Z",
+  "lastUpdated": "2026-03-25T02:56:35.297Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -42,7 +42,12 @@
     "editor",
     "board-image",
     "activity",
-    "links"
+    "links",
+    "affiliate",
+    "[code]",
+    "convert",
+    "partner",
+    "plan"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -94,9 +99,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:57.134Z",
-        "lastUpdated": "2026-03-24T06:27:23.695Z"
+        "lastUpdated": "2026-03-25T02:47:23.533Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/programs/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/programs/page.tsx"
     },
     "[advertiserId]": {
       "phase": "do",
@@ -211,9 +216,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:40:55.133Z",
-        "lastUpdated": "2026-03-24T07:36:14.796Z"
+        "lastUpdated": "2026-03-25T02:56:15.974Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/join/advertiser/page.tsx"
     },
     "login": {
       "phase": "do",
@@ -250,9 +255,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T07:16:11.872Z",
-        "lastUpdated": "2026-03-24T09:16:42.748Z"
+        "lastUpdated": "2026-03-25T02:14:41.818Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/admin-nav.tsx"
     },
     "advertisers": {
       "phase": "do",
@@ -315,9 +320,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-25T00:56:07.680Z"
+        "lastUpdated": "2026-03-25T02:56:35.297Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/page.tsx"
     },
     "[id]": {
       "phase": "do",
@@ -328,7 +333,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-25T00:59:06.618Z"
+        "lastUpdated": "2026-03-25T02:47:02.783Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/programs/[id]/page.tsx"
     },
@@ -393,9 +398,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T10:32:59.752Z",
-        "lastUpdated": "2026-03-23T08:57:01.676Z"
+        "lastUpdated": "2026-03-25T02:28:46.623Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/auth/advertiser/signup/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/page.tsx"
     },
     "branded-partner-signup": {
       "phase": "archived",
@@ -466,9 +471,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T07:47:55.981Z",
-        "lastUpdated": "2026-03-23T08:14:13.244Z"
+        "lastUpdated": "2026-03-25T02:56:29.720Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/landing/FeaturesGrid.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/landing/PricingSection.tsx"
     },
     "me": {
       "phase": "do",
@@ -586,6 +591,71 @@
         "lastUpdated": "2026-03-25T01:56:27.892Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/affiliate/links/route.ts"
+    },
+    "affiliate": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T02:14:30.308Z",
+        "lastUpdated": "2026-03-25T02:14:30.308Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/affiliate/page.tsx"
+    },
+    "[code]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T02:26:34.941Z",
+        "lastUpdated": "2026-03-25T02:44:51.490Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/r/[code]/route.ts"
+    },
+    "convert": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T02:27:09.840Z",
+        "lastUpdated": "2026-03-25T02:27:09.840Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/affiliate/convert/route.ts"
+    },
+    "partner": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T02:27:48.844Z",
+        "lastUpdated": "2026-03-25T02:55:38.147Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/join/partner/page.tsx"
+    },
+    "plan": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T02:38:19.002Z",
+        "lastUpdated": "2026-03-25T02:56:30.682Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/plan/page.tsx"
     }
   },
   "pipeline": {
@@ -596,7 +666,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-25T01:56:27.892Z"
+    "lastActivity": "2026-03-25T02:56:35.297Z"
   },
   "history": [
     {
@@ -2594,6 +2664,222 @@
     {
       "timestamp": "2026-03-25T01:56:27.892Z",
       "feature": "links",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:14:30.308Z",
+      "feature": "affiliate",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:14:38.138Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:14:41.818Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:26:34.941Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:26:43.838Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:26:56.603Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:27:09.840Z",
+      "feature": "convert",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:27:48.844Z",
+      "feature": "partner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:28:21.312Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:28:34.414Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:28:40.946Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:28:46.623Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:29:08.493Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:36:47.429Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:36:54.592Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:37:00.884Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:37:05.307Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:37:15.760Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:37:53.317Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:37:58.038Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:38:06.951Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:38:09.560Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:38:19.002Z",
+      "feature": "plan",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:44:45.424Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:44:51.490Z",
+      "feature": "[code]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:45:23.181Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:45:34.382Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:45:46.037Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:47:02.783Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:47:18.744Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:47:23.533Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:55:38.147Z",
+      "feature": "partner",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:56:15.974Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:56:29.721Z",
+      "feature": "landing",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:56:30.682Z",
+      "feature": "plan",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T02:56:35.297Z",
+      "feature": "referio-platform",
       "phase": "do",
       "action": "updated"
     }
