@@ -25,7 +25,17 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" />
       </head>
       <body className="antialiased">
-        {children}
+        <a
+          href="https://puzl.co.kr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center bg-gray-900 text-white text-xs py-1.5 hover:bg-gray-800 transition-colors"
+        >
+          Powered by 퍼즐코퍼레이션
+        </a>
+        <div className="pt-8">
+          {children}
+        </div>
         <Toaster />
       </body>
     </html>
