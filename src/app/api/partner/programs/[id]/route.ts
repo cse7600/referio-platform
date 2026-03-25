@@ -26,8 +26,65 @@ export async function GET(
       return NextResponse.json({ error: '파트너를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    // 광고주(프로그램) 상세 정보 — admin client으로 RLS 우회
     const admin = createAdminClient()
+
+    // Check if this is an affiliate campaign first
+    const { data: campaign } = await admin
+      .from('referio_campaigns')
+      .select('*')
+      .eq('id', id)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (campaign) {
+      // Affiliate campaign detail
+      const { data: existingLink } = await admin
+        .from('referio_affiliate_links')
+        .select('short_code, click_count, conversion_count')
+        .eq('campaign_id', campaign.id)
+        .eq('promoter_partner_id', partner.id)
+        .maybeSingle()
+
+      return NextResponse.json({
+        program: {
+          id: campaign.id,
+          company_name: 'Referio',
+          program_name: campaign.name,
+          program_description: campaign.description,
+          logo_url: null,
+          primary_color: '#6366f1',
+          category: null,
+          homepage_url: null,
+          landing_url: campaign.landing_path,
+          default_lead_commission: campaign.reward_amount,
+          default_contract_commission: 0,
+          activity_guide: null,
+          content_sources: null,
+          prohibited_activities: null,
+          precautions: null,
+          is_system: true,
+          is_affiliate_campaign: true,
+          affiliate_campaign_type: campaign.type,
+          reward_trigger: campaign.reward_trigger,
+          enrollment: existingLink
+            ? {
+                id: existingLink.short_code,
+                status: 'approved',
+                referral_code: existingLink.short_code,
+                lead_commission: campaign.reward_amount,
+                contract_commission: 0,
+                applied_at: '',
+                approved_at: null,
+              }
+            : null,
+          media: [],
+          announcements: [],
+          boardPosts: [],
+        },
+      })
+    }
+
+    // Regular advertiser program detail — admin client for RLS bypass
     const { data: advertiser } = await admin
       .from('advertisers')
       .select(`

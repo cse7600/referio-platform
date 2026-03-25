@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://referio.co.kr';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://referio.puzl.co.kr';
 
 interface RouteParams {
   params: Promise<{ code: string }>;
@@ -46,7 +46,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   Promise.all([
     admin.from('referio_affiliate_events').insert({
       link_id: link.id,
-      campaign_id: link.campaign_id,
       event_type: 'click',
       metadata: {
         ip: clientIp,

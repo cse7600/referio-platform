@@ -130,7 +130,7 @@ export default function ProgramsPage() {
   }
 
   const buildAffiliateCopyLink = (shortCode: string) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.co.kr'
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.puzl.co.kr'
     return `${origin}/api/r/${shortCode}`
   }
 
@@ -241,35 +241,56 @@ export default function ProgramsPage() {
                 />
               ) : null}
               <div className="p-4 pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-[15px] leading-tight truncate">
-                        {program.program_name || program.company_name}
-                      </p>
-                      {program.is_system && (
-                        <Badge className="bg-indigo-600 text-white text-[10px] shrink-0">Referio Official</Badge>
+                {program.is_affiliate_campaign ? (
+                  // Affiliate campaign card: vertical layout to prevent text truncation
+                  <div>
+                    <p className="font-semibold text-[15px] leading-tight">
+                      {program.program_name || program.company_name}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <Badge className="bg-indigo-600 text-white text-[10px]">Referio Official</Badge>
+                      {program.enrollment && (
+                        <Badge className={`text-[11px] ${STATUS_CONFIG[program.enrollment.status]?.className || ''}`}>
+                          {STATUS_CONFIG[program.enrollment.status]?.icon}
+                          <span className="ml-1">
+                            {STATUS_CONFIG[program.enrollment.status]?.label}
+                          </span>
+                        </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1.5">
                       {program.company_name}
-                      {program.is_system && <span className="ml-1.5 text-indigo-500 font-medium">SPECIAL</span>}
-                      {!program.is_system && program.category && CATEGORY_MAP[program.category] && (
-                        <span className="ml-1.5 text-gray-400">
-                          · {CATEGORY_MAP[program.category]}
-                        </span>
-                      )}
+                      <span className="ml-1.5 text-indigo-500 font-medium">SPECIAL</span>
                     </p>
                   </div>
-                  {program.enrollment && (
-                    <Badge className={`shrink-0 text-[11px] ${STATUS_CONFIG[program.enrollment.status]?.className || ''}`}>
-                      {STATUS_CONFIG[program.enrollment.status]?.icon}
-                      <span className="ml-1">
-                        {STATUS_CONFIG[program.enrollment.status]?.label}
-                      </span>
-                    </Badge>
-                  )}
-                </div>
+                ) : (
+                  // Regular program card: original horizontal layout
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-[15px] leading-tight truncate">
+                          {program.program_name || program.company_name}
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {program.company_name}
+                        {program.category && CATEGORY_MAP[program.category] && (
+                          <span className="ml-1.5 text-gray-400">
+                            · {CATEGORY_MAP[program.category]}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {program.enrollment && (
+                      <Badge className={`shrink-0 text-[11px] ${STATUS_CONFIG[program.enrollment.status]?.className || ''}`}>
+                        {STATUS_CONFIG[program.enrollment.status]?.icon}
+                        <span className="ml-1">
+                          {STATUS_CONFIG[program.enrollment.status]?.label}
+                        </span>
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
               <CardContent className="flex-1 flex flex-col pt-0 space-y-3">
                 {program.program_description && (

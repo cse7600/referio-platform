@@ -60,6 +60,10 @@ interface ProgramDetail {
   content_sources: string | null
   prohibited_activities: string | null
   precautions: string | null
+  is_system?: boolean
+  is_affiliate_campaign?: boolean
+  affiliate_campaign_type?: string
+  reward_trigger?: string
   enrollment: {
     id: string
     status: string
@@ -159,6 +163,13 @@ export default function ProgramDetailPage() {
   const buildReferralLink = () => {
     if (!program?.enrollment?.referral_code) return ''
     const refCode = program.enrollment.referral_code
+
+    // Affiliate campaign uses /api/r/{shortCode} redirect
+    if (program.is_affiliate_campaign) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.puzl.co.kr'
+      return `${origin}/api/r/${refCode}`
+    }
+
     if (program.landing_url) {
       let base = program.landing_url
       if (!base.startsWith('http://') && !base.startsWith('https://')) {
@@ -208,6 +219,194 @@ export default function ProgramDetailPage() {
 
   const leadComm = program.enrollment?.lead_commission || program.default_lead_commission || 0
   const contractComm = program.enrollment?.contract_commission || program.default_contract_commission || 0
+
+  // Affiliate campaign detail view
+  if (program.is_affiliate_campaign) {
+    const isPartnerRecruit = program.affiliate_campaign_type === 'partner_recruit'
+    const rewardAmount = program.default_lead_commission || 0
+
+    return (
+      <div className="max-w-3xl mx-auto pb-28">
+        <button
+          onClick={() => router.push('/dashboard/programs')}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          프로그램 목록
+        </button>
+
+        <div className="rounded-xl border overflow-hidden bg-white">
+          <div className="h-1.5 bg-gradient-to-r from-indigo-500 to-violet-500" />
+          <div className="p-5 sm:p-6">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <Badge className="bg-indigo-600 text-white text-[10px]">Referio Official</Badge>
+              {isApproved && (
+                <Badge className="bg-green-100 text-green-700 text-xs font-normal">
+                  <Check className="w-3 h-3 mr-1" />참가 중
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-xl font-bold leading-tight">
+              {isPartnerRecruit ? '파트너 모집 프로그램' : '광고주 모집 프로그램'}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {isPartnerRecruit
+                ? 'Referio 파트너를 소개해주세요. 소개한 파트너가 가입 완료되면 보상을 드립니다.'
+                : 'Referio를 도입할 만한 기업을 소개해주세요. 유료 플랜 시작 시 보상을 드립니다.'}
+            </p>
+
+            {/* 보상 금액 */}
+            <div className="mt-4 bg-indigo-50 rounded-lg p-4">
+              <p className="text-xs text-gray-500 mb-1">
+                {program.reward_trigger === 'signup' ? '가입 완료 시 보상' : '유료 플랜 시작 시 보상'}
+              </p>
+              <p className="text-2xl font-bold text-indigo-600">
+                ₩{rewardAmount.toLocaleString()}
+              </p>
+            </div>
+
+            {/* 추천 링크 */}
+            {isApproved && (
+              <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
+                <p className="text-xs font-medium text-green-700 mb-2">내 추천 링크</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs text-green-800 bg-green-100 px-2.5 py-1.5 rounded truncate">
+                    {buildReferralLink()}
+                  </code>
+                  <Button
+                    size="sm"
+                    className="shrink-0 bg-green-600 hover:bg-green-700 text-xs h-8"
+                    onClick={handleCopyLink}
+                  >
+                    {copied ? <><Check className="w-3 h-3 mr-1" />복사됨</> : <><Copy className="w-3 h-3 mr-1" />복사</>}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {notEnrolled && (
+              <div className="mt-4">
+                <Button
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  onClick={handleApply}
+                  disabled={applying}
+                >
+                  {applying ? '신청 중...' : '참가 신청'}
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 어떻게 작동하나요? */}
+        <div className="mt-4 rounded-xl border bg-white p-5 sm:p-6">
+          <h2 className="font-semibold text-base mb-4">어떻게 작동하나요?</h2>
+          <ol className="space-y-3">
+            {isPartnerRecruit ? (
+              <>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                  <p className="text-sm text-gray-700">내 추천 링크를 영업인, 프리랜서, 커뮤니티에 공유</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                  <p className="text-sm text-gray-700">링크로 접속한 사람이 Referio 파트너로 가입</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                  <p className="text-sm text-gray-700">가입 완료 시 ₩{rewardAmount.toLocaleString()} 보상 지급</p>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                  <p className="text-sm text-gray-700">파트너 마케팅이 필요한 B2B 기업에게 Referio 소개</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                  <p className="text-sm text-gray-700">소개한 기업이 Referio 광고주로 가입</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                  <p className="text-sm text-gray-700">유료 플랜 시작 시 ₩{rewardAmount.toLocaleString()} 보상 지급</p>
+                </li>
+              </>
+            )}
+          </ol>
+        </div>
+
+        {/* 추천 대상 & 보상 조건 */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-xl border bg-white p-5">
+            <h3 className="font-semibold text-sm mb-3">추천 대상</h3>
+            <ul className="space-y-2">
+              {isPartnerRecruit ? (
+                <>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />영업/마케팅 종사자</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />프리랜서 컨설턴트</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />커뮤니티 운영자</li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />B2B SaaS 종사자</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />영업/마케팅 컨설턴트</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-700"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />스타트업 네트워크 보유자</li>
+                </>
+              )}
+            </ul>
+          </div>
+          <div className="rounded-xl border bg-white p-5">
+            <h3 className="font-semibold text-sm mb-3">보상 조건</h3>
+            <p className="text-sm text-gray-700">
+              {isPartnerRecruit
+                ? '소개한 사람이 Referio 파트너 가입을 완료하면 보상이 지급됩니다.'
+                : '소개한 기업이 Referio 유료 플랜을 시작하면 보상이 지급됩니다.'}
+            </p>
+          </div>
+        </div>
+
+        {/* 하단 고정 CTA */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t z-50">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">
+                {isPartnerRecruit ? '파트너 모집 프로그램' : '광고주 모집 프로그램'}
+              </p>
+              <p className="text-xs text-gray-500">
+                보상 ₩{rewardAmount.toLocaleString()}
+              </p>
+            </div>
+
+            {notEnrolled && (
+              <Button
+                className="shrink-0 bg-indigo-600 hover:bg-indigo-700 px-6"
+                onClick={handleApply}
+                disabled={applying}
+              >
+                {applying ? '신청 중...' : '참가 신청'}
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            )}
+
+            {isApproved && (
+              <Button
+                className="shrink-0 bg-green-600 hover:bg-green-700 px-6"
+                onClick={handleCopyLink}
+              >
+                {copied ? (
+                  <><Check className="w-4 h-4 mr-1.5" />복사 완료</>
+                ) : (
+                  <><Copy className="w-4 h-4 mr-1.5" />추천 링크 복사</>
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Badge counts for tabs
   const unreadAnnouncements = program.announcements?.filter(a => !a.is_read).length || 0
