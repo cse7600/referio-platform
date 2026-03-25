@@ -132,29 +132,13 @@ export default function AdvertiserSettingsPage() {
 
   const fetchAirtableIntegration = async () => {
     try {
-      const supabase = createClient()
-      const meRes = await fetch('/api/auth/advertiser/me')
-      if (!meRes.ok) return
-      const meData = await meRes.json()
+      const res = await fetch('/api/advertiser/integrations/airtable/connect')
+      if (!res.ok) return
+      const { integration } = await res.json()
 
-      const { data: adv } = await supabase
-        .from('advertisers')
-        .select('id')
-        .eq('advertiser_id', meData.advertiser.advertiserId)
-        .single()
-
-      if (!adv) return
-
-      const { data } = await supabase
-        .from('webhook_integrations')
-        .select('id, name, api_key, api_secret, is_active, config')
-        .eq('advertiser_id', adv.id)
-        .eq('source', 'airtable')
-        .single()
-
-      if (data) {
-        setAirtableIntegration(data)
-        const cfg = data.config?.airtable
+      if (integration) {
+        setAirtableIntegration(integration)
+        const cfg = integration.config?.airtable
         if (cfg) {
           setAirtableNameField(cfg.name_field || '이름')
           setAirtablePhoneField(cfg.phone_field || '전화번호')
@@ -163,7 +147,6 @@ export default function AdvertiserSettingsPage() {
           setAirtableValidValues((cfg.valid_values || ['유효']).join(', '))
           setAirtableContractValues((cfg.contract_values || ['계약']).join(', '))
           setAirtableInvalidValues((cfg.invalid_values || ['무효']).join(', '))
-          // contract_date_field no longer tracked in state
         }
       }
     } catch { /* ignore */ }
@@ -272,11 +255,7 @@ export default function AdvertiserSettingsPage() {
 
   const handleDisconnectAirtable = async () => {
     if (!airtableIntegration) return
-    const supabase = createClient()
-    await supabase
-      .from('webhook_integrations')
-      .update({ is_active: false })
-      .eq('id', airtableIntegration.id)
+    await fetch('/api/advertiser/integrations/airtable/connect', { method: 'DELETE' })
     toast.success('연동이 해제됐습니다')
     setAirtableIntegration(null)
   }
@@ -290,12 +269,12 @@ export default function AdvertiserSettingsPage() {
     if (!airtableIntegration) return false
     setSavingAirtable(true)
     try {
-      const supabase = createClient()
-      // Preserve PAT, base_id, table_id, last_synced_at — only update field mapping
       const existingCfg = airtableIntegration.config.airtable || {}
-      const { error } = await supabase
-        .from('webhook_integrations')
-        .update({
+      const res = await fetch('/api/advertiser/integrations/airtable/connect', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: airtableIntegration.id,
           config: {
             airtable: {
               ...existingCfg,
@@ -308,10 +287,10 @@ export default function AdvertiserSettingsPage() {
               invalid_values: airtableInvalidValues.split(',').map(s => s.trim()).filter(Boolean),
             },
           },
-        })
-        .eq('id', airtableIntegration.id)
+        }),
+      })
 
-      if (error) {
+      if (!res.ok) {
         toast.error('Airtable 설정 저장에 실패했습니다')
         return false
       } else {

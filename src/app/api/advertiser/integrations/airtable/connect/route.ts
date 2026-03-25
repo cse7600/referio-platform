@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession } from '@/lib/auth'
+
+// GET /api/advertiser/integrations/airtable/connect
+// Returns current Airtable integration config for the authenticated advertiser
+export async function GET() {
+  try {
+    const session = await getAdvertiserSession()
+    if (!session) {
+      return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+    }
+
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('webhook_integrations')
+      .select('id, name, api_key, api_secret, is_active, config')
+      .eq('advertiser_id', session.advertiserUuid)
+      .eq('source', 'airtable')
+      .maybeSingle()
+
+    return NextResponse.json({ integration: data })
+  } catch {
+    return NextResponse.json({ error: '서버 오류가 발생했습니다' }, { status: 500 })
+  }
+}
 
 interface FieldConfig {
   name_field: string
@@ -58,7 +81,7 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Upsert webhook integration
     const { data: existing } = await supabase
@@ -86,6 +109,56 @@ export async function POST(request: NextRequest) {
           is_active: true,
         })
     }
+
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ error: '서버 오류가 발생했습니다' }, { status: 500 })
+  }
+}
+
+// PATCH /api/advertiser/integrations/airtable/connect
+// Updates field mapping config for existing integration
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getAdvertiserSession()
+    if (!session) {
+      return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+    }
+
+    const { id, config } = await request.json() as { id: string; config: Record<string, unknown> }
+
+    const supabase = createAdminClient()
+    const { error } = await supabase
+      .from('webhook_integrations')
+      .update({ config })
+      .eq('id', id)
+      .eq('advertiser_id', session.advertiserUuid)
+
+    if (error) {
+      return NextResponse.json({ error: '저장에 실패했습니다' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ error: '서버 오류가 발생했습니다' }, { status: 500 })
+  }
+}
+
+// DELETE /api/advertiser/integrations/airtable/connect
+// Disconnects Airtable integration (sets is_active: false)
+export async function DELETE() {
+  try {
+    const session = await getAdvertiserSession()
+    if (!session) {
+      return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
+    }
+
+    const supabase = createAdminClient()
+    await supabase
+      .from('webhook_integrations')
+      .update({ is_active: false })
+      .eq('advertiser_id', session.advertiserUuid)
+      .eq('source', 'airtable')
 
     return NextResponse.json({ success: true })
   } catch {
