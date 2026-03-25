@@ -29,7 +29,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
             <a href="#features" className="hover:text-slate-900 transition-colors">기능</a>
             <a href="#integrations" className="hover:text-slate-900 transition-colors">연동</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">요금제</a>
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">도입 문의</a>
             <Link href="/blog" className="hover:text-slate-900 transition-colors">블로그</Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -93,18 +93,12 @@ export default function Home() {
             파트너가 만드는 매출,<br />지금 시작하세요
           </h2>
           <p className="text-slate-400 text-lg mb-8 max-w-xl mx-auto">
-            5분 안에 프로그램을 개설하고, 첫 파트너를 초대하세요.<br />
-            Free 요금제로 바로 시작, 신용카드 불필요.
+            도입 문의부터 온보딩까지, 담당자가 직접 안내해드립니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/advertiser/signup">
-              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 text-lg px-8 h-14 gap-2">
-                무료로 시작하기 <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
             <Link href="mailto:sales@referio.kr">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 text-lg px-8 h-14">
-                영업팀 문의
+              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 text-lg px-8 h-14 gap-2">
+                도입 문의하기 <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
           </div>
@@ -132,7 +126,7 @@ export default function Home() {
               <ul className="space-y-2 text-sm">
                 <li><a href="#features" className="hover:text-white transition-colors">기능</a></li>
                 <li><a href="#integrations" className="hover:text-white transition-colors">연동</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">요금제</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">도입 문의</a></li>
                 <li><Link href="/blog" className="hover:text-white transition-colors">블로그</Link></li>
               </ul>
             </div>
