@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { PartnerProgram } from '@/types/database'
+import type { PartnerProgram, Partner } from '@/types/database'
 
 interface ProgramWithAdvertiser extends PartnerProgram {
   advertisers: {
@@ -15,6 +15,7 @@ interface ProgramWithAdvertiser extends PartnerProgram {
 }
 
 interface ProgramContextType {
+  partner: Partner | null
   programs: ProgramWithAdvertiser[]
   selectedProgram: ProgramWithAdvertiser | null
   selectProgram: (programId: string) => void
@@ -23,6 +24,7 @@ interface ProgramContextType {
 }
 
 const ProgramContext = createContext<ProgramContextType>({
+  partner: null,
   programs: [],
   selectedProgram: null,
   selectProgram: () => {},
@@ -30,45 +32,52 @@ const ProgramContext = createContext<ProgramContextType>({
   refresh: async () => {},
 })
 
-export function ProgramProvider({
-  children,
-  partnerId,
-}: {
-  children: React.ReactNode
-  partnerId: string | null
-}) {
+// partner + programs를 한 번에 가져와서 공유 — 중복 DB 조회 제거
+export function ProgramProvider({ children }: { children: React.ReactNode }) {
+  const [partner, setPartner] = useState<Partner | null>(null)
   const [programs, setPrograms] = useState<ProgramWithAdvertiser[]>([])
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchPrograms = useCallback(async () => {
-    if (!partnerId) return
-
+  const fetchAll = useCallback(async () => {
     const supabase = createClient()
-    const { data } = await supabase
-      .from('partner_programs')
-      .select(`
-        *,
-        advertisers!inner(
-          id,
-          company_name,
-          program_name,
-          logo_url,
-          primary_color
-        )
-      `)
-      .eq('partner_id', partnerId)
-      .order('created_at', { ascending: false })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
 
-    if (data) {
-      setPrograms(data as unknown as ProgramWithAdvertiser[])
+    // partner 조회 후 programs 병렬 조회 가능한 구조로
+    const { data: partnerData } = await supabase
+      .from('partners')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    setPartner(partnerData as Partner | null)
+
+    if (partnerData) {
+      const { data: progs } = await supabase
+        .from('partner_programs')
+        .select(`
+          *,
+          advertisers!inner(
+            id,
+            company_name,
+            program_name,
+            logo_url,
+            primary_color
+          )
+        `)
+        .eq('partner_id', partnerData.id)
+        .order('created_at', { ascending: false })
+
+      if (progs) setPrograms(progs as unknown as ProgramWithAdvertiser[])
     }
+
     setLoading(false)
-  }, [partnerId])
+  }, [])
 
   useEffect(() => {
-    fetchPrograms()
-  }, [fetchPrograms])
+    fetchAll()
+  }, [fetchAll])
 
   // localStorage에서 선택된 프로그램 복원
   useEffect(() => {
@@ -76,12 +85,11 @@ export function ProgramProvider({
     if (saved) setSelectedProgramId(saved)
   }, [])
 
-  // 프로그램이 로드되면, 저장된 선택이 유효한지 확인
+  // 프로그램 로드 후 선택 유효성 확인
   useEffect(() => {
     if (programs.length > 0 && selectedProgramId) {
       const valid = programs.find(p => p.id === selectedProgramId)
       if (!valid) {
-        // 유효하지 않으면 첫 승인 프로그램 또는 첫 프로그램 선택
         const approved = programs.find(p => p.status === 'approved')
         const newId = approved?.id || programs[0].id
         setSelectedProgramId(newId)
@@ -105,7 +113,7 @@ export function ProgramProvider({
 
   return (
     <ProgramContext.Provider
-      value={{ programs, selectedProgram, selectProgram, loading, refresh: fetchPrograms }}
+      value={{ partner, programs, selectedProgram, selectProgram, loading, refresh: fetchAll }}
     >
       {children}
     </ProgramContext.Provider>

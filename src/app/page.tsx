@@ -1,11 +1,18 @@
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
-import PricingSection from '@/components/landing/PricingSection'
-import EarningsSimulator from '@/components/landing/EarningsSimulator'
-import HeroSection from '@/components/landing/HeroSection'
-import PremiumServices from '@/components/landing/PremiumServices'
-import AnimatedSections from '@/components/landing/AnimatedSections'
+
+// HeroSection은 framer-motion 사용 — 동적 로드로 초기 번들에서 분리
+const HeroSection = dynamic(() => import('@/components/landing/HeroSection'), {
+  loading: () => <div className="h-[600px] bg-gradient-to-b from-slate-50 to-white" />,
+})
+
+// 스크롤 이후 섹션들 — 초기 렌더에 불필요
+const AnimatedSections = dynamic(() => import('@/components/landing/AnimatedSections'))
+const PremiumServices = dynamic(() => import('@/components/landing/PremiumServices'))
+const PricingSection = dynamic(() => import('@/components/landing/PricingSection'))
+const EarningsSimulator = dynamic(() => import('@/components/landing/EarningsSimulator'))
 
 export default function Home() {
   return (

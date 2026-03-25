@@ -22,6 +22,15 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Preconnect to reduce DNS/SSL latency before font CSS loads */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        {/* Preload hints the browser to fetch the font CSS earlier in parallel */}
+        <link
+          rel="preload"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+          as="style"
+        />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" />
       </head>
       <body className="antialiased">

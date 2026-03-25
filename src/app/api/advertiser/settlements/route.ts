@@ -71,6 +71,8 @@ export async function GET() {
     return NextResponse.json({
       settlements: settlementsWithNames,
       stats,
+    }, {
+      headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=60' },
     })
 
   } catch (error) {

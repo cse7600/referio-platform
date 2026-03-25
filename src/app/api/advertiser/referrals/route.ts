@@ -44,7 +44,9 @@ export async function GET() {
       partners: undefined, // 중첩 객체 제거
     }))
 
-    return NextResponse.json({ referrals: referralsWithPartnerName })
+    return NextResponse.json({ referrals: referralsWithPartnerName }, {
+      headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=30' },
+    })
 
   } catch (error) {
     console.error('Referrals API error:', error)

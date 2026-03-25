@@ -32,7 +32,6 @@ import {
   Building,
   Megaphone,
 } from 'lucide-react'
-import type { Partner } from '@/types/database'
 import { ProgramProvider, useProgram } from './ProgramContext'
 
 const NAV_ITEMS = [
@@ -83,32 +82,12 @@ function DashboardContent({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [partner, setPartner] = useState<Partner | null>(null)
+  const { partner } = useProgram() // ProgramContext에서 공유 — 중복 DB 조회 제거
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    const fetchPartner = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data } = await supabase
-          .from('partners')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single()
-
-        if (data) {
-          setPartner(data)
-        }
-      }
-    }
-    fetchPartner()
   }, [])
 
   const handleLogout = async () => {
@@ -274,26 +253,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [partnerId, setPartnerId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchPartnerId = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data } = await supabase
-          .from('partners')
-          .select('id')
-          .eq('auth_user_id', user.id)
-          .single()
-        if (data) setPartnerId(data.id)
-      }
-    }
-    fetchPartnerId()
-  }, [])
-
+  // ProgramProvider가 내부적으로 partner + programs를 한 번에 로드
   return (
-    <ProgramProvider partnerId={partnerId}>
+    <ProgramProvider>
       <DashboardContent>{children}</DashboardContent>
     </ProgramProvider>
   )

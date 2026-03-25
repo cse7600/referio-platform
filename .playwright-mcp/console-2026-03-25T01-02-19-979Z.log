@@ -1,0 +1,1 @@
+[     685ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://referio-platform.vercel.app/api/auth/advertiser/me:0

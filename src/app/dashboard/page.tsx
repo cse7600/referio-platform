@@ -19,7 +19,6 @@ import {
   Building,
 } from 'lucide-react'
 import Link from 'next/link'
-import type { Partner } from '@/types/database'
 import { useProgram } from './ProgramContext'
 
 const TIER_COLORS: Record<string, string> = {
@@ -67,34 +66,12 @@ const GUIDES = [
 ]
 
 export default function DashboardPage() {
-  const [partner, setPartner] = useState<Partner | null>(null)
   const [stats, setStats] = useState<ProgramStats | null>(null)
   const [copied, setCopied] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [myRank, setMyRank] = useState<{ rank: number; total: number } | null>(null)
-  const { selectedProgram, programs, loading: programLoading } = useProgram()
-
-  useEffect(() => {
-    const fetchPartner = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data: partnerData } = await supabase
-          .from('partners')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single()
-
-        if (partnerData) {
-          setPartner(partnerData)
-        }
-      }
-      setLoading(false)
-    }
-    fetchPartner()
-  }, [])
+  const { partner, selectedProgram, programs, loading } = useProgram()
+  // partner는 ProgramContext에서 공유 — 별도 fetch 제거
 
   // 프로모션 및 랭킹 로드 (선택된 프로그램의 광고주 기준)
   useEffect(() => {
@@ -225,7 +202,7 @@ export default function DashboardPage() {
   const progressPercent = Math.round((completedCount / milestones.length) * 100)
   const isAllMilestonesCompleted = progressPercent === 100
 
-  if (loading || programLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">로딩 중...</div>

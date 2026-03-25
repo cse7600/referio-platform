@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Wallet, Clock, CheckCircle } from 'lucide-react'
-import type { Partner, Settlement, Referral } from '@/types/database'
+import { Search, Clock, CheckCircle } from 'lucide-react'
+import type { Settlement, Referral } from '@/types/database'
 import { useProgram } from '../ProgramContext'
 
 interface SettlementWithReferral extends Settlement {
@@ -30,34 +30,12 @@ interface SettlementWithReferral extends Settlement {
 }
 
 export default function SettlementsPage() {
-  const [partner, setPartner] = useState<Partner | null>(null)
+  const { partner, selectedProgram, loading } = useProgram() // ProgramContext 공유 — 중복 fetch 제거
   const [settlements, setSettlements] = useState<SettlementWithReferral[]>([])
-  const [loading, setLoading] = useState(true)
+  const [settlementsLoading, setSettlementsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterField, setFilterField] = useState<'id' | 'referral'>('id')
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
-  const { selectedProgram } = useProgram()
-
-  useEffect(() => {
-    const fetchPartner = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data: partnerData } = await supabase
-          .from('partners')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single()
-
-        if (partnerData) {
-          setPartner(partnerData)
-        }
-      }
-      setLoading(false)
-    }
-    fetchPartner()
-  }, [])
 
   // 선택된 프로그램 변경 시 settlements 재조회
   useEffect(() => {
@@ -83,9 +61,14 @@ export default function SettlementsPage() {
       if (settlementsData) {
         setSettlements(settlementsData)
       }
+      setSettlementsLoading(false)
     }
-    fetchSettlements()
-  }, [partner?.id, selectedProgram])
+    if (partner?.id) {
+      fetchSettlements()
+    } else if (!loading) {
+      setSettlementsLoading(false)
+    }
+  }, [partner?.id, selectedProgram, loading])
 
   // 탭별 필터링
   const filteredByTab = settlements.filter((settlement) => {
@@ -128,7 +111,7 @@ export default function SettlementsPage() {
     .filter(s => s.status === 'completed')
     .reduce((sum, s) => sum + s.amount, 0)
 
-  if (loading) {
+  if (loading || settlementsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">로딩 중...</div>
