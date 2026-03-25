@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 
 export async function GET() {
@@ -13,7 +13,7 @@ export async function GET() {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 피추천인 목록 조회 (파트너 정보 포함)
     const { data: referrals, error } = await supabase
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '이름과 연락처는 필수입니다' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 파트너 추천코드로 partner_id 조회 (선택사항)
     let partnerId: string | null = null

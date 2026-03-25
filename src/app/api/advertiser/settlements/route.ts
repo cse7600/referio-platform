@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession } from '@/lib/auth'
 
 export async function GET() {
@@ -13,7 +13,7 @@ export async function GET() {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 정산 목록 조회 (파트너, 피추천인 정보 포함)
     const { data: settlements, error } = await supabase

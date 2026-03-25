@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 
 export async function PATCH(
@@ -27,7 +27,7 @@ export async function PATCH(
     const body = await request.json()
     const { contract_status, is_valid, sales_rep, memo, labels, priority, next_action, next_action_at } = body
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // 해당 광고주의 피추천인인지 확인 (이전 상태도 가져옴)
     const { data: referral, error: referralError } = await supabase
@@ -231,7 +231,7 @@ export async function GET(
     }
 
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: referral, error } = await supabase
       .from('referrals')
