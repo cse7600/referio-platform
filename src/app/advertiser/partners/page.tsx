@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, ExternalLink, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Partner {
@@ -24,6 +24,8 @@ interface Partner {
   referral_code: string
   channels: string[] | null
   main_channel_link: string | null
+  is_active_partner: boolean | null
+  activity_link: string | null
   created_at: string
   monthly_lead_count: number
   monthly_contract_count: number
@@ -216,18 +218,36 @@ export default function AdvertiserPartnersPage() {
                   </TableCell>
                   <TableCell className="font-medium">{partner.name}</TableCell>
                   <TableCell>
-                    {partner.channels && partner.channels.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {partner.channels.slice(0, 2).map((ch, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">{ch}</Badge>
-                        ))}
-                        {partner.channels.length > 2 && (
-                          <span className="text-xs text-slate-400">+{partner.channels.length - 2}</span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-sm">-</span>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {/* 주활동채널 뱃지 (주채널링크 또는 활동링크로 연결) */}
+                      {partner.channels && partner.channels.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 items-center">
+                          {partner.channels.slice(0, 2).map((ch, i) => {
+                            const link = partner.main_channel_link || partner.activity_link
+                            return link ? (
+                              <a key={i} href={link} target="_blank" rel="noopener noreferrer">
+                                <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-slate-200 flex items-center gap-0.5">
+                                  {ch}<ExternalLink className="w-2.5 h-2.5 ml-0.5 opacity-60" />
+                                </Badge>
+                              </a>
+                            ) : (
+                              <Badge key={i} variant="secondary" className="text-xs">{ch}</Badge>
+                            )
+                          })}
+                          {partner.channels.length > 2 && (
+                            <span className="text-xs text-slate-400">+{partner.channels.length - 2}</span>
+                          )}
+                          {/* 활동 여부 */}
+                          {partner.is_active_partner && (
+                            <span title="활동 중" className="inline-flex items-center">
+                              <Activity className="w-3 h-3 text-green-500" />
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-sm">-</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge className={statusLabels[partner.status]?.color}>

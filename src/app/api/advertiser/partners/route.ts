@@ -35,6 +35,8 @@ export async function GET() {
           name,
           channels,
           main_channel_link,
+          is_active_partner,
+          activity_link,
           created_at
         )
       `)
@@ -77,6 +79,8 @@ export async function GET() {
         name: string
         channels: string[] | null
         main_channel_link: string | null
+        is_active_partner: boolean | null
+        activity_link: string | null
         created_at: string
       }
       const monthStats = statsMap[partnerData.id] || { lead_count: 0, contract_count: 0 }
