@@ -976,62 +976,126 @@ console.log('Referio 응답:', JSON.stringify(result));`
 
               {/* 파트너 가이드 섹션 */}
               <div className="border-t pt-6 mt-2">
-                <h3 className="font-semibold text-base mb-1">파트너 가이드</h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  프로그램 상세 페이지에서 파트너에게 보여지는 활동 안내 정보입니다
-                </p>
-
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <Label>활동 가이드</Label>
-                    <Textarea
-                      value={activityGuide}
-                      onChange={(e) => setActivityGuide(e.target.value)}
-                      placeholder={"1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통한 상담 신청이 유효 DB로 인정됩니다.\n3. 실제 계약 체결 시 계약 커미션이 추가 지급됩니다."}
-                      rows={5}
-                    />
-                    <p className="text-xs text-slate-500">
-                      파트너가 어떻게 활동하면 되는지 단계별로 안내해주세요
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h3 className="font-semibold text-base mb-0.5">파트너 가이드</h3>
+                    <p className="text-sm text-slate-500">
+                      파트너 상세 페이지에 표시되는 활동 안내입니다. 숫자(1. 2. 3.)로 시작하면 단계별로, 하이픈(- )으로 시작하면 목록으로 보여집니다.
                     </p>
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label>콘텐츠 소스</Label>
-                    <Textarea
-                      value={contentSources}
-                      onChange={(e) => setContentSources(e.target.value)}
-                      placeholder={"- 공식 브로슈어: https://...\n- 제품 이미지 모음: https://...\n- 홍보 영상 소스 제공"}
-                      rows={4}
-                    />
-                    <p className="text-xs text-slate-500">
-                      파트너가 활동에 활용할 수 있는 이미지, 영상, 문서 등의 자료 링크
-                    </p>
+                <div className="space-y-4">
+                  {/* 활동 가이드 */}
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-800">📋 활동 가이드</p>
+                        <p className="text-xs text-blue-600 mt-0.5">파트너가 어떻게 수익을 낼 수 있는지 단계별로 안내해주세요</p>
+                      </div>
+                      {!activityGuide && (
+                        <button
+                          type="button"
+                          onClick={() => setActivityGuide('1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통해 상담 신청이 들어오면 유효 DB로 인정됩니다.\n3. 실제 계약이 체결되면 계약 커미션이 추가로 지급됩니다.')}
+                          className="shrink-0 text-xs text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded-md px-2.5 py-1.5 transition-colors"
+                        >
+                          템플릿 불러오기
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <Textarea
+                        value={activityGuide}
+                        onChange={(e) => setActivityGuide(e.target.value)}
+                        placeholder={'1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통한 상담 신청이 유효 DB로 인정됩니다.\n3. 실제 계약 체결 시 계약 커미션이 추가 지급됩니다.'}
+                        rows={5}
+                        className="bg-white text-sm"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>금지 활동</Label>
-                    <Textarea
-                      value={prohibitedActivities}
-                      onChange={(e) => setProhibitedActivities(e.target.value)}
-                      placeholder={"- 허위/과장 광고 금지\n- 스팸 문자/메일 발송 금지\n- 타사 비방 금지"}
-                      rows={4}
-                    />
-                    <p className="text-xs text-slate-500">
-                      파트너십 해지 사유가 될 수 있는 금지 활동을 명시해주세요
-                    </p>
+                  {/* 콘텐츠 소스 */}
+                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-indigo-100">
+                      <div>
+                        <p className="text-sm font-semibold text-indigo-800">🗂️ 콘텐츠 소스</p>
+                        <p className="text-xs text-indigo-600 mt-0.5">파트너가 활동에 쓸 수 있는 이미지, 영상, 문서 링크를 제공해주세요</p>
+                      </div>
+                      {!contentSources && (
+                        <button
+                          type="button"
+                          onClick={() => setContentSources('- 공식 브로슈어: https://\n- 제품 이미지 모음: https://\n- 홍보 영상 링크: https://')}
+                          className="shrink-0 text-xs text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 rounded-md px-2.5 py-1.5 transition-colors"
+                        >
+                          템플릿 불러오기
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <Textarea
+                        value={contentSources}
+                        onChange={(e) => setContentSources(e.target.value)}
+                        placeholder={'- 공식 브로슈어: https://...\n- 제품 이미지 모음: https://...\n- 홍보 영상 소스 제공'}
+                        rows={4}
+                        className="bg-white text-sm"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>유의 사항</Label>
-                    <Textarea
-                      value={precautions}
-                      onChange={(e) => setPrecautions(e.target.value)}
-                      placeholder={"- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다."}
-                      rows={4}
-                    />
-                    <p className="text-xs text-slate-500">
-                      정산 기준, 중복 처리, 기타 파트너가 알아야 할 사항
-                    </p>
+                  {/* 금지 활동 */}
+                  <div className="rounded-lg border border-red-100 bg-red-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-red-100">
+                      <div>
+                        <p className="text-sm font-semibold text-red-800">🚫 금지 활동</p>
+                        <p className="text-xs text-red-600 mt-0.5">파트너십 해지 사유가 될 수 있는 행위를 명시해주세요</p>
+                      </div>
+                      {!prohibitedActivities && (
+                        <button
+                          type="button"
+                          onClick={() => setProhibitedActivities('- 허위/과장 광고 금지\n- 스팸 문자·메일 발송 금지\n- 타사 비방 금지\n- 개인정보 무단 수집 금지')}
+                          className="shrink-0 text-xs text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-md px-2.5 py-1.5 transition-colors"
+                        >
+                          템플릿 불러오기
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <Textarea
+                        value={prohibitedActivities}
+                        onChange={(e) => setProhibitedActivities(e.target.value)}
+                        placeholder={'- 허위/과장 광고 금지\n- 스팸 문자/메일 발송 금지\n- 타사 비방 금지'}
+                        rows={4}
+                        className="bg-white text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 유의 사항 */}
+                  <div className="rounded-lg border border-amber-100 bg-amber-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-amber-100">
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">⚠️ 유의 사항</p>
+                        <p className="text-xs text-amber-600 mt-0.5">정산 기준, 중복 처리 등 파트너가 꼭 알아야 할 사항</p>
+                      </div>
+                      {!precautions && (
+                        <button
+                          type="button"
+                          onClick={() => setPrecautions('- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.\n- 허위 DB 발생 시 해당 건은 차감 처리됩니다.')}
+                          className="shrink-0 text-xs text-amber-600 border border-amber-200 bg-white hover:bg-amber-50 rounded-md px-2.5 py-1.5 transition-colors"
+                        >
+                          템플릿 불러오기
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <Textarea
+                        value={precautions}
+                        onChange={(e) => setPrecautions(e.target.value)}
+                        placeholder={'- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.'}
+                        rows={4}
+                        className="bg-white text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

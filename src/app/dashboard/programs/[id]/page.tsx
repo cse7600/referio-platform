@@ -12,13 +12,17 @@ import {
   X,
   ExternalLink,
   BookOpen,
-  Palette,
   ShieldAlert,
   AlertTriangle,
   ArrowRight,
   Megaphone,
   ChevronDown,
   ChevronUp,
+  FileImage,
+  LayoutGrid,
+  Bell,
+  Youtube,
+  Play,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProgram } from '@/app/dashboard/ProgramContext'
@@ -37,6 +41,7 @@ const CATEGORY_MAP: Record<string, string> = {
   food: '식품',
   electronics: '가전/IT',
   etc: '기타',
+  legal: '법률',
 }
 
 interface ProgramDetail {
@@ -87,6 +92,15 @@ interface ProgramDetail {
   }>
 }
 
+type TabId = 'overview' | 'guide' | 'media' | 'board'
+
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: 'overview', label: '개요', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+  { id: 'guide', label: '활동 가이드', icon: <BookOpen className="w-3.5 h-3.5" /> },
+  { id: 'media', label: '홍보자료', icon: <FileImage className="w-3.5 h-3.5" /> },
+  { id: 'board', label: '공지·지원', icon: <Bell className="w-3.5 h-3.5" /> },
+]
+
 export default function ProgramDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -95,7 +109,7 @@ export default function ProgramDetailPage() {
   const [loading, setLoading] = useState(true)
   const [applying, setApplying] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [expandedAnnouncement, setExpandedAnnouncement] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
 
   const programId = params.id as string
 
@@ -126,7 +140,6 @@ export default function ProgramDetailPage() {
 
       if (res.ok) {
         toast.success('참가 신청이 완료되었습니다')
-        // 상세 새로고침
         const refreshRes = await fetch(`/api/partner/programs/${programId}`)
         if (refreshRes.ok) {
           const data = await refreshRes.json()
@@ -167,30 +180,6 @@ export default function ProgramDetailPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleAnnouncementClick = async (announcementId: string, isRead: boolean) => {
-    setExpandedAnnouncement(prev => prev === announcementId ? null : announcementId)
-    if (!isRead) {
-      try {
-        await fetch('/api/partner/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message_id: announcementId }),
-        })
-        // 읽음 상태 로컬 업데이트
-        if (program) {
-          setProgram({
-            ...program,
-            announcements: program.announcements.map(a =>
-              a.id === announcementId ? { ...a, is_read: true } : a
-            ),
-          })
-        }
-      } catch {
-        // 읽음 처리 실패해도 무시
-      }
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -211,7 +200,7 @@ export default function ProgramDetailPage() {
     )
   }
 
-  const brandColor = program.primary_color || '#f97316'
+  const brandColor = program.primary_color || '#6366f1'
   const isApproved = program.enrollment?.status === 'approved'
   const isPending = program.enrollment?.status === 'pending'
   const isRejected = program.enrollment?.status === 'rejected'
@@ -220,113 +209,119 @@ export default function ProgramDetailPage() {
   const leadComm = program.enrollment?.lead_commission || program.default_lead_commission || 0
   const contractComm = program.enrollment?.contract_commission || program.default_contract_commission || 0
 
+  // Badge counts for tabs
+  const unreadAnnouncements = program.announcements?.filter(a => !a.is_read).length || 0
+  const boardCount = program.boardPosts?.length || 0
+  const mediaCount = program.media?.length || 0
+  const hasGuide = !!(program.activity_guide || program.content_sources || program.prohibited_activities || program.precautions)
+
   return (
     <div className="max-w-3xl mx-auto pb-28">
       {/* 뒤로가기 */}
       <button
         onClick={() => router.push('/dashboard/programs')}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         프로그램 목록
       </button>
 
-      {/* 헤더 */}
+      {/* 프로그램 헤더 */}
       <div className="rounded-xl border overflow-hidden bg-white">
-        <div className="h-2" style={{ backgroundColor: brandColor }} />
-        <div className="p-6 sm:p-8">
+        <div className="h-1.5" style={{ backgroundColor: brandColor }} />
+        <div className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              {program.category && CATEGORY_MAP[program.category] && (
-                <Badge variant="secondary" className="mb-3 text-xs font-normal">
-                  {CATEGORY_MAP[program.category]}
-                </Badge>
-              )}
-              <h1 className="text-2xl font-bold leading-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                {program.category && CATEGORY_MAP[program.category] && (
+                  <Badge variant="secondary" className="text-xs font-normal shrink-0">
+                    {CATEGORY_MAP[program.category]}
+                  </Badge>
+                )}
+                {isApproved && (
+                  <Badge className="bg-green-100 text-green-700 text-xs font-normal shrink-0">
+                    <Check className="w-3 h-3 mr-1" />참가 중
+                  </Badge>
+                )}
+                {isPending && (
+                  <Badge className="bg-yellow-100 text-yellow-700 text-xs font-normal shrink-0">
+                    <Clock className="w-3 h-3 mr-1" />승인 대기
+                  </Badge>
+                )}
+                {isRejected && (
+                  <Badge className="bg-red-100 text-red-700 text-xs font-normal shrink-0">
+                    <X className="w-3 h-3 mr-1" />반려
+                  </Badge>
+                )}
+              </div>
+              <h1 className="text-xl font-bold leading-tight truncate">
                 {program.program_name || program.company_name}
               </h1>
-              <p className="text-gray-500 mt-1">{program.company_name}</p>
+              <p className="text-sm text-gray-500 mt-0.5">{program.company_name}</p>
             </div>
             {program.homepage_url && (
               <a
                 href={program.homepage_url.startsWith('http') ? program.homepage_url : `https://${program.homepage_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
+                className="shrink-0 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors border rounded-md px-2.5 py-1.5"
               >
                 홈페이지
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>
 
-          {program.program_description && (
-            <p className="text-gray-600 mt-4 leading-relaxed">
-              {program.program_description}
-            </p>
-          )}
-
-          {/* 커미션 정보 */}
-          <div className="grid grid-cols-2 gap-3 mt-6">
-            <div className="rounded-lg bg-blue-50 p-4">
-              <p className="text-xs text-blue-600 font-medium">유효 DB 단가</p>
-              <p className="text-xl font-bold text-blue-700 mt-1">
-                ₩{leadComm.toLocaleString()}
-              </p>
+          {/* 커미션 칩 */}
+          <div className="flex gap-2 mt-4 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 rounded-full px-3 py-1.5 text-sm font-medium">
+              <span className="text-xs text-blue-500">유효 DB</span>
+              <span className="font-bold">₩{leadComm.toLocaleString()}</span>
             </div>
-            <div className="rounded-lg bg-purple-50 p-4">
-              <p className="text-xs text-purple-600 font-medium">계약 단가</p>
-              <p className="text-xl font-bold text-purple-700 mt-1">
-                ₩{contractComm.toLocaleString()}
-              </p>
+            <div className="flex items-center gap-1.5 bg-purple-50 text-purple-700 rounded-full px-3 py-1.5 text-sm font-medium">
+              <span className="text-xs text-purple-500">계약</span>
+              <span className="font-bold">₩{contractComm.toLocaleString()}</span>
             </div>
           </div>
 
-          {/* 참가 상태 알림 */}
+          {/* 승인 시 추천 링크 */}
           {isApproved && (
-            <div className="mt-6 rounded-lg bg-green-50 border border-green-200 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <p className="text-sm font-medium text-green-800">참가 승인 완료</p>
-              </div>
+            <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
+              <p className="text-xs font-medium text-green-700 mb-2">내 추천 링크</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm text-green-800 bg-green-100 px-3 py-2 rounded truncate">
+                <code className="flex-1 text-xs text-green-800 bg-green-100 px-2.5 py-1.5 rounded truncate">
                   {buildReferralLink()}
                 </code>
                 <Button
                   size="sm"
-                  className="shrink-0 bg-green-600 hover:bg-green-700"
+                  className="shrink-0 bg-green-600 hover:bg-green-700 text-xs h-8"
                   onClick={handleCopyLink}
                 >
-                  {copied ? (
-                    <><Check className="w-3.5 h-3.5 mr-1" />복사됨</>
-                  ) : (
-                    <><Copy className="w-3.5 h-3.5 mr-1" />링크 복사</>
-                  )}
+                  {copied ? <><Check className="w-3 h-3 mr-1" />복사됨</> : <><Copy className="w-3 h-3 mr-1" />복사</>}
                 </Button>
               </div>
             </div>
           )}
 
           {isPending && (
-            <div className="mt-6 rounded-lg bg-yellow-50 border border-yellow-200 p-4 flex items-start gap-3">
+            <div className="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3 flex items-start gap-2">
               <Clock className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-yellow-800">승인 대기 중</p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  광고주가 참가 신청을 검토하고 있습니다. 승인되면 추천 링크가 발급됩니다.
+                <p className="text-xs text-yellow-700 mt-0.5">
+                  광고주가 신청을 검토하고 있습니다. 승인 후 추천 링크가 발급됩니다.
                 </p>
               </div>
             </div>
           )}
 
           {isRejected && (
-            <div className="mt-6 rounded-lg bg-red-50 border border-red-200 p-4 flex items-start gap-3">
+            <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
               <X className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-red-800">참가 반려</p>
-                <p className="text-xs text-red-700 mt-1">
-                  아쉽지만 이번 신청은 반려되었습니다. 자세한 사항은 고객센터로 문의해주세요.
+                <p className="text-xs text-red-700 mt-0.5">
+                  이번 신청은 반려되었습니다. 자세한 사항은 고객센터로 문의해주세요.
                 </p>
               </div>
             </div>
@@ -334,158 +329,73 @@ export default function ProgramDetailPage() {
         </div>
       </div>
 
-      {/* 공지사항 */}
-      {program.announcements && program.announcements.length > 0 && (
-        <div className="mt-6 rounded-xl border border-amber-100 bg-white overflow-hidden">
-          <div className="p-5 sm:p-6">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Megaphone className="w-4 h-4" />
-              </div>
-              <h3 className="font-semibold">공지사항</h3>
-              {program.announcements.some(a => !a.is_read) && (
-                <span className="w-2 h-2 rounded-full bg-red-500" />
-              )}
-            </div>
-            <div className="ml-[38px] space-y-2">
-              {program.announcements.map(announcement => (
-                <div
-                  key={announcement.id}
-                  className={`rounded-lg border transition-colors ${
-                    !announcement.is_read ? 'border-amber-200 bg-amber-50/50' : 'border-gray-100'
-                  }`}
-                >
-                  <button
-                    className="w-full text-left p-3 flex items-start justify-between gap-2"
-                    onClick={() => handleAnnouncementClick(announcement.id, announcement.is_read)}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        {!announcement.is_read && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                        )}
-                        <p className={`text-sm truncate ${!announcement.is_read ? 'font-semibold' : 'font-medium'}`}>
-                          {announcement.title}
-                        </p>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {new Date(announcement.sent_at).toLocaleDateString('ko-KR')}
-                      </p>
-                    </div>
-                    {expandedAnnouncement === announcement.id ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                    )}
-                  </button>
-                  {expandedAnnouncement === announcement.id && (
-                    <div className="px-3 pb-3 border-t border-gray-100 pt-3">
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                        {announcement.body}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* 탭 네비게이션 */}
+      <div className="mt-4 bg-white border rounded-xl overflow-hidden">
+        <div className="flex border-b overflow-x-auto no-scrollbar">
+          {TABS.map(tab => {
+            // Badge counts per tab
+            let count: number | null = null
+            if (tab.id === 'media') count = mediaCount > 0 ? mediaCount : null
+            if (tab.id === 'board') count = (unreadAnnouncements + boardCount) > 0 ? unreadAnnouncements + boardCount : null
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                {count !== null && (
+                  <span className={`text-xs rounded-full px-1.5 py-0.5 ${
+                    activeTab === tab.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
-      )}
 
-      {/* 게시판 */}
-      {program.boardPosts && program.boardPosts.length > 0 && (
-        <BoardSection posts={program.boardPosts} />
-      )}
+        {/* 탭 콘텐츠 */}
+        <div className="p-5 sm:p-6">
+          {/* 개요 탭 */}
+          {activeTab === 'overview' && (
+            <OverviewTab program={program} />
+          )}
 
-      {/* 상세 정보 섹션들 */}
-      <div className="mt-6 space-y-4">
-        {program.activity_guide && (
-          <DetailSection
-            icon={<BookOpen className="w-4 h-4" />}
-            title="활동 가이드"
-            description="이렇게 활동하면 수익을 높일 수 있어요"
-            content={program.activity_guide}
-            accentColor="blue"
-          />
-        )}
+          {/* 활동 가이드 탭 */}
+          {activeTab === 'guide' && (
+            <GuideTab program={program} hasGuide={hasGuide} />
+          )}
 
-        {program.content_sources && (
-          <DetailSection
-            icon={<Palette className="w-4 h-4" />}
-            title="콘텐츠 소스"
-            description="활동에 활용할 수 있는 자료들이에요"
-            content={program.content_sources}
-            accentColor="indigo"
-          />
-        )}
+          {/* 홍보자료 탭 */}
+          {activeTab === 'media' && (
+            <MediaTab media={program.media} />
+          )}
 
-        {program.prohibited_activities && (
-          <DetailSection
-            icon={<ShieldAlert className="w-4 h-4" />}
-            title="금지 활동"
-            description="아래 활동은 파트너십 해지 사유가 될 수 있어요"
-            content={program.prohibited_activities}
-            accentColor="red"
-          />
-        )}
-
-        {program.precautions && (
-          <DetailSection
-            icon={<AlertTriangle className="w-4 h-4" />}
-            title="유의 사항"
-            description="참가 전에 꼭 확인해주세요"
-            content={program.precautions}
-            accentColor="amber"
-          />
-        )}
-
-        {/* 미디어 자료 */}
-        {program.media && program.media.length > 0 && (
-          <div className="rounded-xl border border-violet-100 bg-white overflow-hidden">
-            <div className="p-5 sm:p-6">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
-                  <Palette className="w-4 h-4" />
-                </div>
-                <h3 className="font-semibold">홍보 자료</h3>
-                <span className="text-xs text-gray-400">{program.media.length}개</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 ml-[38px]">
-                {program.media.map((m) => (
-                  <a
-                    key={m.id}
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-                  >
-                    {m.type === 'image' && (
-                      <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0">
-                        <img src={m.url} alt={m.name} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    {m.type === 'video' && (
-                      <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                        <ArrowRight className="w-5 h-5 text-slate-400" />
-                      </div>
-                    )}
-                    {m.type === 'youtube' && (
-                      <div className="w-12 h-12 rounded bg-red-50 flex items-center justify-center shrink-0">
-                        <ExternalLink className="w-5 h-5 text-red-500" />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{m.name}</p>
-                      <p className="text-xs text-gray-400">
-                        {m.type === 'youtube' ? '유튜브 영상' : m.type === 'image' ? '이미지' : '영상 파일'}
-                      </p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+          {/* 공지·지원 탭 */}
+          {activeTab === 'board' && (
+            <BoardTab
+              announcements={program.announcements}
+              boardPosts={program.boardPosts}
+              programId={program.id}
+              onAnnouncementRead={(id) => {
+                setProgram(prev => prev ? {
+                  ...prev,
+                  announcements: prev.announcements.map(a =>
+                    a.id === id ? { ...a, is_read: true } : a
+                  ),
+                } : prev)
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* 하단 고정 CTA */}
@@ -543,96 +453,465 @@ export default function ProgramDetailPage() {
   )
 }
 
-function BoardSection({
-  posts,
-}: {
-  posts: Array<{ id: string; title: string; content: string; post_type: string; created_at: string }>
-}) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+// ─── 개요 탭 ───────────────────────────────────────────
+function OverviewTab({ program }: { program: ProgramDetail }) {
+  if (!program.program_description) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-8">프로그램 소개가 아직 없습니다.</p>
+    )
+  }
 
   return (
-    <div className="mt-6 rounded-xl border border-indigo-100 bg-white overflow-hidden">
-      <div className="p-5 sm:p-6">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <Megaphone className="w-4 h-4" />
-          </div>
-          <h3 className="font-semibold">파트너 활동 지원</h3>
-          <span className="text-xs text-gray-400">{posts.length}개</span>
-        </div>
-        <div className="ml-[38px] space-y-2">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="rounded-lg border border-gray-100"
-            >
-              <button
-                className="w-full text-left p-3 flex items-start justify-between gap-2"
-                onClick={() => setExpandedId((prev) => (prev === post.id ? null : post.id))}
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{post.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(post.created_at).toLocaleDateString('ko-KR')}
-                  </p>
-                </div>
-                {expandedId === post.id ? (
-                  <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                )}
-              </button>
-              {expandedId === post.id && (
-                <div className="px-3 pb-3 border-t border-gray-100 pt-3">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {post.content}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">프로그램 소개</h3>
+        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+          {program.program_description}
+        </p>
+      </div>
+
+      {/* 주요 정보 테이블 */}
+      <div className="border rounded-lg overflow-hidden mt-4">
+        <table className="w-full text-sm">
+          <tbody>
+            {program.category && (
+              <tr className="border-b last:border-0">
+                <td className="px-4 py-3 text-gray-500 font-medium bg-gray-50 w-28 shrink-0">업종</td>
+                <td className="px-4 py-3 text-gray-800">{CATEGORY_MAP[program.category] || program.category}</td>
+              </tr>
+            )}
+            {program.homepage_url && (
+              <tr className="border-b last:border-0">
+                <td className="px-4 py-3 text-gray-500 font-medium bg-gray-50 w-28">홈페이지</td>
+                <td className="px-4 py-3">
+                  <a
+                    href={program.homepage_url.startsWith('http') ? program.homepage_url : `https://${program.homepage_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:underline flex items-center gap-1 text-sm"
+                  >
+                    {program.homepage_url}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </td>
+              </tr>
+            )}
+            <tr className="border-b last:border-0">
+              <td className="px-4 py-3 text-gray-500 font-medium bg-gray-50 w-28">유효 DB 단가</td>
+              <td className="px-4 py-3 font-semibold text-blue-700">
+                ₩{(program.default_lead_commission || 0).toLocaleString()}
+              </td>
+            </tr>
+            <tr className="border-b last:border-0">
+              <td className="px-4 py-3 text-gray-500 font-medium bg-gray-50 w-28">계약 단가</td>
+              <td className="px-4 py-3 font-semibold text-purple-700">
+                ₩{(program.default_contract_commission || 0).toLocaleString()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   )
 }
 
-function DetailSection({
+// ─── 활동 가이드 탭 ───────────────────────────────────
+function GuideTab({ program, hasGuide }: { program: ProgramDetail; hasGuide: boolean }) {
+  if (!hasGuide) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-8">활동 가이드가 아직 등록되지 않았습니다.</p>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {program.activity_guide && (
+        <GuideSection
+          icon={<BookOpen className="w-4 h-4" />}
+          title="활동 가이드"
+          subtitle="이렇게 활동하면 수익을 높일 수 있어요"
+          content={program.activity_guide}
+          accentColor="blue"
+          renderStyle="steps"
+        />
+      )}
+
+      {program.content_sources && (
+        <GuideSection
+          icon={<FileImage className="w-4 h-4" />}
+          title="콘텐츠 소스"
+          subtitle="활동에 활용할 수 있는 자료들이에요"
+          content={program.content_sources}
+          accentColor="indigo"
+          renderStyle="list"
+        />
+      )}
+
+      {program.prohibited_activities && (
+        <GuideSection
+          icon={<ShieldAlert className="w-4 h-4" />}
+          title="금지 활동"
+          subtitle="파트너십 해지 사유가 될 수 있어요"
+          content={program.prohibited_activities}
+          accentColor="red"
+          renderStyle="list"
+        />
+      )}
+
+      {program.precautions && (
+        <GuideSection
+          icon={<AlertTriangle className="w-4 h-4" />}
+          title="유의 사항"
+          subtitle="참가 전에 꼭 확인해주세요"
+          content={program.precautions}
+          accentColor="amber"
+          renderStyle="list"
+        />
+      )}
+    </div>
+  )
+}
+
+// 가이드 섹션 컴포넌트 — 넘버드 리스트는 스텝 뱃지, 불릿은 체크리스트로 렌더링
+function GuideSection({
   icon,
   title,
-  description,
+  subtitle,
   content,
   accentColor,
+  renderStyle,
 }: {
   icon: React.ReactNode
   title: string
-  description: string
+  subtitle: string
   content: string
   accentColor: string
+  renderStyle: 'steps' | 'list'
 }) {
-  const colorMap: Record<string, { border: string; iconBg: string; iconText: string }> = {
-    blue: { border: 'border-blue-100', iconBg: 'bg-blue-50', iconText: 'text-blue-600' },
-    indigo: { border: 'border-indigo-100', iconBg: 'bg-indigo-50', iconText: 'text-indigo-600' },
-    red: { border: 'border-red-100', iconBg: 'bg-red-50', iconText: 'text-red-600' },
-    amber: { border: 'border-amber-100', iconBg: 'bg-amber-50', iconText: 'text-amber-600' },
+  const colorMap: Record<string, { badge: string; iconBg: string; iconText: string; stepBg: string; stepText: string }> = {
+    blue: {
+      badge: 'bg-blue-50 border-blue-100',
+      iconBg: 'bg-blue-100',
+      iconText: 'text-blue-600',
+      stepBg: 'bg-blue-600',
+      stepText: 'text-white',
+    },
+    indigo: {
+      badge: 'bg-indigo-50 border-indigo-100',
+      iconBg: 'bg-indigo-100',
+      iconText: 'text-indigo-600',
+      stepBg: 'bg-indigo-600',
+      stepText: 'text-white',
+    },
+    red: {
+      badge: 'bg-red-50 border-red-100',
+      iconBg: 'bg-red-100',
+      iconText: 'text-red-600',
+      stepBg: 'bg-red-500',
+      stepText: 'text-white',
+    },
+    amber: {
+      badge: 'bg-amber-50 border-amber-100',
+      iconBg: 'bg-amber-100',
+      iconText: 'text-amber-600',
+      stepBg: 'bg-amber-500',
+      stepText: 'text-white',
+    },
   }
 
   const colors = colorMap[accentColor] || colorMap.blue
 
+  // Parse lines for step/list rendering
+  const lines = content
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+
+  const isNumberedLine = (line: string) => /^(\d+)[.)]\s/.test(line)
+  const isBulletLine = (line: string) => /^[-•*]\s/.test(line)
+
+  const stripPrefix = (line: string) => {
+    return line.replace(/^(\d+)[.)]\s/, '').replace(/^[-•*]\s/, '')
+  }
+
+  const hasNumbered = lines.some(isNumberedLine)
+  const useSteps = renderStyle === 'steps' && hasNumbered
+
   return (
-    <div className={`rounded-xl border ${colors.border} bg-white overflow-hidden`}>
-      <div className="p-5 sm:p-6">
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className={`w-7 h-7 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center`}>
-            {icon}
-          </div>
-          <h3 className="font-semibold">{title}</h3>
+    <div className={`rounded-xl border ${colors.badge} overflow-hidden`}>
+      {/* 섹션 헤더 */}
+      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-inherit">
+        <div className={`w-7 h-7 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center shrink-0`}>
+          {icon}
         </div>
-        <p className="text-xs text-gray-400 ml-[38px] mb-4">{description}</p>
-        <div className="ml-[38px] text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-          {content}
+        <div>
+          <h3 className="font-semibold text-sm">{title}</h3>
+          <p className="text-xs text-gray-400">{subtitle}</p>
         </div>
       </div>
+
+      {/* 콘텐츠 */}
+      <div className="px-5 py-4">
+        {useSteps ? (
+          // 스텝 렌더링
+          <ol className="space-y-3">
+            {lines.map((line, i) => {
+              const isNum = isNumberedLine(line)
+              const text = isNum ? stripPrefix(line) : line
+              const stepNum = isNum ? (line.match(/^(\d+)/)?.[1] || String(i + 1)) : null
+
+              return (
+                <li key={i} className="flex items-start gap-3">
+                  {stepNum ? (
+                    <span className={`w-5 h-5 rounded-full ${colors.stepBg} ${colors.stepText} text-xs font-bold flex items-center justify-center shrink-0 mt-0.5`}>
+                      {stepNum}
+                    </span>
+                  ) : (
+                    <span className="w-5 h-5 shrink-0" />
+                  )}
+                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
+                </li>
+              )
+            })}
+          </ol>
+        ) : (
+          // 불릿/일반 렌더링
+          <ul className="space-y-2">
+            {lines.map((line, i) => {
+              const isBullet = isBulletLine(line)
+              const text = stripPrefix(line)
+
+              return (
+                <li key={i} className="flex items-start gap-2.5">
+                  {isBullet ? (
+                    <span className={`w-1.5 h-1.5 rounded-full ${colors.stepBg} shrink-0 mt-1.5`} />
+                  ) : (
+                    <span className="text-gray-300 text-xs mt-0.5 shrink-0">·</span>
+                  )}
+                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── 홍보자료 탭 ──────────────────────────────────────
+function MediaTab({ media }: { media: ProgramDetail['media'] }) {
+  if (!media || media.length === 0) {
+    return (
+      <div className="text-center py-10 text-gray-400">
+        <FileImage className="w-10 h-10 mx-auto mb-2 opacity-30" />
+        <p className="text-sm">등록된 홍보 자료가 없습니다.</p>
+      </div>
+    )
+  }
+
+  const images = media.filter(m => m.type === 'image')
+  const others = media.filter(m => m.type !== 'image')
+
+  return (
+    <div className="space-y-5">
+      {images.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">이미지</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {images.map(m => (
+              <a
+                key={m.id}
+                href={m.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-lg border overflow-hidden hover:border-indigo-300 transition-colors"
+              >
+                <div className="aspect-video bg-gray-100 overflow-hidden">
+                  <img
+                    src={m.url}
+                    alt={m.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-medium truncate text-gray-700">{m.name}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">영상 / 링크</h3>
+          <div className="space-y-2">
+            {others.map(m => (
+              <a
+                key={m.id}
+                href={m.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                  m.type === 'youtube' ? 'bg-red-50' : 'bg-slate-100'
+                }`}>
+                  {m.type === 'youtube' ? (
+                    <Youtube className="w-5 h-5 text-red-500" />
+                  ) : (
+                    <Play className="w-5 h-5 text-slate-500" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate text-gray-800">{m.name}</p>
+                  {m.description && (
+                    <p className="text-xs text-gray-400 truncate">{m.description}</p>
+                  )}
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-300 shrink-0" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── 공지·지원 탭 ─────────────────────────────────────
+function BoardTab({
+  announcements,
+  boardPosts,
+  programId,
+  onAnnouncementRead,
+}: {
+  announcements: ProgramDetail['announcements']
+  boardPosts: ProgramDetail['boardPosts']
+  programId: string
+  onAnnouncementRead: (id: string) => void
+}) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const handleClick = async (id: string, isRead: boolean, type: 'announcement' | 'board') => {
+    setExpandedId(prev => prev === id ? null : id)
+    if (type === 'announcement' && !isRead) {
+      try {
+        await fetch('/api/partner/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: id }),
+        })
+        onAnnouncementRead(id)
+      } catch {
+        // 읽음 처리 실패 무시
+      }
+    }
+  }
+
+  const hasContent = (announcements?.length || 0) + (boardPosts?.length || 0) > 0
+
+  if (!hasContent) {
+    return (
+      <div className="text-center py-10 text-gray-400">
+        <Bell className="w-10 h-10 mx-auto mb-2 opacity-30" />
+        <p className="text-sm">등록된 공지사항이나 지원 게시물이 없습니다.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* 공지사항 */}
+      {announcements && announcements.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Megaphone className="w-4 h-4 text-amber-500" />
+            <h3 className="text-sm font-semibold text-gray-700">공지사항</h3>
+            {announcements.some(a => !a.is_read) && (
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+            )}
+          </div>
+          <div className="space-y-2">
+            {announcements.map(a => (
+              <div
+                key={a.id}
+                className={`rounded-lg border transition-colors ${
+                  !a.is_read ? 'border-amber-200 bg-amber-50/50' : 'border-gray-100'
+                }`}
+              >
+                <button
+                  className="w-full text-left p-3.5 flex items-start justify-between gap-2"
+                  onClick={() => handleClick(a.id, a.is_read, 'announcement')}
+                >
+                  <div className="min-w-0 flex items-start gap-2">
+                    {!a.is_read && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                    )}
+                    <div>
+                      <p className={`text-sm ${!a.is_read ? 'font-semibold' : 'font-medium'} text-gray-800`}>
+                        {a.title}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {new Date(a.sent_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                  </div>
+                  {expandedId === a.id ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                  )}
+                </button>
+                {expandedId === a.id && (
+                  <div className="px-3.5 pb-3.5 border-t border-gray-100 pt-3">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{a.body}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 파트너 활동 지원 게시판 */}
+      {boardPosts && boardPosts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="w-4 h-4 text-indigo-500" />
+            <h3 className="text-sm font-semibold text-gray-700">파트너 활동 지원</h3>
+            <span className="text-xs text-gray-400">{boardPosts.length}개</span>
+          </div>
+          <div className="space-y-2">
+            {boardPosts.map(post => (
+              <div key={post.id} className="rounded-lg border border-gray-100">
+                <button
+                  className="w-full text-left p-3.5 flex items-start justify-between gap-2"
+                  onClick={() => setExpandedId(prev => prev === post.id ? null : post.id)}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{post.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                    </p>
+                  </div>
+                  {expandedId === post.id ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                  )}
+                </button>
+                {expandedId === post.id && (
+                  <div className="px-3.5 pb-3.5 border-t border-gray-100 pt-3">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
