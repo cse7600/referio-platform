@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -13,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check, ExternalLink, Activity } from 'lucide-react'
+import { Copy, Check, ExternalLink, Activity, X, Save, Link } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Partner {
@@ -26,6 +27,7 @@ interface Partner {
   main_channel_link: string | null
   is_active_partner: boolean | null
   activity_link: string | null
+  memo: string | null
   created_at: string
   monthly_lead_count: number
   monthly_contract_count: number
@@ -52,9 +54,17 @@ export default function AdvertiserPartnersPage() {
   const [advertiserId, setAdvertiserId] = useState<string | null>(null)
   const [copiedInvite, setCopiedInvite] = useState(false)
 
+  // Side panel state
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
+  const [panelActive, setPanelActive] = useState(false)
+  const [editIsActive, setEditIsActive] = useState(false)
+  const [editActivityLink, setEditActivityLink] = useState('')
+  const [editMainChannelLink, setEditMainChannelLink] = useState('')
+  const [editMemo, setEditMemo] = useState('')
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     fetchPartners()
-    // 광고주 slug 조회 (파트너 초대 링크용)
     fetch('/api/auth/advertiser/me')
       .then(r => r.json())
       .then(d => { if (d.advertiser?.advertiserId) setAdvertiserId(d.advertiser.advertiserId) })
@@ -75,6 +85,52 @@ export default function AdvertiserPartnersPage() {
     }
   }
 
+  const openPanel = (partner: Partner) => {
+    setSelectedPartner(partner)
+    setEditIsActive(partner.is_active_partner ?? false)
+    setEditActivityLink(partner.activity_link ?? '')
+    setEditMainChannelLink(partner.main_channel_link ?? '')
+    setEditMemo(partner.memo ?? '')
+    setPanelActive(true)
+  }
+
+  const closePanel = () => {
+    setPanelActive(false)
+    setTimeout(() => setSelectedPartner(null), 300)
+  }
+
+  const handleSave = async () => {
+    if (!selectedPartner) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/advertiser/partners/${selectedPartner.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          is_active_partner: editIsActive,
+          activity_link: editActivityLink || null,
+          main_channel_link: editMainChannelLink || null,
+          memo: editMemo || null,
+        }),
+      })
+      if (res.ok) {
+        setPartners(prev => prev.map(p =>
+          p.id === selectedPartner.id
+            ? { ...p, is_active_partner: editIsActive, activity_link: editActivityLink || null, main_channel_link: editMainChannelLink || null, memo: editMemo || null }
+            : p
+        ))
+        setSelectedPartner(prev => prev ? { ...prev, is_active_partner: editIsActive, activity_link: editActivityLink || null, main_channel_link: editMainChannelLink || null, memo: editMemo || null } : null)
+        toast.success('저장됐습니다')
+      } else {
+        toast.error('저장에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleStatusChange = async (partnerId: string, newStatus: 'approved' | 'rejected') => {
     try {
       const response = await fetch(`/api/advertiser/partners/${partnerId}`, {
@@ -82,7 +138,6 @@ export default function AdvertiserPartnersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
-
       if (response.ok) {
         setPartners(prev =>
           prev.map(p => p.id === partnerId ? { ...p, status: newStatus } : p)
@@ -99,6 +154,8 @@ export default function AdvertiserPartnersPage() {
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const approvedPartners = filteredPartners.filter(p => p.status === 'approved')
 
   if (loading) {
     return (
@@ -117,7 +174,6 @@ export default function AdvertiserPartnersPage() {
 
   const handleCopyInviteLink = () => {
     if (!advertiserId) return
-    // Partner signup URL using advertiser slug
     const link = `${window.location.origin}/signup/${advertiserId}`
     navigator.clipboard.writeText(link).then(() => {
       setCopiedInvite(true)
@@ -127,188 +183,300 @@ export default function AdvertiserPartnersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">파트너 관리</h1>
-          <p className="text-slate-500 mt-1">파트너 목록 및 승인 관리</p>
+    <div className="flex gap-0 relative">
+      {/* Main content */}
+      <div className={`flex-1 space-y-6 transition-all duration-300 ${panelActive ? 'mr-[380px]' : ''}`}>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">파트너 관리</h1>
+            <p className="text-slate-500 mt-1">파트너 목록 및 승인 관리</p>
+          </div>
+          {advertiserId && (
+            <Button variant="outline" onClick={handleCopyInviteLink}>
+              {copiedInvite ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
+              파트너 초대 링크 복사
+            </Button>
+          )}
         </div>
-        {advertiserId && (
-          <Button variant="outline" onClick={handleCopyInviteLink}>
-            {copiedInvite ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
-            파트너 초대 링크 복사
-          </Button>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Input
+            placeholder="파트너 이름으로 검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <div className="flex gap-2">
+            {(['all', 'pending', 'approved', 'rejected'] as const).map(s => (
+              <Button
+                key={s}
+                variant={statusFilter === s ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter(s)}
+              >
+                {s === 'all' ? '전체' : s === 'pending' ? '대기' : s === 'approved' ? '승인' : '거절'}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Partners Table */}
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">순위</TableHead>
+                <TableHead>이름</TableHead>
+                <TableHead>채널</TableHead>
+                <TableHead>상태</TableHead>
+                <TableHead>티어</TableHead>
+                <TableHead className="text-center">이번 달 리드</TableHead>
+                <TableHead className="text-center">이번 달 계약</TableHead>
+                <TableHead>추천 코드</TableHead>
+                <TableHead className="text-right">관리</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPartners.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-12 text-slate-500">
+                    {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPartners.map((partner) => {
+                  const rank = partner.status === 'approved'
+                    ? approvedPartners.findIndex(p => p.id === partner.id) + 1
+                    : null
+                  const isSelected = selectedPartner?.id === partner.id
+
+                  return (
+                    <TableRow
+                      key={partner.id}
+                      onClick={() => openPanel(partner)}
+                      className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-slate-50'}`}
+                    >
+                      <TableCell className="text-center">
+                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank ? `${rank}위` : '-'}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {partner.name}
+                          {partner.memo && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="메모 있음" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          {partner.channels && partner.channels.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 items-center">
+                              {partner.channels.slice(0, 2).map((ch, i) => {
+                                const link = partner.main_channel_link || partner.activity_link
+                                return link ? (
+                                  <a key={i} href={link} target="_blank" rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}>
+                                    <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-slate-200 flex items-center gap-0.5">
+                                      {ch}<ExternalLink className="w-2.5 h-2.5 ml-0.5 opacity-60" />
+                                    </Badge>
+                                  </a>
+                                ) : (
+                                  <Badge key={i} variant="secondary" className="text-xs">{ch}</Badge>
+                                )
+                              })}
+                              {partner.channels.length > 2 && (
+                                <span className="text-xs text-slate-400">+{partner.channels.length - 2}</span>
+                              )}
+                              {partner.is_active_partner && (
+                                <span title="활동 중"><Activity className="w-3 h-3 text-green-500" /></span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-sm">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusLabels[partner.status]?.color}>
+                          {statusLabels[partner.status]?.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={tierLabels[partner.tier]?.color}>
+                          {tierLabels[partner.tier]?.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-semibold ${(partner.monthly_lead_count || 0) > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                          {partner.monthly_lead_count || 0}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-semibold ${(partner.monthly_contract_count || 0) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                          {partner.monthly_contract_count || 0}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-slate-100 px-2 py-1 rounded">
+                          {partner.referral_code}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                        {partner.status === 'pending' && (
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" onClick={() => handleStatusChange(partner.id, 'approved')}>승인</Button>
+                            <Button size="sm" variant="outline" onClick={() => handleStatusChange(partner.id, 'rejected')}>거절</Button>
+                          </div>
+                        )}
+                        {partner.status === 'rejected' && (
+                          <Button size="sm" variant="outline" onClick={() => handleStatusChange(partner.id, 'approved')}>재승인</Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
+
+      {/* Side Panel */}
+      <div
+        className={`fixed top-0 right-0 h-full w-[380px] bg-white border-l border-slate-200 shadow-xl z-40 flex flex-col transition-transform duration-300 ${panelActive ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {selectedPartner && (
+          <>
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div>
+                <h2 className="font-semibold text-slate-900 text-base">{selectedPartner.name}</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  <code className="bg-slate-100 px-1.5 py-0.5 rounded">{selectedPartner.referral_code}</code>
+                  <span className="ml-2">{statusLabels[selectedPartner.status]?.label}</span>
+                </p>
+              </div>
+              <button onClick={closePanel} className="p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Panel body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{selectedPartner.monthly_lead_count || 0}</div>
+                  <div className="text-xs text-blue-500 mt-0.5">이번 달 리드</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">{selectedPartner.monthly_contract_count || 0}</div>
+                  <div className="text-xs text-green-500 mt-0.5">이번 달 계약</div>
+                </div>
+              </div>
+
+              {/* 주활동채널 */}
+              {selectedPartner.channels && selectedPartner.channels.length > 0 && (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">주활동채널</label>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {selectedPartner.channels.map((ch, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{ch}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 활동 여부 체크박스 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">활동 여부</label>
+                <div className="mt-2">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div
+                      onClick={() => setEditIsActive(!editIsActive)}
+                      className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${editIsActive ? 'bg-green-500' : 'bg-slate-200'}`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${editIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                    <span className={`text-sm font-medium ${editIsActive ? 'text-green-600' : 'text-slate-400'}`}>
+                      {editIsActive ? '활동 중' : '비활동'}
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 주채널 링크 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                  <Link className="w-3 h-3" />주채널 링크
+                </label>
+                <div className="mt-1.5 flex gap-2">
+                  <Input
+                    value={editMainChannelLink}
+                    onChange={e => setEditMainChannelLink(e.target.value)}
+                    placeholder="https://..."
+                    className="text-sm h-8"
+                  />
+                  {editMainChannelLink && (
+                    <a href={editMainChannelLink} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline" className="h-8 px-2"><ExternalLink className="w-3.5 h-3.5" /></Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* 활동 링크 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                  <Link className="w-3 h-3" />활동 링크
+                </label>
+                <div className="mt-1.5 flex gap-2">
+                  <Input
+                    value={editActivityLink}
+                    onChange={e => setEditActivityLink(e.target.value)}
+                    placeholder="게시물 URL..."
+                    className="text-sm h-8"
+                  />
+                  {editActivityLink && (
+                    <a href={editActivityLink} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline" className="h-8 px-2"><ExternalLink className="w-3.5 h-3.5" /></Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* 메모 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">메모</label>
+                <Textarea
+                  value={editMemo}
+                  onChange={e => setEditMemo(e.target.value)}
+                  placeholder="파트너 관련 메모를 입력하세요..."
+                  className="mt-1.5 text-sm resize-none"
+                  rows={5}
+                />
+              </div>
+            </div>
+
+            {/* Panel footer */}
+            <div className="px-5 py-4 border-t border-slate-100">
+              <Button onClick={handleSave} disabled={saving} className="w-full">
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? '저장 중...' : '저장'}
+              </Button>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="파트너 이름으로 검색..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+      {/* Backdrop for mobile */}
+      {panelActive && (
+        <div
+          className="fixed inset-0 bg-black/10 z-30 lg:hidden"
+          onClick={closePanel}
         />
-        <div className="flex gap-2">
-          <Button
-            variant={statusFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('all')}
-          >
-            전체
-          </Button>
-          <Button
-            variant={statusFilter === 'pending' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('pending')}
-          >
-            대기
-          </Button>
-          <Button
-            variant={statusFilter === 'approved' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('approved')}
-          >
-            승인
-          </Button>
-          <Button
-            variant={statusFilter === 'rejected' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('rejected')}
-          >
-            거절
-          </Button>
-        </div>
-      </div>
-
-      {/* Partners Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">순위</TableHead>
-              <TableHead>이름</TableHead>
-              <TableHead>채널</TableHead>
-              <TableHead>상태</TableHead>
-              <TableHead>티어</TableHead>
-              <TableHead className="text-center">이번 달 리드</TableHead>
-              <TableHead className="text-center">이번 달 계약</TableHead>
-              <TableHead>추천 코드</TableHead>
-              <TableHead className="text-right">관리</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPartners.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-slate-500">
-                  {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPartners.map((partner) => {
-                const approvedPartners = filteredPartners.filter(p => p.status === 'approved')
-                const rank = partner.status === 'approved'
-                  ? approvedPartners.findIndex(p => p.id === partner.id) + 1
-                  : null
-
-                return (
-                <TableRow key={partner.id}>
-                  <TableCell className="text-center">
-                    {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank ? `${rank}위` : '-'}
-                  </TableCell>
-                  <TableCell className="font-medium">{partner.name}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      {/* 주활동채널 뱃지 (주채널링크 또는 활동링크로 연결) */}
-                      {partner.channels && partner.channels.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 items-center">
-                          {partner.channels.slice(0, 2).map((ch, i) => {
-                            const link = partner.main_channel_link || partner.activity_link
-                            return link ? (
-                              <a key={i} href={link} target="_blank" rel="noopener noreferrer">
-                                <Badge variant="secondary" className="text-xs cursor-pointer hover:bg-slate-200 flex items-center gap-0.5">
-                                  {ch}<ExternalLink className="w-2.5 h-2.5 ml-0.5 opacity-60" />
-                                </Badge>
-                              </a>
-                            ) : (
-                              <Badge key={i} variant="secondary" className="text-xs">{ch}</Badge>
-                            )
-                          })}
-                          {partner.channels.length > 2 && (
-                            <span className="text-xs text-slate-400">+{partner.channels.length - 2}</span>
-                          )}
-                          {/* 활동 여부 */}
-                          {partner.is_active_partner && (
-                            <span title="활동 중" className="inline-flex items-center">
-                              <Activity className="w-3 h-3 text-green-500" />
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 text-sm">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={statusLabels[partner.status]?.color}>
-                      {statusLabels[partner.status]?.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={tierLabels[partner.tier]?.color}>
-                      {tierLabels[partner.tier]?.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className={`font-semibold ${(partner.monthly_lead_count || 0) > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
-                      {partner.monthly_lead_count || 0}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className={`font-semibold ${(partner.monthly_contract_count || 0) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
-                      {partner.monthly_contract_count || 0}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-slate-100 px-2 py-1 rounded">
-                      {partner.referral_code}
-                    </code>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {partner.status === 'pending' && (
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          size="sm"
-                          onClick={() => handleStatusChange(partner.id, 'approved')}
-                        >
-                          승인
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStatusChange(partner.id, 'rejected')}
-                        >
-                          거절
-                        </Button>
-                      </div>
-                    )}
-                    {partner.status === 'rejected' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleStatusChange(partner.id, 'approved')}
-                      >
-                        재승인
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      )}
     </div>
   )
 }
