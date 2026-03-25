@@ -23,6 +23,9 @@ interface ProgramItem {
   default_contract_commission: number
   category: string | null
   is_system?: boolean
+  is_affiliate_campaign?: boolean
+  affiliate_campaign_type?: string
+  reward_trigger?: string
   enrollment: {
     id: string
     status: string
@@ -126,12 +129,19 @@ export default function ProgramsPage() {
     return `${origin}/inquiry/${advertiserId}?ref=${refCode}`
   }
 
-  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string, landingUrl: string | null) => {
+  const buildAffiliateCopyLink = (shortCode: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.co.kr'
+    return `${origin}/api/r/${shortCode}`
+  }
+
+  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string, landingUrl: string | null, isAffiliate?: boolean) => {
     e.stopPropagation()
-    const link = buildReferralLink(refCode, landingUrl, advertiserId)
+    const link = isAffiliate
+      ? buildAffiliateCopyLink(refCode)
+      : buildReferralLink(refCode, landingUrl, advertiserId)
     await navigator.clipboard.writeText(link)
     setCopiedId(advertiserId)
-    toast.success('추천 링크가 복사되었습니다')
+    toast.success('링크가 복사되었습니다')
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -268,20 +278,31 @@ export default function ProgramsPage() {
                   </p>
                 )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 rounded-lg p-2.5">
-                    <p className="text-[11px] text-gray-500">유효 DB 단가</p>
-                    <p className="text-sm font-bold text-blue-600">
-                      ₩{(program.enrollment?.lead_commission || program.default_lead_commission || 0).toLocaleString()}
+                {program.is_affiliate_campaign ? (
+                  <div className="bg-indigo-50 rounded-lg p-2.5">
+                    <p className="text-[11px] text-gray-500">
+                      {program.reward_trigger === 'signup' ? '가입 완료 시 보상' : '유료 플랜 시작 시 보상'}
+                    </p>
+                    <p className="text-sm font-bold text-indigo-600">
+                      ₩{(program.default_lead_commission || 0).toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2.5">
-                    <p className="text-[11px] text-gray-500">계약 단가</p>
-                    <p className="text-sm font-bold text-purple-600">
-                      ₩{(program.enrollment?.contract_commission || program.default_contract_commission || 0).toLocaleString()}
-                    </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <p className="text-[11px] text-gray-500">유효 DB 단가</p>
+                      <p className="text-sm font-bold text-blue-600">
+                        ₩{(program.enrollment?.lead_commission || program.default_lead_commission || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <p className="text-[11px] text-gray-500">계약 단가</p>
+                      <p className="text-sm font-bold text-purple-600">
+                        ₩{(program.enrollment?.contract_commission || program.default_contract_commission || 0).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 하단 액션 */}
                 <div className="mt-auto pt-1">
@@ -299,7 +320,7 @@ export default function ProgramsPage() {
                     <Button
                       className="w-full bg-green-600 hover:bg-green-700"
                       size="sm"
-                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id, program.landing_url)}
+                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id, program.landing_url, program.is_affiliate_campaign)}
                     >
                       {copiedId === program.id ? (
                         <><Check className="w-3.5 h-3.5 mr-1.5" />복사 완료</>
