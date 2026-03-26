@@ -80,7 +80,13 @@ export async function GET(request: NextRequest) {
         const name = (f['파트너이름'] as string || '').trim()
         const email = (f['이메일'] as string || '').trim().toLowerCase()
         const phone = (f['연락처'] as string || '').trim() || null
-        const refCode = (f['추천인코드(5글자 이내)'] as string || '').trim()
+        // 추천인코드(5글자 이내)는 Airtable formula 필드로, API 응답이 {state, value} 객체로 올 수 있음
+        const rawCode = f['추천인코드(5글자 이내)']
+        const refCode = (
+          rawCode && typeof rawCode === 'object' && 'value' in (rawCode as object)
+            ? String((rawCode as Record<string, unknown>).value)
+            : String(rawCode || '')
+        ).trim()
 
         if (!email) continue
         if (existingEmails.has(email)) continue // already in DB, skip
