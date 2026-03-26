@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/sync-airtable",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/sync-airtable-partners",
+      "schedule": "*/30 * * * *"
     }
   ]
 }
