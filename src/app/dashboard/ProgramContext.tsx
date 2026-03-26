@@ -11,6 +11,7 @@ interface ProgramWithAdvertiser extends PartnerProgram {
     program_name: string | null
     logo_url: string | null
     primary_color: string | null
+    landing_url: string | null
   }
 }
 
@@ -63,7 +64,8 @@ export function ProgramProvider({ children }: { children: React.ReactNode }) {
             company_name,
             program_name,
             logo_url,
-            primary_color
+            primary_color,
+            landing_url
           )
         `)
         .eq('partner_id', partnerData.id)

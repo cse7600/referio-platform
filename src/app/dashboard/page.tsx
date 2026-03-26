@@ -67,7 +67,7 @@ const GUIDES = [
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<ProgramStats | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [promotions, setPromotions] = useState<Promotion[]>([])
   const [myRank, setMyRank] = useState<{ rank: number; total: number } | null>(null)
   const { partner, selectedProgram, programs, loading } = useProgram()
@@ -169,20 +169,29 @@ export default function DashboardPage() {
     fetchStats()
   }, [partner?.id, selectedProgram])
 
-  // 파트너가 고객에게 공유할 추천 URL (광고주별 문의 폼)
-  const referralPath = selectedProgram
-    ? `/inquiry/${selectedProgram.advertiser_id}?ref=${selectedProgram.referral_code}`
-    : null
-  const referralUrl = referralPath
-    ? (typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr') + referralPath
-    : partner?.referral_url || null
-
-  const handleCopy = async () => {
-    if (referralUrl) {
-      await navigator.clipboard.writeText(referralUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+  // 프로그램별 추천 URL 생성
+  const buildProgramReferralUrl = (program: typeof programs[0]) => {
+    const adv = program.advertisers as unknown as { landing_url: string | null }
+    const refCode = program.referral_code
+    if (adv?.landing_url) {
+      let base = adv.landing_url
+      if (!base.startsWith('http')) base = `https://${base}`
+      try {
+        const url = new URL(base)
+        url.searchParams.set('ref', refCode)
+        return url.toString()
+      } catch {
+        return `${base}?ref=${refCode}`
+      }
     }
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'
+    return `${origin}/inquiry/${program.advertiser_id}?ref=${refCode}`
+  }
+
+  const handleCopy = async (programId: string, url: string) => {
+    await navigator.clipboard.writeText(url)
+    setCopiedId(programId)
+    setTimeout(() => setCopiedId(null), 2000)
   }
 
   const currentTier = selectedProgram?.tier || partner?.tier || 'authorized'
@@ -323,46 +332,48 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* 추천 URL - 승인된 프로그램이 있을 때 */}
-      {selectedProgram?.status === 'approved' && (
+      {/* 내 추천 URL — 승인된 전체 프로그램 목록 */}
+      {approvedPrograms.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">내 추천 URL</CardTitle>
-              {selectedProgram && (
-                <Badge variant="secondary" className="text-xs">
-                  {(selectedProgram.advertisers as unknown as { program_name: string | null; company_name: string }).program_name ||
-                   (selectedProgram.advertisers as unknown as { company_name: string }).company_name}
-                </Badge>
-              )}
-            </div>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">내 추천 URL</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 p-3 bg-gray-100 rounded-lg text-sm truncate">
-                {referralUrl || 'https://referio.kr/security?ref=...'}
-              </code>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopy}
-                disabled={!referralUrl}
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-green-500" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-gray-500">
-                이 링크를 공유하면 유입 고객이 자동으로 기록됩니다
-              </p>
-              <code className="text-xs text-gray-400">
-                코드: {selectedProgram.referral_code}
-              </code>
-            </div>
+          <CardContent className="space-y-4">
+            {approvedPrograms.map((prog) => {
+              const adv = prog.advertisers as unknown as { program_name: string | null; company_name: string }
+              const url = buildProgramReferralUrl(prog)
+              const isCopied = copiedId === prog.id
+              return (
+                <div key={prog.id} className="rounded-xl border border-gray-100 bg-gray-50/60 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {adv.program_name || adv.company_name}
+                    </span>
+                    <code className="text-xs text-gray-400">코드: {prog.referral_code}</code>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 p-2.5 bg-white border border-gray-200 rounded-lg text-xs truncate text-gray-700">
+                      {url}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 h-9 w-9"
+                      onClick={() => handleCopy(prog.id, url)}
+                    >
+                      {isCopied ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+            <p className="text-xs text-gray-400 pt-1">
+              링크를 공유하면 유입 고객이 자동으로 기록됩니다
+            </p>
           </CardContent>
         </Card>
       )}
