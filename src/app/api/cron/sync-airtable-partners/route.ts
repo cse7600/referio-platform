@@ -19,14 +19,10 @@ interface AirtablePartnerRecord {
   fields: Record<string, unknown>
 }
 
-// Generates a random 5-char alphanumeric code
-function generateRefCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
-  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
-
 // GET /api/cron/sync-airtable-partners
-// Called by Vercel Cron — syncs new partners from Airtable partner table into DB
+// Called by Vercel Cron — syncs new partners from Airtable partner table into DB.
+// Source of truth: Airtable. ref코드 must be set in Airtable first; records without
+// a ref코드 are skipped until the code is manually entered there.
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -35,7 +31,6 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient()
 
-  // Get all active airtable integrations that have a partner_table_id configured
   const { data: integrations } = await supabase
     .from('webhook_integrations')
     .select('id, advertiser_id, config')
@@ -51,17 +46,17 @@ export async function GET(request: NextRequest) {
   }
 
   let totalAdded = 0
-  const results: { advertiser_id: string; added: number; updated_codes: number; error?: string }[] = []
+  const results: { advertiser_id: string; added: number; skipped_no_code: number; error?: string }[] = []
 
   for (const integration of partnerSyncIntegrations) {
     const cfg = integration.config?.airtable!
     const partnerTableId = cfg.partner_table_id!
 
     try {
-      // 1. Fetch all partners from Airtable partner table
+      // 1. Fetch all partners from Airtable
       const atPartners = await fetchAllAirtablePartners(cfg.pat, cfg.base_id, partnerTableId)
 
-      // 2. Get all existing partner emails for this advertiser from DB
+      // 2. Get existing partner emails registered under this advertiser
       const { data: existingPrograms } = await supabase
         .from('partner_programs')
         .select('referral_code, partners(id, email)')
@@ -78,7 +73,7 @@ export async function GET(request: NextRequest) {
       }
 
       let added = 0
-      let updatedCodes = 0
+      let skippedNoCode = 0
 
       for (const record of atPartners) {
         const f = record.fields
@@ -88,58 +83,49 @@ export async function GET(request: NextRequest) {
         const refCode = (f['ref코드'] as string || '').trim()
 
         if (!email) continue
+        if (existingEmails.has(email)) continue // already in DB, skip
 
-        const isNewPartner = !existingEmails.has(email)
-        const needsCode = !refCode
-
-        if (!isNewPartner && !needsCode) continue // already synced, skip
-
-        // Generate unique code if needed
-        let codeToUse = refCode
-        if (!codeToUse) {
-          let attempt = 0
-          do {
-            codeToUse = generateRefCode()
-            attempt++
-          } while (existingCodes.has(codeToUse) && attempt < 10)
-          existingCodes.add(codeToUse)
+        // ref코드가 없으면 Airtable에 코드가 설정될 때까지 대기
+        if (!refCode) {
+          skippedNoCode++
+          continue
         }
 
-        if (isNewPartner) {
-          // Insert partner + partner_program
-          const { data: newPartner, error: partnerErr } = await supabase
-            .from('partners')
-            .upsert({ name, email, phone, status: 'approved' }, { onConflict: 'email' })
-            .select('id')
-            .single()
-
-          if (partnerErr || !newPartner) {
-            console.error('Partner upsert error:', partnerErr)
-            continue
-          }
-
-          const { error: progErr } = await supabase
-            .from('partner_programs')
-            .insert({
-              partner_id: newPartner.id,
-              advertiser_id: integration.advertiser_id,
-              referral_code: codeToUse,
-              status: 'approved',
-            })
-
-          if (progErr && progErr.code !== '23505') {
-            console.error('Program insert error:', progErr)
-            continue
-          }
-
-          added++
+        // ref코드 중복 방어
+        if (existingCodes.has(refCode)) {
+          console.warn(`Duplicate ref code ${refCode} for ${email}, skipping`)
+          continue
         }
 
-        // Update Airtable with the ref code (if it was missing)
-        if (needsCode) {
-          await updateAirtableRefCode(cfg.pat, cfg.base_id, partnerTableId, record.id, codeToUse)
-          updatedCodes++
+        // Insert partner + partner_program using the code from Airtable
+        const { data: newPartner, error: partnerErr } = await supabase
+          .from('partners')
+          .upsert({ name, email, phone, status: 'approved' }, { onConflict: 'email' })
+          .select('id')
+          .single()
+
+        if (partnerErr || !newPartner) {
+          console.error('Partner upsert error:', partnerErr)
+          continue
         }
+
+        const { error: progErr } = await supabase
+          .from('partner_programs')
+          .insert({
+            partner_id: newPartner.id,
+            advertiser_id: integration.advertiser_id,
+            referral_code: refCode,
+            status: 'approved',
+          })
+
+        if (progErr) {
+          if (progErr.code !== '23505') console.error('Program insert error:', progErr)
+          continue
+        }
+
+        existingCodes.add(refCode)
+        existingEmails.add(email)
+        added++
       }
 
       // Update last_partner_synced_at
@@ -154,10 +140,10 @@ export async function GET(request: NextRequest) {
         .eq('id', integration.id)
 
       totalAdded += added
-      results.push({ advertiser_id: integration.advertiser_id, added, updated_codes: updatedCodes })
+      results.push({ advertiser_id: integration.advertiser_id, added, skipped_no_code: skippedNoCode })
     } catch (err) {
       console.error(`Partner sync error for ${integration.advertiser_id}:`, err)
-      results.push({ advertiser_id: integration.advertiser_id, added: 0, updated_codes: 0, error: String(err) })
+      results.push({ advertiser_id: integration.advertiser_id, added: 0, skipped_no_code: 0, error: String(err) })
     }
   }
 
@@ -189,21 +175,4 @@ async function fetchAllAirtablePartners(
   } while (offset)
 
   return all
-}
-
-async function updateAirtableRefCode(
-  pat: string,
-  baseId: string,
-  tableId: string,
-  recordId: string,
-  code: string
-): Promise<void> {
-  await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}/${recordId}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${pat}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ fields: { 'ref코드': code } }),
-  })
 }
