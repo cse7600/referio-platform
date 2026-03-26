@@ -30,7 +30,9 @@ interface Props {
 export default function BrandedSignupForm({ advertiser, code }: Props) {
   const router = useRouter()
 
-  // --- 비밀번호 설정 모드 (이관 유저: ?code= 파라미터 존재) ---
+  // --- 비밀번호 설정 모드 (이관 유저) ---
+  // code(PKCE) 또는 해시 토큰(Implicit) 감지 시 true
+  const [isPasswordMode, setIsPasswordMode] = useState(!!code)
   const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle')
   const [resetPassword, setResetPassword] = useState('')
   const [resetConfirm, setResetConfirm] = useState('')
@@ -38,16 +40,41 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
   const [resetSubmitting, setResetSubmitting] = useState(false)
 
   useEffect(() => {
-    // 해시에 Supabase 에러가 있으면 (#error=access_denied 등) 에러 처리
     const hash = window.location.hash
+
+    // Case 1: 에러 해시 (#error=access_denied 등)
     if (hash.includes('error=')) {
       const params = new URLSearchParams(hash.replace('#', ''))
       const desc = params.get('error_description') || '링크가 만료되었거나 유효하지 않습니다.'
+      setIsPasswordMode(true)
       setResetStatus('error')
       setResetError(decodeURIComponent(desc.replace(/\+/g, ' ')))
       return
     }
 
+    // Case 2: Implicit flow 토큰 해시 (#access_token=...&type=recovery)
+    if (hash.includes('access_token=') && hash.includes('type=recovery')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token') || ''
+      if (accessToken) {
+        setIsPasswordMode(true)
+        setResetStatus('loading')
+        const supabase = createClient()
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          .then(({ error }) => {
+            if (error) {
+              setResetStatus('error')
+              setResetError('인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
+            } else {
+              setResetStatus('ready')
+            }
+          })
+        return
+      }
+    }
+
+    // Case 3: PKCE flow (?code= 쿼리 파라미터, 서버에서 prop으로 전달)
     if (!code) return
     setResetStatus('loading')
     const supabase = createClient()
@@ -194,8 +221,8 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
     setLoading(false)
   }
 
-  // 비밀번호 설정 모드: ?code= 파라미터가 있을 때
-  if (code) {
+  // 비밀번호 설정 모드: code(PKCE) 또는 해시 토큰(Implicit) 감지 시
+  if (isPasswordMode) {
     return (
       <div className="min-h-screen flex">
         {/* 좌측 브랜딩 패널 */}
