@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, User, Lock } from 'lucide-react'
+import { trackPartnerSignup } from '@/lib/gtm'
 
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -117,6 +118,7 @@ export default function SignupPage() {
 
       // Track affiliate conversion if came from affiliate link
       await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
+      trackPartnerSignup();
       router.push('/onboarding')
       return
     }
@@ -166,6 +168,7 @@ export default function SignupPage() {
       }
       // Track affiliate conversion if came from affiliate link
       await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
+      trackPartnerSignup();
       router.push('/onboarding')
       return
     }

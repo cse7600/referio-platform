@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Lock } from 'lucide-react'
+import { trackPartnerLogin } from '@/lib/gtm'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,6 +32,7 @@ export default function LoginPage() {
     })
 
     if (error) {
+      setLoading(false)
       if (error.message === 'Invalid login credentials') {
         setError('이메일 또는 비밀번호가 올바르지 않습니다')
       } else if (error.message === 'Email not confirmed') {
@@ -38,10 +40,10 @@ export default function LoginPage() {
       } else {
         setError(error.message)
       }
-      setLoading(false)
       return
     }
 
+    trackPartnerLogin();
     router.push('/dashboard')
   }
 

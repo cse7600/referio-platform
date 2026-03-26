@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building, User, Mail, Phone, KeyRound, Lock } from 'lucide-react'
+import { trackAdvertiserSignup } from '@/lib/gtm'
 
 export default function AdvertiserSignupPage() {
   const router = useRouter()
@@ -51,6 +52,7 @@ export default function AdvertiserSignupPage() {
       })
 
       if (res.ok) {
+        trackAdvertiserSignup();
         router.push('/advertiser/dashboard')
       } else {
         const data = await res.json()

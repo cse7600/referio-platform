@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import { trackInquirySubmit } from '@/lib/gtm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -72,6 +73,7 @@ function InquiryForm({ advertiserId }: { advertiserId: string }) {
       })
 
       if (res.ok) {
+        trackInquirySubmit({ advertiser_id: advertiserId, referral_code: ref || undefined });
         setSubmitted(true)
       } else {
         const data = await res.json()

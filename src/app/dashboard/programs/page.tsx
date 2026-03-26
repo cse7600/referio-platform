@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Building, Check, Clock, X, ArrowRight, Copy, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProgram } from '@/app/dashboard/ProgramContext'
+import { trackReferralLinkCopy } from '@/lib/gtm'
 
 interface ProgramItem {
   id: string
@@ -140,6 +141,7 @@ export default function ProgramsPage() {
       ? buildAffiliateCopyLink(refCode)
       : buildReferralLink(refCode, landingUrl, advertiserId)
     await navigator.clipboard.writeText(link)
+    trackReferralLinkCopy({ advertiser_id: advertiserId, referral_code: refCode });
     setCopiedId(advertiserId)
     toast.success('링크가 복사되었습니다')
     setTimeout(() => setCopiedId(null), 2000)
