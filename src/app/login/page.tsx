@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,6 +121,10 @@ export default function LoginPage() {
                 <p className="text-red-500 text-sm">{error}</p>
               )}
 
+              {resetMsg && (
+                <p className="text-green-600 text-sm">{resetMsg}</p>
+              )}
+
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
@@ -144,16 +149,19 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    const emailInput = document.getElementById('email') as HTMLInputElement
-                    if (emailInput?.value) {
-                      const supabase = createClient()
-                      await supabase.auth.resetPasswordForEmail(emailInput.value, {
-                        redirectTo: `${window.location.origin}/reset-password`,
-                      })
-                      setError('')
-                      alert('비밀번호 재설정 메일을 발송했습니다. 이메일을 확인해주세요.')
-                    } else {
+                    if (!email) {
                       setError('이메일을 먼저 입력해주세요')
+                      return
+                    }
+                    const supabase = createClient()
+                    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: `${window.location.origin}/reset-password`,
+                    })
+                    if (resetError) {
+                      setError('메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.')
+                    } else {
+                      setError('')
+                      setResetMsg('비밀번호 재설정 메일을 발송했습니다. 이메일을 확인해주세요.')
                     }
                   }}
                   className="hover:text-slate-600 transition-colors"

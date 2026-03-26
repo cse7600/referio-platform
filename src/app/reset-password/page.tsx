@@ -49,8 +49,8 @@ function ResetPasswordForm() {
     e.preventDefault()
     setErrorMsg('')
 
-    if (password.length < 8) {
-      setErrorMsg('비밀번호는 8자 이상이어야 합니다')
+    if (password.length < 6) {
+      setErrorMsg('비밀번호는 6자 이상이어야 합니다')
       return
     }
     if (password !== confirm) {
@@ -66,6 +66,8 @@ function ResetPasswordForm() {
       setErrorMsg('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
       setSubmitting(false)
     } else {
+      // Sign out to clear the password-reset session before redirecting
+      await supabase.auth.signOut()
       setStatus('success')
     }
   }
@@ -85,7 +87,7 @@ function ResetPasswordForm() {
             새 비밀번호를<br />설정해주세요
           </h2>
           <p className="text-slate-400 text-lg">
-            8자 이상의 안전한 비밀번호를 사용하세요
+            6자 이상의 안전한 비밀번호를 사용하세요
           </p>
         </div>
         <div className="text-slate-500 text-sm">
@@ -165,12 +167,12 @@ function ResetPasswordForm() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="8자 이상 입력"
+                      placeholder="6자 이상 입력"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
                       required
-                      minLength={8}
+                      minLength={6}
                     />
                   </div>
                 </div>

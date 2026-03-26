@@ -258,7 +258,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
             <h2 className="text-4xl font-bold mb-4 leading-tight">파트너 포털에<br />오신 것을 환영합니다</h2>
             <p className="text-white/80 text-lg">비밀번호를 설정하고<br />파트너 포털에 입장하세요</p>
           </div>
-          <a href="https://referio.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
+          <a href="https://referio.puzl.co.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
             Powered by <span className="font-medium">Referio</span>
           </a>
         </div>
@@ -382,7 +382,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
           <p className="text-white/80 text-lg whitespace-pre-wrap">{welcomeMessage}</p>
         </div>
 
-        <a href="https://referio.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
+        <a href="https://referio.puzl.co.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
           Powered by{' '}
           <span className="font-medium">Referio</span>
         </a>

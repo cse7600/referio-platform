@@ -324,7 +324,7 @@ function InquiryForm({ advertiserId }: { advertiserId: string }) {
       <div className="pb-8 text-center">
         <p className="text-xs text-slate-400">
           powered by{' '}
-          <a href="https://referio.kr" className="font-semibold text-slate-500 hover:text-slate-700" target="_blank" rel="noopener noreferrer">
+          <a href="https://referio.puzl.co.kr" className="font-semibold text-slate-500 hover:text-slate-700" target="_blank" rel="noopener noreferrer">
             Referio
           </a>
         </p>

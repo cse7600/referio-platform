@@ -26,6 +26,12 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProgram } from '@/app/dashboard/ProgramContext'
+import dynamic from 'next/dynamic'
+
+const MarkdownRenderer = dynamic(
+  () => import('@/components/editor/MarkdownRenderer'),
+  { ssr: false, loading: () => <div className="h-10 animate-pulse bg-gray-100 rounded" /> }
+)
 
 const CATEGORY_MAP: Record<string, string> = {
   security: '보안/CCTV',
@@ -96,11 +102,13 @@ interface ProgramDetail {
   }>
 }
 
-type TabId = 'overview' | 'guide' | 'media' | 'board'
+type TabId = 'overview' | 'guide' | 'rules' | 'caution' | 'media' | 'board'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: '개요', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
   { id: 'guide', label: '활동 가이드', icon: <BookOpen className="w-3.5 h-3.5" /> },
+  { id: 'rules', label: '금지활동', icon: <ShieldAlert className="w-3.5 h-3.5" /> },
+  { id: 'caution', label: '유의사항', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
   { id: 'media', label: '홍보자료', icon: <FileImage className="w-3.5 h-3.5" /> },
   { id: 'board', label: '공지·지원', icon: <Bell className="w-3.5 h-3.5" /> },
 ]
@@ -201,7 +209,7 @@ export default function ProgramDetailPage() {
 
   if (!program) {
     return (
-      <div className="max-w-3xl mx-auto text-center py-20">
+      <div className="w-full text-center py-20">
         <p className="text-gray-500 mb-4">프로그램을 찾을 수 없습니다</p>
         <Button variant="outline" onClick={() => router.push('/dashboard/programs')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -226,7 +234,7 @@ export default function ProgramDetailPage() {
     const rewardAmount = program.default_lead_commission || 0
 
     return (
-      <div className="max-w-3xl mx-auto pb-28">
+      <div className="w-full pb-28">
         <button
           onClick={() => router.push('/dashboard/programs')}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors"
@@ -369,7 +377,7 @@ export default function ProgramDetailPage() {
 
         {/* 하단 고정 CTA */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t z-50">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="px-6 py-3 flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">
                 {isPartnerRecruit ? '파트너 모집 프로그램' : '광고주 모집 프로그램'}
@@ -412,10 +420,12 @@ export default function ProgramDetailPage() {
   const unreadAnnouncements = program.announcements?.filter(a => !a.is_read).length || 0
   const boardCount = program.boardPosts?.length || 0
   const mediaCount = program.media?.length || 0
-  const hasGuide = !!(program.activity_guide || program.content_sources || program.prohibited_activities || program.precautions)
+  const hasGuide = !!program.activity_guide
+  const hasRules = !!program.prohibited_activities
+  const hasCaution = !!program.precautions
 
   return (
-    <div className="max-w-3xl mx-auto pb-28">
+    <div className="w-full pb-28">
       {/* 뒤로가기 */}
       <button
         onClick={() => router.push('/dashboard/programs')}
@@ -531,7 +541,11 @@ export default function ProgramDetailPage() {
       {/* 탭 네비게이션 */}
       <div className="mt-4 bg-white border rounded-xl overflow-hidden">
         <div className="flex border-b overflow-x-auto no-scrollbar">
-          {TABS.map(tab => {
+          {TABS.filter(tab => {
+            if (tab.id === 'rules') return hasRules
+            if (tab.id === 'caution') return hasCaution
+            return true
+          }).map(tab => {
             // Badge counts per tab
             let count: number | null = null
             if (tab.id === 'media') count = mediaCount > 0 ? mediaCount : null
@@ -573,6 +587,16 @@ export default function ProgramDetailPage() {
             <GuideTab program={program} hasGuide={hasGuide} />
           )}
 
+          {/* 금지활동 탭 */}
+          {activeTab === 'rules' && (
+            <RulesTab content={program.prohibited_activities} hasContent={hasRules} />
+          )}
+
+          {/* 유의사항 탭 */}
+          {activeTab === 'caution' && (
+            <CautionTab content={program.precautions} hasContent={hasCaution} />
+          )}
+
           {/* 홍보자료 탭 */}
           {activeTab === 'media' && (
             <MediaTab media={program.media} />
@@ -599,7 +623,7 @@ export default function ProgramDetailPage() {
 
       {/* 하단 고정 CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t z-50">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <div className="px-6 py-3 flex items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">
               {program.program_name || program.company_name}
@@ -714,131 +738,328 @@ function OverviewTab({ program }: { program: ProgramDetail }) {
   )
 }
 
-// ─── 활동 가이드 탭 ───────────────────────────────────
-function GuideTab({ program, hasGuide }: { program: ProgramDetail; hasGuide: boolean }) {
-  if (!hasGuide) {
-    return (
-      <p className="text-sm text-gray-400 text-center py-8">활동 가이드가 아직 등록되지 않았습니다.</p>
-    )
+// ─── Markdown section parser ─────────────────────────
+interface ParsedSection { title: string; body: string; emoji?: string }
+
+// Standard parser: splits by ## h2 headings only (for activity_guide)
+function parseMarkdownSections(content: string): ParsedSection[] {
+  const lines = content.split('\n')
+  const sections: ParsedSection[] = []
+  let currentTitle = ''
+  let currentEmoji = ''
+  let currentBody: string[] = []
+
+  for (const line of lines) {
+    const h2Match = line.match(/^## (.+)$/)
+
+    if (h2Match) {
+      if (currentTitle) sections.push({ title: currentTitle, body: currentBody.join('\n').trim(), emoji: currentEmoji })
+      const titleText = h2Match[1].trim()
+      // Extract leading emoji if present
+      const emojiPrefix = titleText.match(/^([\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}✅❌⚠️💡🚀🎯💰🏆📊💳📢✔️👥📱💬🔄🖊️📸🎬🤝🔑])\s*/u)
+      currentEmoji = emojiPrefix ? emojiPrefix[1] : ''
+      currentTitle = emojiPrefix ? titleText.slice(emojiPrefix[0].length).trim() : titleText
+      currentBody = []
+    } else {
+      currentBody.push(line)
+    }
   }
+  if (currentTitle) sections.push({ title: currentTitle, body: currentBody.join('\n').trim(), emoji: currentEmoji })
+
+  // If no ## headings found, return whole content as one section
+  if (sections.length === 0) return [{ title: '가이드', body: content }]
+  return sections
+}
+
+// Channel-aware parser: splits by top-level emoji headings (for content_sources)
+function parseChannelSections(content: string): ParsedSection[] {
+  const lines = content.split('\n')
+  const sections: ParsedSection[] = []
+  let currentTitle = ''
+  let currentEmoji = ''
+  let currentBody: string[] = []
+
+  // Match emoji at line start — only non-indented lines
+  const emojiHeadingRegex = /^([\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}✅❌⚠️💡🚀🎯💰🏆📊💳📢✔️👥📱💬🔄🖊️📸🎬🤝🔑])\s+(.+)$/u
+
+  for (const line of lines) {
+    const h2Match = line.match(/^## (.+)$/)
+    const emojiMatch = line.match(emojiHeadingRegex)
+
+    if (h2Match) {
+      if (currentTitle) sections.push({ title: currentTitle, body: currentBody.join('\n').trim(), emoji: currentEmoji })
+      currentTitle = h2Match[1].trim()
+      currentEmoji = ''
+      currentBody = []
+    } else if (emojiMatch && !line.startsWith('  ') && !line.startsWith('\t')) {
+      // Check if this looks like a major channel heading (contains "가이드" or "메이트")
+      const text = emojiMatch[2].trim()
+      const isChannelHeading = text.includes('가이드') || text.includes('메이트')
+      if (isChannelHeading) {
+        if (currentTitle) sections.push({ title: currentTitle, body: currentBody.join('\n').trim(), emoji: currentEmoji })
+        currentEmoji = emojiMatch[1]
+        currentTitle = text
+        currentBody = []
+      } else {
+        currentBody.push(line)
+      }
+    } else {
+      currentBody.push(line)
+    }
+  }
+  if (currentTitle) sections.push({ title: currentTitle, body: currentBody.join('\n').trim(), emoji: currentEmoji })
+
+  if (sections.length === 0) return [{ title: '가이드', body: content }]
+  return sections
+}
+
+// ─── Channel card config for content_sources ─────────
+const CHANNEL_CONFIG: Record<string, { icon: string; color: string }> = {
+  '블로거': { icon: '✍️', color: 'bg-green-50 border-green-200 text-green-700' },
+  '블로그': { icon: '✍️', color: 'bg-green-50 border-green-200 text-green-700' },
+  '인스타그램': { icon: '📸', color: 'bg-pink-50 border-pink-200 text-pink-700' },
+  '유튜버': { icon: '🎬', color: 'bg-red-50 border-red-200 text-red-700' },
+  '유튜브': { icon: '🎬', color: 'bg-red-50 border-red-200 text-red-700' },
+  '지인 영업': { icon: '🤝', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+  '지인영업': { icon: '🤝', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+  'DM 자동화': { icon: '🤖', color: 'bg-purple-50 border-purple-200 text-purple-700' },
+  '카톡방': { icon: '💬', color: 'bg-yellow-50 border-yellow-200 text-yellow-700' },
+}
+
+function getChannelConfig(title: string): { icon: string; color: string } {
+  for (const [key, config] of Object.entries(CHANNEL_CONFIG)) {
+    if (title.includes(key)) return config
+  }
+  return { icon: '📄', color: 'bg-gray-50 border-gray-200 text-gray-700' }
+}
+
+// ─── Sectioned Guide (TOC + Content panel) ───────────
+function SectionedGuide({ sections, accentColor }: { sections: ParsedSection[]; accentColor: string }) {
+  const [activeIdx, setActiveIdx] = useState(0)
+
+  const colorMap: Record<string, { active: string; hover: string; indicator: string }> = {
+    blue:   { active: 'bg-blue-50 text-blue-700 border-blue-200', hover: 'hover:bg-blue-50/50', indicator: 'bg-blue-500' },
+    indigo: { active: 'bg-indigo-50 text-indigo-700 border-indigo-200', hover: 'hover:bg-indigo-50/50', indicator: 'bg-indigo-500' },
+  }
+  const colors = colorMap[accentColor] || colorMap.blue
 
   return (
-    <div className="space-y-6">
-      {program.activity_guide && (
-        <GuideSection
-          icon={<BookOpen className="w-4 h-4" />}
-          title="활동 가이드"
-          subtitle="이렇게 활동하면 수익을 높일 수 있어요"
-          content={program.activity_guide}
-          accentColor="blue"
-          renderStyle="steps"
-        />
-      )}
+    <div className="flex gap-0 min-h-[300px]">
+      {/* Left sidebar TOC */}
+      <div className="w-44 shrink-0 border-r border-gray-100 pr-1">
+        <nav className="space-y-0.5 sticky top-0">
+          {sections.map((sec, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveIdx(idx)}
+              className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${
+                activeIdx === idx
+                  ? `${colors.active} font-semibold border`
+                  : `text-gray-600 ${colors.hover} border border-transparent`
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {sec.emoji && <span className="text-base shrink-0">{sec.emoji}</span>}
+                <span className="truncate leading-snug">{sec.title}</span>
+              </div>
+            </button>
+          ))}
+        </nav>
+      </div>
 
-      {program.content_sources && (
-        <GuideSection
-          icon={<FileImage className="w-4 h-4" />}
-          title="콘텐츠 소스"
-          subtitle="활동에 활용할 수 있는 자료들이에요"
-          content={program.content_sources}
-          accentColor="indigo"
-          renderStyle="list"
-        />
-      )}
+      {/* Right content panel */}
+      <div className="flex-1 pl-5 min-w-0">
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`w-1.5 h-6 rounded-full ${colors.indicator}`} />
+          <h3 className="font-semibold text-gray-900">
+            {sections[activeIdx]?.emoji && <span className="mr-1.5">{sections[activeIdx].emoji}</span>}
+            {sections[activeIdx]?.title}
+          </h3>
+        </div>
+        <div className="pr-2">
+          <MarkdownRenderer content={preprocessGuideContent(sections[activeIdx]?.body || '')} />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-      {program.prohibited_activities && (
-        <GuideSection
-          icon={<ShieldAlert className="w-4 h-4" />}
-          title="금지 활동"
-          subtitle="파트너십 해지 사유가 될 수 있어요"
-          content={program.prohibited_activities}
-          accentColor="red"
-          renderStyle="list"
-        />
-      )}
+// ─── Channel card grid for content_sources ───────────
+function ChannelCardGrid({ sections }: { sections: ParsedSection[] }) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
 
-      {program.precautions && (
-        <GuideSection
-          icon={<AlertTriangle className="w-4 h-4" />}
-          title="유의 사항"
-          subtitle="참가 전에 꼭 확인해주세요"
-          content={program.precautions}
-          accentColor="amber"
-          renderStyle="list"
-        />
+  return (
+    <div className="space-y-4">
+      {/* Card grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {sections.map((sec, idx) => {
+          const config = getChannelConfig(sec.title)
+          const isExpanded = expandedIdx === idx
+          return (
+            <button
+              key={idx}
+              onClick={() => setExpandedIdx(prev => prev === idx ? null : idx)}
+              className={`text-left rounded-xl border-2 p-4 transition-all ${
+                isExpanded
+                  ? `${config.color} ring-2 ring-offset-1 ring-current/20`
+                  : `${config.color} opacity-80 hover:opacity-100`
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">{config.icon}</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{sec.title}</p>
+                  <p className="text-xs opacity-70 mt-0.5">
+                    {sec.body.split('\n').filter(l => l.trim()).length}개 항목
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2 flex items-center gap-1 text-xs opacity-60">
+                {isExpanded ? (
+                  <><ChevronUp className="w-3 h-3" />접기</>
+                ) : (
+                  <><ChevronDown className="w-3 h-3" />펼치기</>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Expanded content below grid */}
+      {expandedIdx !== null && sections[expandedIdx] && (
+        <div className="rounded-xl border bg-white p-5 transition-all duration-200">
+          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+            <span className="text-xl">{getChannelConfig(sections[expandedIdx].title).icon}</span>
+            <h4 className="font-semibold text-sm text-gray-900">{sections[expandedIdx].title}</h4>
+            <button
+              onClick={() => setExpandedIdx(null)}
+              className="ml-auto text-gray-400 hover:text-gray-600 p-1 rounded"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="pr-2">
+            <MarkdownRenderer content={preprocessGuideContent(sections[expandedIdx].body)} />
+          </div>
+        </div>
       )}
     </div>
   )
 }
 
-// 가이드 섹션 컴포넌트 — 넘버드 리스트는 스텝 뱃지, 불릿은 체크리스트로 렌더링
+// ─── 활동 가이드 탭 ───────────────────────────────────
+function GuideTab({ program, hasGuide }: { program: ProgramDetail; hasGuide: boolean }) {
+  if (!hasGuide || !program.activity_guide) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-8">활동 가이드가 아직 등록되지 않았습니다.</p>
+    )
+  }
+
+  const guideSections = parseMarkdownSections(program.activity_guide)
+
+  return (
+    <div>
+      {guideSections.length >= 3 ? (
+        <SectionedGuide sections={guideSections} accentColor="blue" />
+      ) : (
+        <MarkdownRenderer content={preprocessGuideContent(program.activity_guide)} />
+      )}
+    </div>
+  )
+}
+
+// ─── 금지활동 탭 — 경고 배너 + 체크리스트 스타일 ─────────
+function RulesTab({ content, hasContent }: { content: string | null; hasContent: boolean }) {
+  if (!hasContent || !content) {
+    return <p className="text-sm text-gray-400 text-center py-8">금지활동 안내가 아직 등록되지 않았습니다.</p>
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Warning banner */}
+      <div className="bg-red-600 text-white rounded-xl px-5 py-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <ShieldAlert className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="font-bold text-sm">금지활동 안내</p>
+          <p className="text-xs text-red-100 mt-0.5">아래 항목 위반 시 파트너 자격이 즉시 해지될 수 있습니다</p>
+        </div>
+      </div>
+
+      {/* Content rendered as checklist style */}
+      <div className="rounded-xl border border-red-100 bg-red-50/30 p-5">
+        <MarkdownRenderer content={preprocessGuideContent(content)} className="rules-checklist" />
+      </div>
+    </div>
+  )
+}
+
+// ─── 유의사항 탭 — 강조 배너 + 체크리스트 ────────────────
+function CautionTab({ content, hasContent }: { content: string | null; hasContent: boolean }) {
+  if (!hasContent || !content) {
+    return <p className="text-sm text-gray-400 text-center py-8">유의사항이 아직 등록되지 않았습니다.</p>
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Caution banner */}
+      <div className="bg-amber-500 text-white rounded-xl px-5 py-4 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <AlertTriangle className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="font-bold text-sm">유의사항</p>
+          <p className="text-xs text-amber-100 mt-0.5">활동 전 반드시 확인해주세요</p>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-5">
+        <MarkdownRenderer content={preprocessGuideContent(content)} />
+      </div>
+    </div>
+  )
+}
+
+// 가이드 섹션 컴포넌트 — MarkdownRenderer로 완전 렌더링
+// Preprocess guide content: ensure emoji-starting lines are separate paragraphs
+function preprocessGuideContent(content: string): string {
+  return content
+    // Add blank line before emoji-starting lines (paragraph separation)
+    .replace(/\n([\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}✅❌⚠️💡🚀🎯💰🏆📊💳📢✔️👥📱💬🔄1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣8️⃣9️⃣🔟])/gu, '\n\n$1')
+    // Add blank lines around horizontal rules
+    .replace(/\n(---)\n/g, '\n\n$1\n\n')
+    // Collapse 3+ consecutive blank lines into 2
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 function GuideSection({
   icon,
   title,
   subtitle,
   content,
   accentColor,
-  renderStyle,
 }: {
   icon: React.ReactNode
   title: string
   subtitle: string
   content: string
   accentColor: string
-  renderStyle: 'steps' | 'list'
+  renderStyle?: 'steps' | 'list'
 }) {
-  const colorMap: Record<string, { badge: string; iconBg: string; iconText: string; stepBg: string; stepText: string }> = {
-    blue: {
-      badge: 'bg-blue-50 border-blue-100',
-      iconBg: 'bg-blue-100',
-      iconText: 'text-blue-600',
-      stepBg: 'bg-blue-600',
-      stepText: 'text-white',
-    },
-    indigo: {
-      badge: 'bg-indigo-50 border-indigo-100',
-      iconBg: 'bg-indigo-100',
-      iconText: 'text-indigo-600',
-      stepBg: 'bg-indigo-600',
-      stepText: 'text-white',
-    },
-    red: {
-      badge: 'bg-red-50 border-red-100',
-      iconBg: 'bg-red-100',
-      iconText: 'text-red-600',
-      stepBg: 'bg-red-500',
-      stepText: 'text-white',
-    },
-    amber: {
-      badge: 'bg-amber-50 border-amber-100',
-      iconBg: 'bg-amber-100',
-      iconText: 'text-amber-600',
-      stepBg: 'bg-amber-500',
-      stepText: 'text-white',
-    },
+  const colorMap: Record<string, { badge: string; iconBg: string; iconText: string }> = {
+    blue:   { badge: 'bg-blue-50 border-blue-100',   iconBg: 'bg-blue-100',   iconText: 'text-blue-600' },
+    indigo: { badge: 'bg-indigo-50 border-indigo-100', iconBg: 'bg-indigo-100', iconText: 'text-indigo-600' },
+    red:    { badge: 'bg-red-50 border-red-100',     iconBg: 'bg-red-100',    iconText: 'text-red-600' },
+    amber:  { badge: 'bg-amber-50 border-amber-100', iconBg: 'bg-amber-100',  iconText: 'text-amber-600' },
   }
-
   const colors = colorMap[accentColor] || colorMap.blue
-
-  // Parse lines for step/list rendering
-  const lines = content
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0)
-
-  const isNumberedLine = (line: string) => /^(\d+)[.)]\s/.test(line)
-  const isBulletLine = (line: string) => /^[-•*]\s/.test(line)
-
-  const stripPrefix = (line: string) => {
-    return line.replace(/^(\d+)[.)]\s/, '').replace(/^[-•*]\s/, '')
-  }
-
-  const hasNumbered = lines.some(isNumberedLine)
-  const useSteps = renderStyle === 'steps' && hasNumbered
 
   return (
     <div className={`rounded-xl border ${colors.badge} overflow-hidden`}>
-      {/* 섹션 헤더 */}
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-inherit">
         <div className={`w-7 h-7 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center shrink-0`}>
           {icon}
@@ -848,51 +1069,8 @@ function GuideSection({
           <p className="text-xs text-gray-400">{subtitle}</p>
         </div>
       </div>
-
-      {/* 콘텐츠 */}
       <div className="px-5 py-4">
-        {useSteps ? (
-          // 스텝 렌더링
-          <ol className="space-y-3">
-            {lines.map((line, i) => {
-              const isNum = isNumberedLine(line)
-              const text = isNum ? stripPrefix(line) : line
-              const stepNum = isNum ? (line.match(/^(\d+)/)?.[1] || String(i + 1)) : null
-
-              return (
-                <li key={i} className="flex items-start gap-3">
-                  {stepNum ? (
-                    <span className={`w-5 h-5 rounded-full ${colors.stepBg} ${colors.stepText} text-xs font-bold flex items-center justify-center shrink-0 mt-0.5`}>
-                      {stepNum}
-                    </span>
-                  ) : (
-                    <span className="w-5 h-5 shrink-0" />
-                  )}
-                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
-                </li>
-              )
-            })}
-          </ol>
-        ) : (
-          // 불릿/일반 렌더링
-          <ul className="space-y-2">
-            {lines.map((line, i) => {
-              const isBullet = isBulletLine(line)
-              const text = stripPrefix(line)
-
-              return (
-                <li key={i} className="flex items-start gap-2.5">
-                  {isBullet ? (
-                    <span className={`w-1.5 h-1.5 rounded-full ${colors.stepBg} shrink-0 mt-1.5`} />
-                  ) : (
-                    <span className="text-gray-300 text-xs mt-0.5 shrink-0">·</span>
-                  )}
-                  <p className="text-sm text-gray-700 leading-relaxed">{text}</p>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        <MarkdownRenderer content={preprocessGuideContent(content)} />
       </div>
     </div>
   )
@@ -1074,7 +1252,7 @@ function BoardTab({
         </div>
       )}
 
-      {/* 파트너 활동 지원 게시판 */}
+      {/* 파트너 활동 지원 게시판 — PC: 좌측 목록 + 우측 패널 / 모바일: 전체화면 오버레이 */}
       {boardPosts && boardPosts.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
@@ -1082,32 +1260,110 @@ function BoardTab({
             <h3 className="text-sm font-semibold text-gray-700">파트너 활동 지원</h3>
             <span className="text-xs text-gray-400">{boardPosts.length}개</span>
           </div>
-          <div className="space-y-2">
-            {boardPosts.map(post => (
-              <div key={post.id} className="rounded-lg border border-gray-100">
-                <button
-                  className="w-full text-left p-3.5 flex items-start justify-between gap-2"
-                  onClick={() => setExpandedId(prev => prev === post.id ? null : post.id)}
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{post.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(post.created_at).toLocaleDateString('ko-KR')}
-                    </p>
+
+          {/* PC layout: sidebar list + right panel */}
+          <div className="hidden sm:flex gap-0 min-h-[300px]">
+            {/* Left card list */}
+            <div className="w-64 shrink-0 border-r border-gray-100 pr-3 space-y-2 overflow-y-auto max-h-[500px]">
+              {boardPosts.map(post => {
+                const channelConfig = getChannelConfig(post.title)
+                const isSelected = expandedId === post.id
+                return (
+                  <button
+                    key={post.id}
+                    className={`w-full text-left rounded-lg border p-3 transition-all ${
+                      isSelected
+                        ? `${channelConfig.color} border-2 font-semibold`
+                        : `border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/50`
+                    }`}
+                    onClick={() => handleClick(post.id, true, 'board')}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-lg shrink-0 mt-0.5">{channelConfig.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-800 line-clamp-2">{post.title}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Right content panel */}
+            <div className="flex-1 pl-4 min-w-0">
+              {expandedId && boardPosts.find(p => p.id === expandedId) ? (
+                <div>
+                  <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
+                    <h4 className="font-semibold text-sm text-gray-900">
+                      {boardPosts.find(p => p.id === expandedId)!.title}
+                    </h4>
+                    <button
+                      onClick={() => setExpandedId(null)}
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  {expandedId === post.id ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                  )}
-                </button>
-                {expandedId === post.id && (
-                  <div className="px-3.5 pb-3.5 border-t border-gray-100 pt-3">
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+                  <div className="pr-2">
+                    <MarkdownRenderer content={boardPosts.find(p => p.id === expandedId)!.content} />
                   </div>
-                )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                  게시물을 선택하세요
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile layout: card grid + fullscreen overlay */}
+          <div className="sm:hidden">
+            <div className="grid grid-cols-1 gap-2">
+              {boardPosts.map(post => {
+                const channelConfig = getChannelConfig(post.title)
+                return (
+                  <button
+                    key={post.id}
+                    className="w-full text-left rounded-xl border-2 p-4 transition-all border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/50"
+                    onClick={() => handleClick(post.id, true, 'board')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl shrink-0 mt-0.5">{channelConfig.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-800 line-clamp-2">{post.title}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 mt-1" />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Mobile fullscreen overlay */}
+            {expandedId && boardPosts.find(p => p.id === expandedId) && (
+              <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
+                  <h4 className="font-semibold text-sm text-gray-900 truncate pr-4">
+                    {boardPosts.find(p => p.id === expandedId)!.title}
+                  </h4>
+                  <button
+                    onClick={() => setExpandedId(null)}
+                    className="text-gray-500 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 shrink-0"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-4 pb-20">
+                  <MarkdownRenderer content={boardPosts.find(p => p.id === expandedId)!.content} />
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

@@ -16,9 +16,9 @@ const TiptapEditor = dynamic(
   { ssr: false, loading: () => <div className="h-[200px] border rounded-lg bg-slate-50 animate-pulse" /> }
 )
 
-const TiptapViewer = dynamic(
-  () => import('@/components/editor/TiptapViewer'),
-  { ssr: false }
+const MarkdownRenderer = dynamic(
+  () => import('@/components/editor/MarkdownRenderer'),
+  { ssr: false, loading: () => <div className="h-10 animate-pulse bg-gray-100 rounded" /> }
 )
 
 interface Post {
@@ -492,7 +492,7 @@ function PostList({
                   </div>
                   {isExpanded && (
                     <div className="mt-4 pt-4 border-t">
-                      <TiptapViewer content={post.content} />
+                      <MarkdownRenderer content={post.content} />
                     </div>
                   )}
                 </>

@@ -13,9 +13,9 @@ import {
 import { Megaphone, LayoutList, Mail, Building } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
-const TiptapViewer = dynamic(
-  () => import('@/components/editor/TiptapViewer'),
-  { ssr: false }
+const MarkdownRenderer = dynamic(
+  () => import('@/components/editor/MarkdownRenderer'),
+  { ssr: false, loading: () => <div className="h-10 animate-pulse bg-gray-100 rounded" /> }
 )
 
 interface Advertiser {
@@ -271,7 +271,7 @@ export default function PartnerActivityPage() {
                           {item.body}
                         </p>
                       ) : (
-                        <TiptapViewer content={item.content || ''} />
+                        <MarkdownRenderer content={item.content || ''} />
                       )}
                     </div>
                   )}
