@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
         const name = (f['파트너이름'] as string || '').trim()
         const email = (f['이메일'] as string || '').trim().toLowerCase()
         const phone = (f['연락처'] as string || '').trim() || null
-        const refCode = (f['ref코드'] as string || '').trim()
+        const refCode = (f['추천인코드(5글자 이내)'] as string || '').trim()
 
         if (!email) continue
         if (existingEmails.has(email)) continue // already in DB, skip
