@@ -59,6 +59,7 @@ export async function GET() {
       .from('referio_campaigns')
       .select('*')
       .eq('is_active', true)
+      .eq('type', 'partner_recruitment')
       .order('created_at', { ascending: true })
 
     const campaignPrograms = await Promise.all(
