@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-25T02:56:35.297Z",
+  "lastUpdated": "2026-03-25T11:40:39.972Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -47,7 +47,9 @@
     "[code]",
     "convert",
     "partner",
-    "plan"
+    "plan",
+    "tmp",
+    "complete"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -99,9 +101,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:57.134Z",
-        "lastUpdated": "2026-03-25T02:47:23.533Z"
+        "lastUpdated": "2026-03-25T10:44:17.116Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/programs/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/programs/route.ts"
     },
     "[advertiserId]": {
       "phase": "do",
@@ -151,7 +153,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T02:53:30.331Z",
-        "lastUpdated": "2026-03-25T00:54:57.006Z"
+        "lastUpdated": "2026-03-25T11:08:16.959Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/referrals/route.ts"
     },
@@ -177,7 +179,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:17:56.248Z",
-        "lastUpdated": "2026-03-25T00:59:50.314Z"
+        "lastUpdated": "2026-03-25T10:39:08.979Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settings/page.tsx"
     },
@@ -190,7 +192,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-03-25T00:55:00.105Z"
+        "lastUpdated": "2026-03-25T11:08:17.874Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/route.ts"
     },
@@ -203,7 +205,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-03-24T07:22:14.627Z"
+        "lastUpdated": "2026-03-25T11:40:39.972Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
     },
@@ -333,9 +335,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-25T02:47:02.783Z"
+        "lastUpdated": "2026-03-25T11:08:23.077Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/programs/[id]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/referrals/[id]/route.ts"
     },
     "schema": {
       "phase": "do",
@@ -359,7 +361,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T06:48:32.584Z",
-        "lastUpdated": "2026-03-10T07:04:42.633Z"
+        "lastUpdated": "2026-03-25T10:38:51.706Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/integrations/airtable/connect/route.ts"
     },
@@ -656,6 +658,32 @@
         "lastUpdated": "2026-03-25T02:56:30.682Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/plan/page.tsx"
+    },
+    "tmp": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T11:04:00.647Z",
+        "lastUpdated": "2026-03-25T11:04:00.647Z"
+      },
+      "lastFile": "/tmp/sync_customers.py"
+    },
+    "complete": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T11:08:08.057Z",
+        "lastUpdated": "2026-03-25T11:08:23.225Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/complete/route.ts"
     }
   },
   "pipeline": {
@@ -666,7 +694,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-25T02:56:35.297Z"
+    "lastActivity": "2026-03-25T11:40:39.972Z"
   },
   "history": [
     {
@@ -2880,6 +2908,174 @@
     {
       "timestamp": "2026-03-25T02:56:35.297Z",
       "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:00.345Z",
+      "feature": "connect",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:03.571Z",
+      "feature": "connect",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:13.643Z",
+      "feature": "connect",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:25.484Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:51.706Z",
+      "feature": "connect",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:38:58.163Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:39:08.979Z",
+      "feature": "settings",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:44:17.116Z",
+      "feature": "programs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:04:00.647Z",
+      "feature": "tmp",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:03.904Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:05.273Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:06.578Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:08.057Z",
+      "feature": "complete",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:15.709Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:16.959Z",
+      "feature": "referrals",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:17.874Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:19.645Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:23.077Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:08:23.225Z",
+      "feature": "complete",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:33:56.478Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:34:00.626Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:34:06.539Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:34:10.943Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:34:21.747Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:38:46.242Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:38:50.519Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:39:54.642Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T11:40:39.972Z",
+      "feature": "partners",
       "phase": "do",
       "action": "updated"
     }
