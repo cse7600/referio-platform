@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -29,6 +29,7 @@ interface Props {
 
 export default function BrandedSignupForm({ advertiser, code }: Props) {
   const router = useRouter()
+  const supabaseRef = useRef(createClient())
 
   // --- 비밀번호 설정 모드 (이관 유저) ---
   const [isPasswordMode, setIsPasswordMode] = useState(!!code)
@@ -59,7 +60,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
       if (accessToken) {
         setIsPasswordMode(true)
         setResetStatus('loading')
-        const supabase = createClient()
+        const supabase = supabaseRef.current
         supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
           .then(async ({ data, error }) => {
             if (error) {
@@ -91,8 +92,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
     // Case 3: PKCE flow (?code= 쿼리 파라미터, 서버에서 prop으로 전달)
     if (!code) return
     setResetStatus('loading')
-    const supabase = createClient()
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+    supabaseRef.current.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
         setResetStatus('error')
         setResetError('링크가 만료되었거나 이미 사용된 링크입니다. 비밀번호 재설정을 다시 요청해주세요.')
@@ -109,8 +109,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
     if (resetPassword !== resetConfirm) { setResetError('비밀번호가 일치하지 않습니다'); return }
 
     setResetSubmitting(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password: resetPassword })
+    const { error } = await supabaseRef.current.auth.updateUser({ password: resetPassword })
 
     if (error) {
       setResetError('비밀번호 설정에 실패했습니다. 다시 시도해주세요.')
@@ -151,7 +150,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
       return
     }
 
-    const supabase = createClient()
+    const supabase = supabaseRef.current
 
     // 1. Supabase Auth 회원가입
     const { data, error: authError } = await supabase.auth.signUp({
