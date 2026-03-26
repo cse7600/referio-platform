@@ -45,11 +45,9 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
 
     // Case 1: 에러 해시 (#error=access_denied 등)
     if (hash.includes('error=')) {
-      const params = new URLSearchParams(hash.replace('#', ''))
-      const desc = params.get('error_description') || '링크가 만료되었거나 유효하지 않습니다.'
       setIsPasswordMode(true)
       setResetStatus('error')
-      setResetError(decodeURIComponent(desc.replace(/\+/g, ' ')))
+      setResetError('링크가 만료되었거나 이미 사용된 링크입니다. 가장 최근에 받은 이메일의 버튼을 클릭해주세요.')
       return
     }
 
