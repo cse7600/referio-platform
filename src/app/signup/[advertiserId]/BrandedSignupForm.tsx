@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, User, Lock } from 'lucide-react'
+import { Mail, User, Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 interface AdvertiserBranding {
   id: string
@@ -28,6 +28,51 @@ interface Props {
 
 export default function BrandedSignupForm({ advertiser }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const code = searchParams.get('code')
+
+  // --- 비밀번호 설정 모드 (이관 유저: ?code= 파라미터 존재) ---
+  const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle')
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetConfirm, setResetConfirm] = useState('')
+  const [resetError, setResetError] = useState('')
+  const [resetSubmitting, setResetSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!code) return
+    setResetStatus('loading')
+    const supabase = createClient()
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setResetStatus('error')
+        setResetError('링크가 만료되었거나 이미 사용된 링크입니다. 비밀번호 재설정을 다시 요청해주세요.')
+      } else {
+        setResetStatus('ready')
+      }
+    })
+  }, [code])
+
+  const handlePasswordSet = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetError('')
+    if (resetPassword.length < 6) { setResetError('비밀번호는 6자 이상이어야 합니다'); return }
+    if (resetPassword !== resetConfirm) { setResetError('비밀번호가 일치하지 않습니다'); return }
+
+    setResetSubmitting(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password: resetPassword })
+
+    if (error) {
+      setResetError('비밀번호 설정에 실패했습니다. 다시 시도해주세요.')
+      setResetSubmitting(false)
+    } else {
+      setResetStatus('success')
+      // 3초 후 로그인 페이지로 자동 이동
+      setTimeout(() => router.push('/login'), 3000)
+    }
+  }
+
+  // --- 일반 신규 가입 모드 ---
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -138,6 +183,117 @@ export default function BrandedSignupForm({ advertiser }: Props) {
 
     setError('가입이 완료되었습니다. 이메일을 확인한 후 로그인해주세요')
     setLoading(false)
+  }
+
+  // 비밀번호 설정 모드: ?code= 파라미터가 있을 때
+  if (code) {
+    return (
+      <div className="min-h-screen flex">
+        {/* 좌측 브랜딩 패널 */}
+        <div
+          className="hidden lg:flex lg:w-1/2 p-12 flex-col justify-between"
+          style={{ background: `linear-gradient(135deg, ${brandColor}ee 0%, ${brandColor}99 100%)` }}
+        >
+          <div className="flex items-center gap-3">
+            {advertiser.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={advertiser.logo_url} alt={advertiser.company_name} className="h-8 object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20">
+                <span className="text-white font-bold text-sm">{advertiser.company_name.charAt(0)}</span>
+              </div>
+            )}
+            <span className="text-white text-xl font-bold">{advertiser.company_name}</span>
+          </div>
+          <div className="text-white">
+            <h2 className="text-4xl font-bold mb-4 leading-tight">파트너 포털에<br />오신 것을 환영합니다</h2>
+            <p className="text-white/80 text-lg">비밀번호를 설정하고<br />파트너 포털에 입장하세요</p>
+          </div>
+          <a href="https://referio.kr" target="_blank" rel="noopener noreferrer" className="text-white/50 text-sm hover:text-white/80 transition-colors">
+            Powered by <span className="font-medium">Referio</span>
+          </a>
+        </div>
+
+        {/* 우측 비밀번호 설정 폼 */}
+        <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="lg:hidden mb-4 flex items-center justify-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: brandColor }}>
+                  <span className="text-white font-bold text-xs">{advertiser.company_name.charAt(0)}</span>
+                </div>
+                <span className="text-slate-900 text-xl font-bold">{advertiser.company_name}</span>
+              </div>
+              <CardTitle className="text-2xl">비밀번호 설정</CardTitle>
+              <CardDescription>
+                {resetStatus === 'loading' && '인증 확인 중입니다...'}
+                {resetStatus === 'ready' && '사용할 비밀번호를 입력해주세요'}
+                {resetStatus === 'success' && '설정 완료! 로그인 페이지로 이동합니다'}
+                {resetStatus === 'error' && '링크를 확인해주세요'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {resetStatus === 'loading' && (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin" style={{ color: brandColor }} />
+                </div>
+              )}
+
+              {resetStatus === 'error' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg">
+                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <p className="text-red-700 text-sm">{resetError}</p>
+                  </div>
+                  <Button className="w-full" variant="outline" onClick={() => router.push('/login')}>
+                    로그인 페이지로 돌아가기
+                  </Button>
+                </div>
+              )}
+
+              {resetStatus === 'success' && (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+                    <p className="text-green-700 text-sm">
+                      비밀번호가 설정되었습니다. 잠시 후 로그인 페이지로 이동합니다.
+                    </p>
+                  </div>
+                  <Button className="w-full text-white" style={{ backgroundColor: brandColor }} onClick={() => router.push('/login')}>
+                    바로 로그인하기
+                  </Button>
+                </div>
+              )}
+
+              {resetStatus === 'ready' && (
+                <form onSubmit={handlePasswordSet} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetPassword">새 비밀번호</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input id="resetPassword" type="password" placeholder="6자 이상" value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)} className="pl-10" required minLength={6} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="resetConfirm">비밀번호 확인</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input id="resetConfirm" type="password" placeholder="비밀번호 재입력" value={resetConfirm}
+                        onChange={(e) => setResetConfirm(e.target.value)} className="pl-10" required minLength={6} />
+                    </div>
+                  </div>
+                  {resetError && <p className="text-red-500 text-sm">{resetError}</p>}
+                  <Button type="submit" className="w-full text-white" style={{ backgroundColor: brandColor }} disabled={resetSubmitting}>
+                    {resetSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />설정 중...</> : '비밀번호 설정 완료'}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
