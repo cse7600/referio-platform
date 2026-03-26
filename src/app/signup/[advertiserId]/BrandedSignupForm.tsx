@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,12 +24,11 @@ interface AdvertiserBranding {
 
 interface Props {
   advertiser: AdvertiserBranding
+  code?: string
 }
 
-export default function BrandedSignupForm({ advertiser }: Props) {
+export default function BrandedSignupForm({ advertiser, code }: Props) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const code = searchParams.get('code')
 
   // --- 비밀번호 설정 모드 (이관 유저: ?code= 파라미터 존재) ---
   const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle')
