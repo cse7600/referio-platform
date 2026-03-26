@@ -31,13 +31,14 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
   const router = useRouter()
 
   // --- 비밀번호 설정 모드 (이관 유저) ---
-  // code(PKCE) 또는 해시 토큰(Implicit) 감지 시 true
   const [isPasswordMode, setIsPasswordMode] = useState(!!code)
   const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle')
   const [resetPassword, setResetPassword] = useState('')
   const [resetConfirm, setResetConfirm] = useState('')
   const [resetError, setResetError] = useState('')
   const [resetSubmitting, setResetSubmitting] = useState(false)
+  const [partnerName, setPartnerName] = useState('')
+  const [partnerEmail, setPartnerEmail] = useState('')
 
   useEffect(() => {
     const hash = window.location.hash
@@ -62,11 +63,26 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
         setResetStatus('loading')
         const supabase = createClient()
         supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-          .then(({ error }) => {
+          .then(async ({ data, error }) => {
             if (error) {
               setResetStatus('error')
               setResetError('인증 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
             } else {
+              // 유저 이름/이메일 가져오기
+              const email = data.user?.email || ''
+              const name = data.user?.user_metadata?.name || ''
+              setPartnerEmail(email)
+              if (name) {
+                setPartnerName(name)
+              } else if (email) {
+                // user_metadata에 name 없으면 partners 테이블에서 조회
+                const { data: p } = await supabase
+                  .from('partners')
+                  .select('name')
+                  .eq('email', email)
+                  .single()
+                if (p?.name) setPartnerName(p.name)
+              }
               setResetStatus('ready')
             }
           })
@@ -263,7 +279,7 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
               <CardTitle className="text-2xl">비밀번호 설정</CardTitle>
               <CardDescription>
                 {resetStatus === 'loading' && '인증 확인 중입니다...'}
-                {resetStatus === 'ready' && '사용할 비밀번호를 입력해주세요'}
+                {resetStatus === 'ready' && (partnerName ? `${partnerName}님, 비밀번호를 설정해주세요` : '사용할 비밀번호를 입력해주세요')}
                 {resetStatus === 'success' && '설정 완료! 로그인 페이지로 이동합니다'}
                 {resetStatus === 'error' && '링크를 확인해주세요'}
               </CardDescription>
@@ -303,6 +319,13 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
 
               {resetStatus === 'ready' && (
                 <form onSubmit={handlePasswordSet} className="space-y-4">
+                  {/* 파트너 정보 표시 */}
+                  {(partnerName || partnerEmail) && (
+                    <div style={{ background: `${brandColor}12`, border: `1px solid ${brandColor}30` }} className="rounded-lg px-4 py-3">
+                      {partnerName && <p className="text-sm font-semibold text-gray-800">{partnerName}</p>}
+                      {partnerEmail && <p className="text-xs text-gray-500 mt-0.5">{partnerEmail}</p>}
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="resetPassword">새 비밀번호</Label>
                     <div className="relative">
