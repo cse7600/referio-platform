@@ -38,6 +38,16 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
   const [resetSubmitting, setResetSubmitting] = useState(false)
 
   useEffect(() => {
+    // 해시에 Supabase 에러가 있으면 (#error=access_denied 등) 에러 처리
+    const hash = window.location.hash
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const desc = params.get('error_description') || '링크가 만료되었거나 유효하지 않습니다.'
+      setResetStatus('error')
+      setResetError(decodeURIComponent(desc.replace(/\+/g, ' ')))
+      return
+    }
+
     if (!code) return
     setResetStatus('loading')
     const supabase = createClient()
