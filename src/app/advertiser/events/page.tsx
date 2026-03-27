@@ -127,31 +127,21 @@ export default function EventsPage() {
       </div>
 
       {/* Funnel Summary Cards */}
-      <div className={`grid grid-cols-1 md:grid-cols-${Math.min(funnel_events.length + conversionKeys.length, 6)} gap-4`}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {funnel_events.map((event, idx) => (
-          <Card key={event}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">
-                총 {getEventLabel(event)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${FUNNEL_COLORS[idx % FUNNEL_COLORS.length]}`}>
-                {(funnel[event] || 0).toLocaleString()}
-              </div>
-            </CardContent>
+          <Card key={event} className="p-4">
+            <p className="text-xs text-slate-500 mb-1">총 {getEventLabel(event)}</p>
+            <p className={`text-2xl font-bold ${FUNNEL_COLORS[idx % FUNNEL_COLORS.length]}`}>
+              {(funnel[event] || 0).toLocaleString()}
+            </p>
           </Card>
         ))}
         {conversionKeys.map((ck) => (
-          <Card key={ck.key}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">{ck.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-500">
-                {funnel[ck.key] || 0}%
-              </div>
-            </CardContent>
+          <Card key={ck.key} className="p-4">
+            <p className="text-xs text-slate-500 mb-1">{ck.label}</p>
+            <p className="text-2xl font-bold text-orange-500">
+              {funnel[ck.key] || 0}%
+            </p>
           </Card>
         ))}
       </div>
