@@ -25,9 +25,10 @@ interface AdvertiserBranding {
 interface Props {
   advertiser: AdvertiserBranding
   code?: string
+  prefillEmail?: string
 }
 
-export default function BrandedSignupForm({ advertiser, code }: Props) {
+export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Props) {
   const router = useRouter()
   const supabaseRef = useRef(createClient())
 
@@ -39,7 +40,8 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
   const [resetError, setResetError] = useState('')
   const [resetSubmitting, setResetSubmitting] = useState(false)
   const [partnerName, setPartnerName] = useState('')
-  const [partnerEmail, setPartnerEmail] = useState('')
+  const [partnerEmail, setPartnerEmail] = useState(prefillEmail || '')
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
 
   useEffect(() => {
     const hash = window.location.hash
@@ -294,6 +296,31 @@ export default function BrandedSignupForm({ advertiser, code }: Props) {
                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-red-700 text-sm">{resetError}</p>
                   </div>
+                  {partnerEmail && (
+                    resendStatus === 'sent' ? (
+                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                        <p className="text-green-700 text-sm">{partnerEmail} 로 새 링크를 발송했습니다. 이메일을 확인해주세요.</p>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full text-white"
+                        style={{ backgroundColor: brandColor }}
+                        disabled={resendStatus === 'sending'}
+                        onClick={async () => {
+                          setResendStatus('sending')
+                          await fetch('/api/public/resend-setup-link', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: partnerEmail, advertiserId: advertiser.advertiser_id }),
+                          })
+                          setResendStatus('sent')
+                        }}
+                      >
+                        {resendStatus === 'sending' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />발송 중...</> : '설정 링크 재전송'}
+                      </Button>
+                    )
+                  )}
                   <Button className="w-full" variant="outline" onClick={() => router.push('/login')}>
                     로그인 페이지로 돌아가기
                   </Button>

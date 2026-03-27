@@ -9,12 +9,12 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ advertiserId: string }>
-  searchParams: Promise<{ code?: string }>
+  searchParams: Promise<{ code?: string; email?: string }>
 }
 
 export default async function BrandedSignupPage({ params, searchParams }: PageProps) {
   const { advertiserId } = await params
-  const { code } = await searchParams
+  const { code, email } = await searchParams
   const admin = createAdminClient()
 
   const { data: advertiser } = await admin
@@ -28,5 +28,5 @@ export default async function BrandedSignupPage({ params, searchParams }: PagePr
     redirect('/signup')
   }
 
-  return <BrandedSignupForm advertiser={advertiser} code={code} />
+  return <BrandedSignupForm advertiser={advertiser} code={code} prefillEmail={email} />
 }
