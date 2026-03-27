@@ -1,7 +1,7 @@
 'use client'
 
 import { Node, mergeAttributes } from '@tiptap/core'
-import { ReactNodeViewRenderer, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react'
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 
 // ─── Stat Card (single metric) ───────────────────────────────────
 function MiniCard({
@@ -105,9 +105,9 @@ function TopTable({ rows }: { rows: Array<{ name: string; count: number; complet
 }
 
 // ─── NodeView renderer ────────────────────────────────────────────
-function StatBlockView({ node }: ReactNodeViewProps) {
-  const blockType = node.attrs.blockType as string
-  const rawData = node.attrs.data as string
+function StatBlockView({ node }: { node: { attrs: Record<string, unknown> } }) {
+  const blockType = String(node.attrs.blockType ?? '')
+  const rawData = String(node.attrs.data ?? '{}')
   let parsed: Record<string, unknown> | null = null
   try { parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData } catch { /* empty */ }
   if (!parsed) return <NodeViewWrapper><div style={{ color: '#94a3b8', fontSize: 12, padding: 8 }}>데이터 없음</div></NodeViewWrapper>
