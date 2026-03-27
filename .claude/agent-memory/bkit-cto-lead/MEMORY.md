@@ -1,0 +1,2 @@
+- [Millie B2C Event Tracking](project_millie_b2c.md) — Millie uses Airbridge event funnel (install/sign_up/subscribe), not B2B manual referrals
+- [Advertiser Type Architecture](project_advertiser_type.md) — advertiser_type column replaces all millie UUID hardcoding (2026-03-27)

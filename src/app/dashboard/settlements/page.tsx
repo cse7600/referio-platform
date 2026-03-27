@@ -87,7 +87,7 @@ export default function SettlementsPage() {
     if (filterField === 'id') {
       return settlement.id.toString().includes(searchLower)
     } else {
-      const referralName = settlement.referral?.name_masked || settlement.referral?.name || ''
+      const referralName = settlement.referral?.name || ''
       return referralName.toLowerCase().includes(searchLower)
     }
   })
@@ -232,7 +232,7 @@ export default function SettlementsPage() {
                           #{settlement.id}
                         </TableCell>
                         <TableCell>
-                          {settlement.referral?.name_masked || settlement.referral?.name || '-'}
+                          {settlement.referral?.name ? settlement.referral.name[0] + '**' : '-'}
                         </TableCell>
                         <TableCell>
                           <Badge

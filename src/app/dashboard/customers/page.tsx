@@ -101,6 +101,11 @@ export default function CustomersPage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
+  const maskName = (name: string | null | undefined) => {
+    if (!name) return '-'
+    return name[0] + '**'
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="text-gray-500">로딩 중...</div></div>
   }
@@ -241,7 +246,7 @@ export default function CustomersPage() {
                         {formatDate(referral.created_at)}
                       </TableCell>
                       <TableCell className="font-medium">
-                        {referral.name_masked || referral.name}
+                        {maskName(referral.name)}
                       </TableCell>
                       {!selectedAdvertiserId && (
                         <TableCell className="text-sm text-gray-500">

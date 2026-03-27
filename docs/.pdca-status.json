@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-27T04:53:06.842Z",
+  "lastUpdated": "2026-03-27T06:15:07.493Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -202,9 +202,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-03-25T11:08:17.874Z"
+        "lastUpdated": "2026-03-27T06:15:07.493Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/settlements/page.tsx"
     },
     "partners": {
       "phase": "do",
@@ -293,7 +293,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T10:27:50.934Z",
-        "lastUpdated": "2026-03-24T06:27:13.643Z"
+        "lastUpdated": "2026-03-27T06:14:52.237Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/customers/page.tsx"
     },
@@ -795,9 +795,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T02:43:05.692Z",
-        "lastUpdated": "2026-03-27T04:41:28.490Z"
+        "lastUpdated": "2026-03-27T05:00:16.729Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/reports/report-editor.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/reports/stat-block-node.tsx"
     },
     "millie-events": {
       "phase": "do",
@@ -821,7 +821,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-03-27T04:44:07.441Z"
+        "lastUpdated": "2026-03-27T04:56:08.981Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/events/page.tsx"
     }
@@ -834,7 +834,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-27T04:53:06.842Z"
+    "lastActivity": "2026-03-27T06:15:07.493Z"
   },
   "history": [
     {
@@ -4632,6 +4632,54 @@
     {
       "timestamp": "2026-03-27T04:53:06.842Z",
       "feature": "campaigns",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T04:56:08.981Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T05:00:07.058Z",
+      "feature": "reports",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T05:00:11.303Z",
+      "feature": "reports",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T05:00:16.729Z",
+      "feature": "reports",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T06:14:46.855Z",
+      "feature": "customers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T06:14:52.237Z",
+      "feature": "customers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T06:15:02.133Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T06:15:07.493Z",
+      "feature": "settlements",
       "phase": "do",
       "action": "updated"
     }
