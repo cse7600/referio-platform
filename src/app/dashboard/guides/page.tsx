@@ -186,7 +186,7 @@ export default function GuidesPage() {
       <div className="text-center py-4">
         <p className="text-sm text-gray-400">
           더 궁금한 점이 있으신가요?{' '}
-          <a href="mailto:support@referio.kr" className="text-indigo-600 hover:underline">support@referio.kr</a>로 문의해주세요
+          <a href="mailto:referio@puzl.co.kr" className="text-indigo-600 hover:underline">referio@puzl.co.kr</a>로 문의해주세요
         </p>
       </div>
     </div>

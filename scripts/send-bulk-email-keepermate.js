@@ -115,7 +115,7 @@ function buildEmailHtml(name, actionLink, referralCode) {
 
   <div style="background:#f8fafc;padding:20px 32px;border-radius:0 0 12px 12px;border-top:1px solid #e5e7eb;">
     <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">이 메일은 한화비전 키퍼메이트 파트너 포털 이전 안내입니다.</p>
-    <p style="margin:0;color:#9ca3af;font-size:12px;">문의: <a href="mailto:support@referio.kr" style="color:#6b7280;">support@referio.kr</a></p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">문의: <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a></p>
   </div>
 
 </div>

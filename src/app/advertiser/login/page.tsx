@@ -123,10 +123,10 @@ export default function AdvertiserLoginPage() {
           <div className="text-sm text-slate-400">
             비밀번호를 잊으셨나요?{' '}
             <a
-              href="mailto:support@referio.kr?subject=광고주 비밀번호 초기화 요청&body=로그인 ID: "
+              href="mailto:referio@puzl.co.kr?subject=광고주 비밀번호 초기화 요청&body=로그인 ID: "
               className="hover:underline text-slate-500"
             >
-              support@referio.kr로 로그인 ID와 함께 문의하세요
+              referio@puzl.co.kr로 로그인 ID와 함께 문의하세요
             </a>
           </div>
           <button

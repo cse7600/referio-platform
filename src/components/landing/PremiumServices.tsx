@@ -152,7 +152,7 @@ export default function PremiumServices() {
         {/* CTA */}
         <div className="text-center">
           {activeTab === 'hero-partner' ? (
-            <Link href="mailto:sales@referio.kr">
+            <Link href="mailto:referio@puzl.co.kr">
               <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-lg px-8 h-14 gap-2">
                 Hero Partner 문의하기 <ArrowRight className="w-5 h-5" />
               </Button>

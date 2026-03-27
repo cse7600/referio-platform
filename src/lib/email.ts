@@ -359,7 +359,7 @@ export async function sendWelcomeEmail(options: {
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
-        문의: <a href="mailto:sales@referio.kr" style="color:#6b7280;">sales@referio.kr</a>
+        문의: <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>
       </p>
     </div>
   </div>

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     </div>
   </div>
   <div style="background:#f8fafc;padding:20px 32px;border-radius:0 0 12px 12px;border-top:1px solid #e5e7eb;">
-    <p style="margin:0;color:#9ca3af;font-size:12px;">문의: <a href="mailto:support@referio.kr" style="color:#6b7280;">support@referio.kr</a></p>
+    <p style="margin:0;color:#9ca3af;font-size:12px;">문의: <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a></p>
   </div>
 </div>
 </body>
