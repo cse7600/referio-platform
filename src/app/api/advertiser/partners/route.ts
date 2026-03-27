@@ -97,6 +97,7 @@ export async function GET() {
         program_id: e.id,
         applied_at: e.applied_at,
         approved_at: e.approved_at,
+        program_created_at: e.created_at,
         monthly_lead_count: monthStats.lead_count,
         monthly_contract_count: monthStats.contract_count,
       }

@@ -29,8 +29,20 @@ interface Partner {
   activity_link: string | null
   memo: string | null
   created_at: string
+  program_created_at: string
   monthly_lead_count: number
   monthly_contract_count: number
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${y}.${m}.${day} ${h}:${min}`
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -234,13 +246,15 @@ export default function AdvertiserPartnersPage() {
                 <TableHead className="text-center">이번 달 리드</TableHead>
                 <TableHead className="text-center">이번 달 계약</TableHead>
                 <TableHead>추천 코드</TableHead>
+                <TableHead>참여일</TableHead>
+                <TableHead>가입일</TableHead>
                 <TableHead className="text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={11} className="text-center py-12 text-slate-500">
                     {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
                   </TableCell>
                 </TableRow>
@@ -321,6 +335,16 @@ export default function AdvertiserPartnersPage() {
                         <code className="text-xs bg-slate-100 px-2 py-1 rounded">
                           {partner.referral_code}
                         </code>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-slate-600 whitespace-nowrap">
+                          {formatDate(partner.program_created_at)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs text-slate-600 whitespace-nowrap">
+                          {formatDate(partner.created_at)}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                         {partner.status === 'pending' && (
