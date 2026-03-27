@@ -45,13 +45,18 @@
 
 총 2가지입니다.
 
-### ✅ 할 일 1: Airtable 베이스 초대
+### ✅ 할 일 1: Referio 연동 전용 Airtable 베이스 생성 후 공유
 
-Referio 팀 계정(`cym@puzl.co.kr`)을 해당 Airtable 베이스에 **Editor** 권한으로 초대합니다.
+기존 Airtable 베이스 전체를 공유하지 않고, **Referio 연동에 필요한 테이블만 담은 새 베이스를 별도로 만들어서 공유합니다.**
 
-> Airtable 베이스 → 우측 상단 Share → Invite by email → cym@puzl.co.kr 입력 → Editor 선택
+이 방식이 보안상 가장 안전합니다. 기존 베이스의 다른 데이터는 Referio에 노출되지 않습니다.
 
-이것만으로 Referio가 해당 베이스에 접근해서 데이터를 읽을 수 있습니다.
+**생성 절차:**
+1. Airtable에서 새 베이스 생성 (이름 예: `Referio 리드 연동`)
+2. 아래 **3번 섹션**의 필드 구성에 맞게 테이블 설정
+3. 베이스 우측 상단 **Share** → **Invite by email** → `cym@puzl.co.kr` 입력 → **Editor** 선택
+
+> 기존 영업 CRM 베이스의 신규 리드 데이터를 이 베이스로 복사하거나 Airtable Automation으로 미러링하는 방법은 Referio 팀이 안내해드립니다.
 
 ---
 
@@ -134,7 +139,7 @@ Referio 팀 계정(`cym@puzl.co.kr`)을 해당 Airtable 베이스에 **Editor** 
 
 | 항목 | 담당 | 완료 |
 |------|------|------|
-| Airtable 베이스에 `cym@puzl.co.kr` Editor 초대 | 고객사 | ☐ |
+| Referio 연동 전용 새 베이스 생성 후 `cym@puzl.co.kr` Editor 초대 | 고객사 | ☐ |
 | 베이스에 `이름`, `추천코드`, `영업상태` 필드 생성 | 고객사 | ☐ |
 | `영업상태` 옵션에 `유효` / `계약완료` / `무효` 포함 | 고객사 | ☐ |
 | 문의 폼에 추천코드 숨김 필드 및 JS 코드 추가 | 고객사 개발팀 | ☐ |
