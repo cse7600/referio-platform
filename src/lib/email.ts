@@ -116,8 +116,38 @@ export async function sendPartnerApprovalEmail(options: {
   programName: string
   referralCode: string
   referralUrl?: string
+  advertiserId?: string // advertiser_id (text slug, e.g. "keepermate")
+  leadCommission?: number
+  contractCommission?: number
 }): Promise<boolean> {
-  const { partnerEmail, partnerName, advertiserCompanyName, programName, referralCode, referralUrl } = options
+  const {
+    partnerEmail, partnerName, advertiserCompanyName, programName,
+    referralCode, referralUrl, advertiserId, leadCommission, contractCommission,
+  } = options
+
+  const displayName = programName || advertiserCompanyName
+  const programPageUrl = advertiserId
+    ? `https://referio.kr/dashboard/programs/${advertiserId}`
+    : 'https://referio.kr/dashboard/programs'
+
+  // Commission info section (only if at least one value exists)
+  const hasCommission = (leadCommission && leadCommission > 0) || (contractCommission && contractCommission > 0)
+  const commissionRows = hasCommission ? `
+      <div style="background:#f0fdf4;border-radius:8px;padding:16px 20px;margin-bottom:24px;border:1px solid #bbf7d0;">
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#166534;">커미션 안내</p>
+        <table style="width:100%;border-collapse:collapse;">
+          ${leadCommission && leadCommission > 0 ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">리드 커미션 (유효 상담 시)</td>
+            <td style="padding:4px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">${leadCommission.toLocaleString()}원</td>
+          </tr>` : ''}
+          ${contractCommission && contractCommission > 0 ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">계약 커미션 (계약 성사 시)</td>
+            <td style="padding:4px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">${contractCommission.toLocaleString()}원</td>
+          </tr>` : ''}
+        </table>
+      </div>` : ''
 
   const html = `
 <!DOCTYPE html>
@@ -129,27 +159,87 @@ export async function sendPartnerApprovalEmail(options: {
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
     </div>
     <div style="padding:32px;">
-      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">파트너 승인을 축하합니다! 🎊</h2>
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">파트너 승인 완료!</h2>
       <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
-        ${partnerName}님이 <strong>${programName || advertiserCompanyName}</strong> 파트너로 승인되었습니다.
-        지금 바로 추천 링크를 공유하고 커미션을 받아보세요!
+        ${partnerName}님, <strong>${displayName}</strong> 파트너로 승인되었습니다.<br/>
+        지금 바로 추천 활동을 시작해 보세요!
       </p>
+
+      <!-- Referral code -->
       <div style="background:#eef2ff;border-radius:8px;padding:20px;margin-bottom:24px;border:1px solid #c7d2fe;">
         <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#4338ca;">내 추천 코드</p>
-        <p style="margin:0 0 12px;font-size:24px;font-weight:700;color:#4f46e5;letter-spacing:2px;">${referralCode}</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#4f46e5;letter-spacing:3px;text-align:center;padding:8px 0;">${referralCode}</p>
         ${referralUrl ? `
-        <p style="margin:0 0 4px;font-size:12px;color:#6b7280;">내 추천 링크</p>
-        <p style="margin:0;font-size:12px;color:#4f46e5;word-break:break-all;">${referralUrl}</p>
-        ` : ''}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #c7d2fe;">
+          <p style="margin:0 0 4px;font-size:12px;color:#6b7280;">내 추천 링크</p>
+          <p style="margin:0;font-size:13px;color:#4f46e5;word-break:break-all;background:#fff;padding:8px 12px;border-radius:6px;border:1px solid #e0e7ff;">${referralUrl}</p>
+        </div>` : ''}
       </div>
-      <a href="https://referio.kr/dashboard"
-         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
-        대시보드로 이동
-      </a>
+
+      <!-- Commission info -->
+      ${commissionRows}
+
+      <!-- Program detail guide -->
+      <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-bottom:24px;border:1px solid #e5e7eb;">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#111827;">프로그램 상세 페이지 안내</p>
+        <p style="margin:0 0 12px;color:#6b7280;font-size:13px;">
+          아래 페이지에서 활동에 필요한 모든 정보를 확인할 수 있습니다.
+        </p>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#4f46e5;font-weight:600;">개요</span>
+              <span style="color:#6b7280;"> — 프로그램 설명, 커미션 구조, 지급 조건</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#4f46e5;font-weight:600;">활동가이드</span>
+              <span style="color:#6b7280;"> — 추천 시 단계별 가이드</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#dc2626;font-weight:600;">금지활동</span>
+              <span style="color:#6b7280;"> — 반드시 확인! 해서는 안 되는 행동</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#4f46e5;font-weight:600;">유의사항</span>
+              <span style="color:#6b7280;"> — 중요 규칙과 주의할 점</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#4f46e5;font-weight:600;">미디어</span>
+              <span style="color:#6b7280;"> — 홍보용 이미지/영상 자료</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;font-size:13px;">
+              <span style="color:#4f46e5;font-weight:600;">게시판</span>
+              <span style="color:#6b7280;"> — 광고주 공지사항, Q&A</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- CTA button -->
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="${programPageUrl}"
+           style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
+          지금 바로 활동 시작하기
+        </a>
+      </div>
+      <p style="margin:8px 0 0;text-align:center;color:#9ca3af;font-size:12px;">
+        프로그램 상세 페이지에서 활동가이드와 금지활동을 꼭 확인해 주세요.
+      </p>
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
+        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
       </p>
     </div>
   </div>
@@ -158,7 +248,7 @@ export async function sendPartnerApprovalEmail(options: {
 
   return sendEmail({
     to: partnerEmail,
-    subject: `[Referio] ${programName || advertiserCompanyName} 파트너로 승인되었습니다`,
+    subject: `[Referio] ${displayName} 파트너로 승인되었습니다`,
     html,
   })
 }

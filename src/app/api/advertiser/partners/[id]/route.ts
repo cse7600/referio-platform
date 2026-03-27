@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
+import { sendPartnerApprovalEmail } from '@/lib/email'
 
 export async function PATCH(
   request: NextRequest,
@@ -66,6 +67,62 @@ export async function PATCH(
       if (progErr) {
         console.error('Program status update error:', progErr)
         return NextResponse.json({ error: '상태 변경에 실패했습니다' }, { status: 500 })
+      }
+
+      // Send approval email when status changes to 'approved'
+      if (status === 'approved') {
+        try {
+          // Fetch partner info
+          const { data: partner } = await supabase
+            .from('partners')
+            .select('email, name')
+            .eq('id', id)
+            .single()
+
+          // Fetch advertiser info
+          const { data: advertiser } = await supabase
+            .from('advertisers')
+            .select('advertiser_id, company_name, program_name')
+            .eq('id', session.advertiserUuid)
+            .single()
+
+          // Fetch partner_program info (referral_code, commissions)
+          const { data: program } = await supabase
+            .from('partner_programs')
+            .select('referral_code, lead_commission, contract_commission')
+            .eq('partner_id', id)
+            .eq('advertiser_id', session.advertiserUuid)
+            .single()
+
+          if (partner?.email && advertiser && program) {
+            // Build referral URL if advertiser has a homepage
+            const { data: advFull } = await supabase
+              .from('advertisers')
+              .select('homepage_url')
+              .eq('id', session.advertiserUuid)
+              .single()
+
+            const referralUrl = advFull?.homepage_url
+              ? `${advFull.homepage_url}${advFull.homepage_url.includes('?') ? '&' : '?'}ref=${program.referral_code}`
+              : undefined
+
+            await sendPartnerApprovalEmail({
+              partnerEmail: partner.email,
+              partnerName: partner.name || '파트너',
+              advertiserCompanyName: advertiser.company_name,
+              programName: advertiser.program_name || '',
+              referralCode: program.referral_code,
+              referralUrl,
+              advertiserId: advertiser.advertiser_id,
+              leadCommission: program.lead_commission,
+              contractCommission: program.contract_commission,
+            })
+            console.log(`[Email] Partner approval email sent to ${partner.email}`)
+          }
+        } catch (emailErr) {
+          // Email failure should not block the approval response
+          console.error('[Email] Failed to send approval email:', emailErr)
+        }
       }
     }
 

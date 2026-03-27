@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-26T07:43:55.615Z",
+  "lastUpdated": "2026-03-27T00:47:46.246Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -52,7 +52,8 @@
     "complete",
     "sync-airtable-partners",
     "feedback",
-    "ui"
+    "ui",
+    "resend-setup-link"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -117,9 +118,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T02:00:39.130Z",
-        "lastUpdated": "2026-03-26T07:09:11.171Z"
+        "lastUpdated": "2026-03-27T00:47:36.609Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/inquiry/[advertiserId]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/[advertiserId]/BrandedSignupForm.tsx"
     },
     "campaigns": {
       "phase": "do",
@@ -325,9 +326,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-26T07:09:03.147Z"
+        "lastUpdated": "2026-03-27T00:41:27.076Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
     "[id]": {
       "phase": "do",
@@ -338,9 +339,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-26T06:25:54.027Z"
+        "lastUpdated": "2026-03-27T00:41:53.814Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/programs/[id]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
     },
     "schema": {
       "phase": "do",
@@ -437,7 +438,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-03-26T03:24:17.222Z"
+        "lastUpdated": "2026-03-27T00:47:46.246Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-bulk-email-keepermate.js"
     },
@@ -726,6 +727,19 @@
         "lastUpdated": "2026-03-26T04:54:57.263Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/ui/feedback-widget.tsx"
+    },
+    "resend-setup-link": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-27T00:41:45.973Z",
+        "lastUpdated": "2026-03-27T00:41:45.973Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/public/resend-setup-link/route.ts"
     }
   },
   "pipeline": {
@@ -736,7 +750,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-26T07:43:55.615Z"
+    "lastActivity": "2026-03-27T00:47:46.246Z"
   },
   "history": [
     {
@@ -3808,6 +3822,90 @@
     {
       "timestamp": "2026-03-26T07:43:55.615Z",
       "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:27.076Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:37.735Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:45.973Z",
+      "feature": "resend-setup-link",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:53.814Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:53.951Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:41:57.392Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:42:12.561Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:42:21.068Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:42:31.981Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:42:44.617Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:46:12.705Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:47:36.609Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:47:41.999Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-27T00:47:46.246Z",
+      "feature": "scripts",
       "phase": "do",
       "action": "updated"
     }
