@@ -296,17 +296,27 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-red-700 text-sm">{resetError}</p>
                   </div>
-                  {partnerEmail && (
-                    resendStatus === 'sent' ? (
-                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                        <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                        <p className="text-green-700 text-sm">{partnerEmail} 로 새 링크를 발송했습니다. 이메일을 확인해주세요.</p>
+                  {resendStatus === 'sent' ? (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                      <p className="text-green-700 text-sm">{partnerEmail} 로 새 링크를 발송했습니다. 이메일을 확인해주세요.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Input
+                          type="email"
+                          placeholder="가입 이메일 주소 입력"
+                          value={partnerEmail}
+                          onChange={(e) => setPartnerEmail(e.target.value)}
+                          className="pl-10"
+                        />
                       </div>
-                    ) : (
                       <Button
                         className="w-full text-white"
                         style={{ backgroundColor: brandColor }}
-                        disabled={resendStatus === 'sending'}
+                        disabled={resendStatus === 'sending' || !partnerEmail}
                         onClick={async () => {
                           setResendStatus('sending')
                           await fetch('/api/public/resend-setup-link', {
@@ -319,7 +329,7 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
                       >
                         {resendStatus === 'sending' ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />발송 중...</> : '설정 링크 재전송'}
                       </Button>
-                    )
+                    </div>
                   )}
                   <Button className="w-full" variant="outline" onClick={() => router.push('/login')}>
                     로그인 페이지로 돌아가기
