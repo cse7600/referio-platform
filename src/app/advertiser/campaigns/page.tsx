@@ -62,14 +62,21 @@ export default function AdvertiserCampaignsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [advertiserType, setAdvertiserType] = useState<string>('inquiry')
 
   // 캠페인 생성 다이얼로그
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [newCampaignName, setNewCampaignName] = useState('')
   const [creating, setCreating] = useState(false)
 
+  const isEventTracking = advertiserType === 'event_tracking'
+
   useEffect(() => {
     fetchCampaign()
+    fetch('/api/auth/advertiser/me')
+      .then(r => r.json())
+      .then(d => { if (d.advertiser?.advertiserType) setAdvertiserType(d.advertiser.advertiserType) })
+      .catch(() => {})
   }, [])
 
   const fetchCampaign = async () => {
@@ -291,7 +298,7 @@ export default function AdvertiserCampaignsPage() {
               <h4 className="font-medium mb-4">기본 단가 설정</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>유효 단가 (원)</Label>
+                  <Label>{isEventTracking ? '가입 단가 (원)' : '유효 단가 (원)'}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₩</span>
                     <Input
@@ -303,11 +310,13 @@ export default function AdvertiserCampaignsPage() {
                       }
                     />
                   </div>
-                  <p className="text-xs text-slate-500">DB 유효 확인 시 파트너에게 지급</p>
+                  <p className="text-xs text-slate-500">
+                    {isEventTracking ? '가입(sign_up) 이벤트 수신 시 파트너에게 지급' : 'DB 유효 확인 시 파트너에게 지급'}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>계약 단가 (원)</Label>
+                  <Label>{isEventTracking ? '구독 단가 (원)' : '계약 단가 (원)'}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₩</span>
                     <Input
@@ -319,7 +328,9 @@ export default function AdvertiserCampaignsPage() {
                       }
                     />
                   </div>
-                  <p className="text-xs text-slate-500">계약 완료 시 파트너에게 지급</p>
+                  <p className="text-xs text-slate-500">
+                    {isEventTracking ? '구독(subscribe) 이벤트 수신 시 파트너에게 지급' : '계약 완료 시 파트너에게 지급'}
+                  </p>
                 </div>
               </div>
             </div>
