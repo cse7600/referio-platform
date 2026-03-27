@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendAdvertiserNewLeadEmail } from '@/lib/email'
+import { notifyAirtableLead } from '@/lib/slack'
 
 interface AirtableConfig {
   name_field: string
@@ -323,6 +324,15 @@ export async function POST(request: NextRequest) {
           source: 'airtable',
         }).catch(() => {})
       }
+
+      // Slack 알림 (비동기)
+      notifyAirtableLead({
+        leadName: name || '이름 없음',
+        leadPhone: phone || undefined,
+        companyName: adv?.company_name || '',
+        referralCode: refCode || null,
+        partnerMatched: !!partnerId,
+      }).catch(() => {})
 
       return NextResponse.json({
         success: true,

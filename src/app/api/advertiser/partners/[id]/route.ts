@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 import { sendPartnerApprovalEmail } from '@/lib/email'
+import { notifyPartnerApproval } from '@/lib/slack'
 
 export async function PATCH(
   request: NextRequest,
@@ -118,6 +119,14 @@ export async function PATCH(
               contractCommission: program.contract_commission,
             })
             console.log(`[Email] Partner approval email sent to ${partner.email}`)
+
+            // Slack 알림 (비동기)
+            notifyPartnerApproval({
+              partnerName: partner.name || '파트너',
+              partnerEmail: partner.email,
+              companyName: advertiser.company_name,
+              referralCode: program.referral_code,
+            }).catch(() => {})
           }
         } catch (emailErr) {
           // Email failure should not block the approval response

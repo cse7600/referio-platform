@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAdvertiserSession } from '@/lib/auth';
+import { notifyFeedback } from '@/lib/slack';
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 const FROM_EMAIL = 'noreply@updates.puzl.co.kr';
-const TO_EMAIL = 'keeper.partners@puzl.co.kr';
+const TO_EMAIL = 'referio@puzl.co.kr';
 
 async function getCurrentUser() {
   // 1. 파트너 (Supabase Auth) 확인
@@ -106,6 +107,14 @@ export async function POST(req: NextRequest) {
       console.error('[Feedback POST] DB 저장 실패:', dbError);
       return NextResponse.json({ error: '저장에 실패했습니다.' }, { status: 500 });
     }
+
+    // Slack 알림 (비동기)
+    notifyFeedback({
+      userName: currentUser.name,
+      userEmail: currentUser.email,
+      userType: currentUser.type,
+      message: message.trim(),
+    }).catch(() => {});
 
     // 이메일 발송
     const apiKey = process.env.RESEND_API_KEY;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendAdvertiserNewLeadEmail } from '@/lib/email'
+import { notifyNewInquiry } from '@/lib/slack'
 
 // UUID 패턴 확인
 function isUuid(str: string): boolean {
@@ -104,6 +105,15 @@ export async function POST(request: NextRequest) {
         source: 'inquiry',
       }).catch(() => {})
     }
+
+    // Slack 알림 (비동기)
+    notifyNewInquiry({
+      leadName: name,
+      leadPhone: phone,
+      companyName: advertiser.company_name || '',
+      referralCode: referral_code || null,
+      partnerMatched: !!partnerId,
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, message: '문의가 접수되었습니다' }, { status: 201 })
   } catch (error) {

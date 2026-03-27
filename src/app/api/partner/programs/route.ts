@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyPartnerApply } from '@/lib/slack'
 
 function generateShortCode(prefix: string): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -258,6 +259,20 @@ export async function POST(request: NextRequest) {
       console.error('Program enrollment error:', insertError)
       return NextResponse.json({ error: '참가 신청에 실패했습니다' }, { status: 500 })
     }
+
+    // 광고주 회사명 조회 후 Slack 알림 (비동기)
+    const { data: advInfo } = await admin
+      .from('advertisers')
+      .select('company_name')
+      .eq('id', advertiser_id)
+      .maybeSingle()
+
+    notifyPartnerApply({
+      partnerName: partner.name || '파트너',
+      partnerEmail: partner.email || '',
+      companyName: advInfo?.company_name || '',
+      autoApproved: autoApprove,
+    }).catch(() => {})
 
     return NextResponse.json({ enrollment }, { status: 201 })
   } catch (error) {

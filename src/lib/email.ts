@@ -94,7 +94,8 @@ export async function sendReferralNotification(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
   </div>
@@ -239,7 +240,8 @@ export async function sendPartnerApprovalEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
   </div>
@@ -308,7 +310,8 @@ export async function sendAdvertiserNewLeadEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio에서 자동 발송됩니다.
-        수신 설정은 <a href="https://referio.kr/advertiser/settings" style="color:#6b7280;">설정 페이지</a>에서 변경하세요.
+        수신 설정은 <a href="https://referio.kr/advertiser/settings" style="color:#6b7280;">설정 페이지</a>에서 변경하세요.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
   </div>
@@ -359,7 +362,7 @@ export async function sendWelcomeEmail(options: {
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
-        문의: <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
   </div>
