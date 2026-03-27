@@ -4,6 +4,17 @@ export type ContractStatus = 'pending' | 'call_1' | 'call_2' | 'call_3' | 'compl
 export type SettlementStatus = 'pending' | 'completed' | 'rejected'
 export type SettlementType = 'contract' | 'valid'
 export type AdvertiserStatus = 'active' | 'suspended' | 'inactive'
+export type AdvertiserType = 'inquiry' | 'event_tracking' | 'hybrid'
+
+export interface EventTrackingConfig {
+  provider: 'airbridge' | 'appsflyer' | 'adjust';
+  funnel_events: string[];
+  conversion_event: string;
+  settlement_trigger: 'auto';
+  link_type: 'tracking_link';
+}
+
+export type TypeConfig = EventTrackingConfig | Record<string, never>
 
 // 광고주
 export interface Advertiser {
@@ -21,6 +32,8 @@ export interface Advertiser {
   program_description: string | null
   default_lead_commission: number
   default_contract_commission: number
+  advertiser_type: AdvertiserType
+  type_config: TypeConfig
   is_public: boolean
   category: string | null
   homepage_url: string | null
@@ -77,6 +90,7 @@ export interface PartnerProgram {
   lead_commission: number
   contract_commission: number
   monthly_fee: number
+  tracking_link_url: string | null
   applied_at: string
   approved_at: string | null
   created_at: string

@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
       contact_email: string | null
       contact_phone: string | null
       status: string
+      advertiser_type: string
+      type_config: Record<string, unknown>
     }
 
     // 계정 상태 확인
@@ -59,6 +61,8 @@ export async function GET(request: NextRequest) {
         primaryColor: advertiser.primary_color,
         contactEmail: advertiser.contact_email,
         contactPhone: advertiser.contact_phone,
+        advertiserType: advertiser.advertiser_type,
+        typeConfig: advertiser.type_config,
       },
     })
   } catch (error) {

@@ -59,6 +59,7 @@ export function ProgramProvider({ children }: { children: React.ReactNode }) {
         .from('partner_programs')
         .select(`
           *,
+          tracking_link_url,
           advertisers!inner(
             id,
             company_name,

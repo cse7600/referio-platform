@@ -33,6 +33,7 @@ import {
   Megaphone,
 } from 'lucide-react'
 import { ProgramProvider, useProgram } from './ProgramContext'
+import { FeedbackWidget } from '@/components/ui/feedback-widget'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: '홈', icon: Home },
@@ -244,6 +245,8 @@ function DashboardContent({
           {children}
         </div>
       </main>
+
+      <FeedbackWidget />
     </div>
   )
 }

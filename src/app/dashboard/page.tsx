@@ -170,7 +170,14 @@ export default function DashboardPage() {
   }, [partner?.id, selectedProgram])
 
   // 프로그램별 추천 URL 생성
+  // tracking_link_url이 있으면 에어브릿지 트래킹 URL 우선 사용 (밀리의서재 등)
   const buildProgramReferralUrl = (program: typeof programs[0]) => {
+    // Airbridge tracking link takes priority if assigned
+    const trackingUrl = (program as unknown as { tracking_link_url?: string | null }).tracking_link_url
+    if (trackingUrl) {
+      return trackingUrl
+    }
+
     const adv = program.advertisers as unknown as { landing_url: string | null }
     const refCode = program.referral_code
     if (adv?.landing_url) {

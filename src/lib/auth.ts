@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cookies } from 'next/headers'
+import type { AdvertiserType, TypeConfig } from '@/types/database'
 
 export interface AdvertiserUser {
   id: string
@@ -11,6 +12,8 @@ export interface AdvertiserUser {
   companyName: string
   logoUrl: string | null
   primaryColor: string | null
+  advertiserType: AdvertiserType
+  typeConfig: TypeConfig
 }
 
 /**
@@ -41,7 +44,9 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
           advertiser_id,
           company_name,
           logo_url,
-          primary_color
+          primary_color,
+          advertiser_type,
+          type_config
         )
       `)
       .eq('token', token)
@@ -68,6 +73,8 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
         company_name: string
         logo_url: string | null
         primary_color: string | null
+        advertiser_type: AdvertiserType
+        type_config: TypeConfig
       }
 
       return {
@@ -80,6 +87,8 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
         companyName: advertisers.company_name,
         logoUrl: advertisers.logo_url,
         primaryColor: advertisers.primary_color,
+        advertiserType: advertisers.advertiser_type,
+        typeConfig: advertisers.type_config,
       }
     }
 
@@ -89,6 +98,8 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
       company_name: string
       logo_url: string | null
       primary_color: string | null
+      advertiser_type: AdvertiserType
+      type_config: TypeConfig
     }
 
     return {
@@ -101,6 +112,8 @@ export async function getAdvertiserSession(): Promise<AdvertiserUser | null> {
       companyName: advertisers.company_name,
       logoUrl: advertisers.logo_url,
       primaryColor: advertisers.primary_color,
+      advertiserType: advertisers.advertiser_type,
+      typeConfig: advertisers.type_config,
     }
   } catch (error) {
     console.error('getAdvertiserSession error:', error)
