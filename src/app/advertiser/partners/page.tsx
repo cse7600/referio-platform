@@ -164,6 +164,30 @@ export default function AdvertiserPartnersPage() {
     }
   }
 
+  const handleToggleActive = async (partnerId: string, newValue: boolean) => {
+    setEditIsActive(newValue)
+    try {
+      const res = await fetch(`/api/advertiser/partners/${partnerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active_partner: newValue }),
+      })
+      if (res.ok) {
+        setPartners(prev => prev.map(p =>
+          p.id === partnerId ? { ...p, is_active_partner: newValue } : p
+        ))
+        setSelectedPartner(prev => prev ? { ...prev, is_active_partner: newValue } : null)
+        toast.success(newValue ? '활동 중으로 변경됐습니다' : '비활동으로 변경됐습니다')
+      } else {
+        setEditIsActive(!newValue) // rollback
+        toast.error('저장에 실패했습니다')
+      }
+    } catch {
+      setEditIsActive(!newValue) // rollback
+      toast.error('서버 오류가 발생했습니다')
+    }
+  }
+
   const handleStatusChange = async (partnerId: string, newStatus: 'approved' | 'rejected') => {
     try {
       const response = await fetch(`/api/advertiser/partners/${partnerId}`, {

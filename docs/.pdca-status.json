@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-30T07:02:02.489Z",
+  "lastUpdated": "2026-03-30T07:20:05.186Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -224,7 +224,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-03-30T05:37:31.763Z"
+        "lastUpdated": "2026-03-30T07:20:05.186Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
     },
@@ -453,7 +453,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-03-30T06:58:51.288Z"
+        "lastUpdated": "2026-03-30T07:02:43.138Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/sync-airtable-settlement.js"
     },
@@ -960,7 +960,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-30T07:02:02.489Z"
+    "lastActivity": "2026-03-30T07:20:05.186Z"
   },
   "history": [
     {
@@ -5832,6 +5832,18 @@
     {
       "timestamp": "2026-03-30T07:02:02.489Z",
       "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:02:43.138Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:20:05.186Z",
+      "feature": "partners",
       "phase": "do",
       "action": "updated"
     }
