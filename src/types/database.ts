@@ -110,6 +110,7 @@ export interface Referral {
   is_valid: boolean | null
   contracted_at: string | null
   inquiry: string | null
+  channel: string | null // marketing channel tag (e.g. blog, youtube)
   created_at: string
 }
 

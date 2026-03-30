@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Users, CheckCircle, FileCheck } from 'lucide-react'
+import { Search, Users, CheckCircle, FileCheck, Tag } from 'lucide-react'
 import type { Partner, Referral } from '@/types/database'
 
 interface EnrolledProgram {
@@ -235,6 +235,7 @@ export default function CustomersPage() {
                     <TableHead>유입일시</TableHead>
                     <TableHead>고객명</TableHead>
                     {!selectedAdvertiserId && <TableHead>프로그램</TableHead>}
+                    <TableHead>채널</TableHead>
                     <TableHead>유효여부</TableHead>
                     <TableHead>계약상태</TableHead>
                   </TableRow>
@@ -253,6 +254,15 @@ export default function CustomersPage() {
                           {enrolledPrograms.find(p => p.advertiser_id === referral.advertiser_id)?.label || '-'}
                         </TableCell>
                       )}
+                      <TableCell>
+                        {referral.channel ? (
+                          <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 font-normal">
+                            {referral.channel}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-300 text-xs">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {referral.is_valid ? (
                           <Badge className="bg-green-100 text-green-700 hover:bg-green-100">유효</Badge>

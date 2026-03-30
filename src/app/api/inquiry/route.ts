@@ -11,7 +11,7 @@ function isUuid(str: string): boolean {
 // POST: 문의 폼으로 리드 생성
 export async function POST(request: NextRequest) {
   try {
-    const { advertiser_id, name, phone, inquiry, referral_code } = await request.json()
+    const { advertiser_id, name, phone, inquiry, referral_code, channel } = await request.json()
 
     if (!advertiser_id || !name || !phone) {
       return NextResponse.json({ error: '이름과 연락처는 필수입니다' }, { status: 400 })
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         phone,
         inquiry: inquiry || null,
         referral_code_input: referral_code || null,
+        channel: channel || null,
         contract_status: 'pending',
       })
 

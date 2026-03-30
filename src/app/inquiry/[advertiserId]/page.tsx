@@ -21,6 +21,7 @@ interface AdvertiserInfo {
 function InquiryForm({ advertiserId }: { advertiserId: string }) {
   const searchParams = useSearchParams()
   const ref = searchParams.get('ref') || ''
+  const ch = searchParams.get('ch') || ''
 
   const [advertiser, setAdvertiser] = useState<AdvertiserInfo | null>(null)
   const [loadingInfo, setLoadingInfo] = useState(true)
@@ -69,6 +70,7 @@ function InquiryForm({ advertiserId }: { advertiserId: string }) {
           phone: form.phone.trim(),
           inquiry: inquiryText || null,
           referral_code: ref || null,
+          channel: ch || null,
         }),
       })
 
