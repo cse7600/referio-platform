@@ -38,7 +38,13 @@ export async function GET() {
           is_active_partner,
           activity_link,
           memo,
-          created_at
+          created_at,
+          bank_name,
+          bank_account,
+          account_holder,
+          ssn_encrypted,
+          phone,
+          email
         )
       `)
       .eq('advertiser_id', session.advertiserUuid)
@@ -84,6 +90,12 @@ export async function GET() {
         activity_link: string | null
         memo: string | null
         created_at: string
+        bank_name: string | null
+        bank_account: string | null
+        account_holder: string | null
+        ssn_encrypted: string | null
+        phone: string | null
+        email: string | null
       }
       const monthStats = statsMap[partnerData.id] || { lead_count: 0, contract_count: 0 }
       return {

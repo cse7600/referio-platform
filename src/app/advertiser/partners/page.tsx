@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check, ExternalLink, Activity, X, Save, Link } from 'lucide-react'
+import { Copy, Check, ExternalLink, X, Save, Link, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Partner {
@@ -32,6 +32,17 @@ interface Partner {
   program_created_at: string
   monthly_lead_count: number
   monthly_contract_count: number
+  bank_name: string | null
+  bank_account: string | null
+  account_holder: string | null
+  ssn_encrypted: string | null
+  phone: string | null
+  email: string | null
+  lead_commission: number
+  contract_commission: number
+  program_id: string
+  applied_at: string
+  approved_at: string | null
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -58,13 +69,23 @@ const tierLabels: Record<string, { label: string; color: string }> = {
   platinum: { label: 'Platinum', color: 'bg-purple-200 text-purple-800' },
 }
 
+const hasSettlementInfo = (p: Partner) =>
+  !!(p.bank_name && p.bank_account && p.account_holder)
+
+type SortKey = 'program_created_at' | 'created_at' | 'name' | 'monthly_lead_count' | 'monthly_contract_count'
+
 export default function AdvertiserPartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [settlementFilter, setSettlementFilter] = useState(false)
   const [advertiserId, setAdvertiserId] = useState<string | null>(null)
   const [copiedInvite, setCopiedInvite] = useState(false)
+
+  // Sort state
+  const [sortKey, setSortKey] = useState<SortKey>('program_created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   // Side panel state
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
@@ -160,14 +181,48 @@ export default function AdvertiserPartnersPage() {
     }
   }
 
-  const filteredPartners = partners.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.channels || []).some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+
+  const filteredPartners = useMemo(() => {
+    let list = partners.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.channels || []).some(c => c.toLowerCase().includes(searchTerm.toLowerCase()))
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter
+      const matchesSettlement = !settlementFilter || !hasSettlementInfo(p)
+      return matchesSearch && matchesStatus && matchesSettlement
+    })
+    list = [...list].sort((a, b) => {
+      let va: string | number = (a[sortKey] as string | number) || ''
+      let vb: string | number = (b[sortKey] as string | number) || ''
+      if (typeof va === 'string') va = va.toLowerCase()
+      if (typeof vb === 'string') vb = vb.toLowerCase()
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+    return list
+  }, [partners, searchTerm, statusFilter, settlementFilter, sortKey, sortDir])
 
   const approvedPartners = filteredPartners.filter(p => p.status === 'approved')
+
+  const SortableHead = ({ label, sortK }: { label: string; sortK: SortKey }) => (
+    <TableHead
+      className="cursor-pointer select-none hover:bg-slate-50 whitespace-nowrap"
+      onClick={() => toggleSort(sortK)}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {sortKey === sortK ? (
+          sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+        ) : (
+          <ChevronsUpDown className="w-3 h-3 text-slate-300" />
+        )}
+      </div>
+    </TableHead>
+  )
 
   if (loading) {
     return (
@@ -219,7 +274,7 @@ export default function AdvertiserPartnersPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {(['all', 'pending', 'approved', 'rejected'] as const).map(s => (
               <Button
                 key={s}
@@ -230,6 +285,13 @@ export default function AdvertiserPartnersPage() {
                 {s === 'all' ? '전체' : s === 'pending' ? '대기' : s === 'approved' ? '승인' : '거절'}
               </Button>
             ))}
+            <Button
+              variant={settlementFilter ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSettlementFilter(v => !v)}
+            >
+              정산정보 미입력
+            </Button>
           </div>
         </div>
 
@@ -239,22 +301,23 @@ export default function AdvertiserPartnersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">순위</TableHead>
-                <TableHead>이름</TableHead>
+                <SortableHead label="이름" sortK="name" />
                 <TableHead>채널</TableHead>
+                <TableHead>활동</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>티어</TableHead>
-                <TableHead className="text-center">이번 달 리드</TableHead>
-                <TableHead className="text-center">이번 달 계약</TableHead>
-                <TableHead>추천 코드</TableHead>
-                <TableHead>참여일</TableHead>
-                <TableHead>가입일</TableHead>
+                <SortableHead label="이번달 리드" sortK="monthly_lead_count" />
+                <SortableHead label="이번달 계약" sortK="monthly_contract_count" />
+                <TableHead>정산정보</TableHead>
+                <SortableHead label="참여일" sortK="program_created_at" />
+                <SortableHead label="가입일" sortK="created_at" />
                 <TableHead className="text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={12} className="text-center py-12 text-slate-500">
                     {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
                   </TableCell>
                 </TableRow>
@@ -302,12 +365,23 @@ export default function AdvertiserPartnersPage() {
                               {partner.channels.length > 2 && (
                                 <span className="text-xs text-slate-400">+{partner.channels.length - 2}</span>
                               )}
-                              {partner.is_active_partner && (
-                                <span title="활동 중"><Activity className="w-3 h-3 text-green-500" /></span>
-                              )}
                             </div>
                           ) : (
                             <span className="text-slate-400 text-sm">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`text-xs font-medium ${partner.is_active_partner ? 'text-green-600' : 'text-slate-400'}`}>
+                            {partner.is_active_partner ? '활동 중' : '비활동'}
+                          </span>
+                          {partner.activity_link && (
+                            <a href={partner.activity_link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+                              <span className="text-xs text-blue-500 underline flex items-center gap-0.5">
+                                링크 <ExternalLink className="w-2.5 h-2.5" />
+                              </span>
+                            </a>
                           )}
                         </div>
                       </TableCell>
@@ -332,9 +406,11 @@ export default function AdvertiserPartnersPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <code className="text-xs bg-slate-100 px-2 py-1 rounded">
-                          {partner.referral_code}
-                        </code>
+                        {hasSettlementInfo(partner) ? (
+                          <Badge className="bg-green-100 text-green-700 text-xs">입력완료</Badge>
+                        ) : (
+                          <Badge className="bg-red-100 text-red-700 text-xs">미입력</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span className="text-xs text-slate-600 whitespace-nowrap">
@@ -400,6 +476,27 @@ export default function AdvertiserPartnersPage() {
                 </div>
               </div>
 
+              {/* 수수료 단가 */}
+              {(selectedPartner.lead_commission > 0 || selectedPartner.contract_commission > 0) && (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">수수료 단가</label>
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">유효 DB 단가</span>
+                      <span className="text-slate-800 font-medium">
+                        {selectedPartner.lead_commission > 0 ? `${selectedPartner.lead_commission.toLocaleString()}원` : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">계약 단가</span>
+                      <span className="text-slate-800 font-medium">
+                        {selectedPartner.contract_commission > 0 ? `${selectedPartner.contract_commission.toLocaleString()}원` : '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 주활동채널 */}
               {selectedPartner.channels && selectedPartner.channels.length > 0 && (
                 <div>
@@ -411,6 +508,21 @@ export default function AdvertiserPartnersPage() {
                   </div>
                 </div>
               )}
+
+              {/* 연락처 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">연락처</label>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">이메일</span>
+                    <span className="text-slate-800">{selectedPartner.email || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">전화번호</span>
+                    <span className="text-slate-800">{selectedPartner.phone || '-'}</span>
+                  </div>
+                </div>
+              </div>
 
               {/* 활동 여부 체크박스 */}
               <div>
@@ -467,6 +579,37 @@ export default function AdvertiserPartnersPage() {
                       <Button size="sm" variant="outline" className="h-8 px-2"><ExternalLink className="w-3.5 h-3.5" /></Button>
                     </a>
                   )}
+                </div>
+              </div>
+
+              {/* 정산 정보 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">정산 정보</label>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">은행명</span>
+                    <span className={selectedPartner.bank_name ? 'text-slate-800 font-medium' : 'text-red-400'}>
+                      {selectedPartner.bank_name || '미입력'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">계좌번호</span>
+                    <span className={selectedPartner.bank_account ? 'text-slate-800 font-medium' : 'text-red-400'}>
+                      {selectedPartner.bank_account || '미입력'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">예금주</span>
+                    <span className={selectedPartner.account_holder ? 'text-slate-800 font-medium' : 'text-red-400'}>
+                      {selectedPartner.account_holder || '미입력'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">주민번호</span>
+                    <span className={selectedPartner.ssn_encrypted ? 'text-slate-800 font-medium' : 'text-red-400'}>
+                      {selectedPartner.ssn_encrypted ? '입력됨' : '미입력'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
