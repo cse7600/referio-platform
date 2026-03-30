@@ -36,7 +36,8 @@ export async function GET() {
     if (ticketIds.length > 0) {
       const { data: replies } = await admin
         .from('support_replies')
-        .select('ticket_id');
+        .select('ticket_id')
+        .in('ticket_id', ticketIds);
 
       if (replies) {
         for (const r of replies) {

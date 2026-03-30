@@ -105,11 +105,11 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message } = await req.json();
-    if (!message || message.trim().length === 0) {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    const { message, image_url } = await req.json();
+    if ((!message || message.trim().length === 0) && !image_url) {
+      return NextResponse.json({ error: 'Message or image is required' }, { status: 400 });
     }
-    if (message.length > 2000) {
+    if (message && message.length > 2000) {
       return NextResponse.json({ error: 'Message too long (max 2000)' }, { status: 400 });
     }
 
@@ -129,14 +129,19 @@ export async function POST(
     }
 
     // Save reply
+    const insertData: Record<string, string> = {
+      ticket_id: id,
+      sender_type: 'user',
+      sender_name: currentUser.name,
+      body: message ? message.trim() : '',
+    };
+    if (image_url) {
+      insertData.image_url = image_url;
+    }
+
     const { data: reply, error: replyError } = await admin
       .from('support_replies')
-      .insert({
-        ticket_id: id,
-        sender_type: 'user',
-        sender_name: currentUser.name,
-        body: message.trim(),
-      })
+      .insert(insertData)
       .select('*')
       .single();
 

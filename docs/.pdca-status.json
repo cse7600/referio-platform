@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-30T01:19:55.267Z",
+  "lastUpdated": "2026-03-30T02:44:32.973Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -62,7 +62,8 @@
     "events",
     "support",
     "reply",
-    "status"
+    "status",
+    "upload"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -348,7 +349,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-30T01:19:55.267Z"
+        "lastUpdated": "2026-03-30T01:45:20.557Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/feedback/[id]/route.ts"
     },
@@ -733,7 +734,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-26T04:47:08.368Z",
-        "lastUpdated": "2026-03-26T04:54:57.263Z"
+        "lastUpdated": "2026-03-30T02:43:51.163Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/ui/feedback-widget.tsx"
     },
@@ -837,9 +838,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T01:00:05.228Z",
-        "lastUpdated": "2026-03-30T01:03:18.429Z"
+        "lastUpdated": "2026-03-30T02:44:32.973Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/support/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/support/page.tsx"
     },
     "reply": {
       "phase": "do",
@@ -850,7 +851,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T01:00:39.308Z",
-        "lastUpdated": "2026-03-30T01:19:28.880Z"
+        "lastUpdated": "2026-03-30T02:42:29.699Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/support/[id]/reply/route.ts"
     },
@@ -863,9 +864,22 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T01:00:46.831Z",
-        "lastUpdated": "2026-03-30T01:00:46.831Z"
+        "lastUpdated": "2026-03-30T01:53:03.954Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/support/[id]/status/route.ts"
+    },
+    "upload": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T01:45:06.225Z",
+        "lastUpdated": "2026-03-30T01:45:06.225Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/feedback/upload/route.ts"
     }
   },
   "pipeline": {
@@ -876,7 +890,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-30T01:19:55.267Z"
+    "lastActivity": "2026-03-30T02:44:32.973Z"
   },
   "history": [
     {
@@ -4950,6 +4964,378 @@
     {
       "timestamp": "2026-03-30T01:19:55.267Z",
       "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:45:06.225Z",
+      "feature": "upload",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:45:12.489Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:45:20.557Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:46:45.917Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:46:52.553Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:46:58.349Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:47:03.121Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:47:08.907Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:47:13.206Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:47:19.242Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:47:40.848Z",
+      "feature": "status",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:52:43.368Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T01:53:03.954Z",
+      "feature": "status",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:32.280Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:37.532Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:42.825Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:47.482Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:52.191Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:55.898Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:31:59.806Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:04.308Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:10.825Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:14.643Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:19.428Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:23.102Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:26.948Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:30.341Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:33.957Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:39.248Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:44.034Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:47.947Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:51.769Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:32:55.780Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:00.566Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:04.177Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:07.438Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:12.823Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:23.933Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:29.112Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:35.918Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:48.013Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:33:53.883Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:11.706Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:19.307Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:26.099Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:36.371Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:41.708Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:38:45.836Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:42:23.667Z",
+      "feature": "reply",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:42:29.699Z",
+      "feature": "reply",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:42:36.593Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:42:41.973Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:42:58.945Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:03.306Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:10.159Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:25.646Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:33.345Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:42.246Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:43:51.163Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:44:11.461Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:44:16.587Z",
+      "feature": "support",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T02:44:32.973Z",
+      "feature": "support",
       "phase": "do",
       "action": "updated"
     }

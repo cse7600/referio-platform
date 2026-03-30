@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft, Paperclip, X } from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -26,6 +26,7 @@ interface Reply {
   sender_type: string;
   sender_name: string;
   body: string;
+  image_url?: string | null;
   created_at: string;
 }
 
@@ -68,10 +69,23 @@ export default function AdminSupportPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [replyError, setReplyError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('all');
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchTickets();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchTickets();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -96,6 +110,8 @@ export default function AdminSupportPage() {
     setSelectedTicket(ticket);
     setDetailLoading(true);
     setReplyText('');
+    setReplyError('');
+    clearAdminImage();
 
     try {
       const res = await fetch(`/api/admin/support/${ticket.id}`);
@@ -114,21 +130,92 @@ export default function AdminSupportPage() {
     }
   };
 
+  // Image handling for admin reply
+  const handleAdminImageSelect = (file: File) => {
+    setImageError('');
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('5MB 이하 이미지만 첨부 가능합니다');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setImageError('이미지 파일만 첨부할 수 있습니다');
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearAdminImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    setImageError('');
+  };
+
+  const handleAdminPaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          handleAdminImageSelect(file);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleAdminFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleAdminImageSelect(file);
+    if (e.target) e.target.value = '';
+  };
+
+  const uploadAdminImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/feedback/upload', { method: 'POST', body: formData });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.url || null;
+    } catch {
+      return null;
+    }
+  };
+
   const sendReply = async () => {
-    if (!selectedTicket || !replyText.trim() || sending) return;
+    if (!selectedTicket || (!replyText.trim() && !imageFile) || sending) return;
     setSending(true);
+    setReplyError('');
 
     try {
+      // Upload image first if present
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        imageUrl = await uploadAdminImage(imageFile);
+        if (!imageUrl) {
+          setReplyError('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+          setSending(false);
+          return;
+        }
+      }
+
       const res = await fetch(`/api/admin/support/${selectedTicket.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: replyText.trim() }),
+        body: JSON.stringify({
+          body: replyText.trim(),
+          ...(imageUrl && { image_url: imageUrl }),
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
         setReplies(prev => [...prev, data.reply]);
         setReplyText('');
+        clearAdminImage();
         // Update ticket status locally
         setTickets(prev =>
           prev.map(t =>
@@ -138,9 +225,13 @@ export default function AdminSupportPage() {
           )
         );
         setSelectedTicket(prev => prev ? { ...prev, status: 'in_progress' } : null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setReplyError(data.error || '답변 전송에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (err) {
       console.error('Failed to send reply:', err);
+      setReplyError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setSending(false);
     }
@@ -193,25 +284,59 @@ export default function AdminSupportPage() {
         <div className="flex h-full">
           {/* Left: Ticket List */}
           <div className={`w-full md:w-96 border-r flex flex-col ${selectedTicket ? 'hidden md:flex' : 'flex'}`}>
-            <div className="p-4 border-b bg-gray-50">
-              <p className="text-sm font-medium text-gray-700">
-                전체 {tickets.length}건
-                {tickets.filter(t => t.unread_by_admin).length > 0 && (
-                  <span className="ml-2 text-red-600">
-                    (미읽음 {tickets.filter(t => t.unread_by_admin).length})
-                  </span>
-                )}
-              </p>
+            {/* Status filter tabs */}
+            <div className="border-b bg-gray-50">
+              <div className="flex">
+                {([
+                  { key: 'all' as const, label: '전체', count: tickets.length },
+                  { key: 'open' as const, label: '대기', count: tickets.filter(t => t.status === 'open').length },
+                  { key: 'in_progress' as const, label: '진행중', count: tickets.filter(t => t.status === 'in_progress').length },
+                  { key: 'resolved' as const, label: '해결됨', count: tickets.filter(t => t.status === 'resolved').length },
+                ]).map(tab => {
+                  const isActive = activeFilter === tab.key;
+                  const unreadInTab = tab.key === 'open'
+                    ? tickets.filter(t => t.status === 'open' && t.unread_by_admin).length
+                    : 0;
+
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => {
+                        setActiveFilter(tab.key);
+                        setSelectedTicket(null);
+                      }}
+                      className={`flex-1 px-2 py-3 text-xs font-medium transition-colors relative ${
+                        isActive
+                          ? 'text-indigo-600 border-b-2 border-indigo-600'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span className="ml-1 text-[10px]">({tab.count})</span>
+                      {unreadInTab > 0 && (
+                        <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-red-500 rounded-full">
+                          {unreadInTab}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {tickets.length === 0 ? (
+              {(() => {
+                const filteredTickets = activeFilter === 'all'
+                  ? tickets
+                  : tickets.filter(t => t.status === activeFilter);
+
+                return filteredTickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400">
                   <MessageSquare className="w-12 h-12 mb-3" />
                   <p>문의가 없습니다</p>
                 </div>
               ) : (
-                tickets.map(ticket => {
+                filteredTickets.map(ticket => {
                   const statusCfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.open;
                   const isSelected = selectedTicket?.id === ticket.id;
 
@@ -255,7 +380,8 @@ export default function AdminSupportPage() {
                     </button>
                   );
                 })
-              )}
+              );
+              })()}
             </div>
           </div>
 
@@ -351,6 +477,15 @@ export default function AdminSupportPage() {
                                 : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                             }`}>
                               <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
+                              {reply.image_url && (
+                                <img
+                                  src={reply.image_url}
+                                  alt="Attachment"
+                                  className="max-w-full rounded-lg mt-2 cursor-pointer"
+                                  style={{ maxHeight: '240px' }}
+                                  onClick={() => window.open(reply.image_url!, '_blank')}
+                                />
+                              )}
                             </div>
                             <p className={`text-[11px] text-gray-400 mt-1 ${
                               reply.sender_type === 'admin' ? 'text-right' : ''
@@ -368,18 +503,64 @@ export default function AdminSupportPage() {
 
                 {/* Reply Input */}
                 <div className="p-4 border-t bg-white">
+                  {replyError && (
+                    <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-sm text-red-600">{replyError}</p>
+                    </div>
+                  )}
+                  {imageError && (
+                    <div className="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-sm text-red-600">{imageError}</p>
+                    </div>
+                  )}
+                  {imagePreview && (
+                    <div className="mb-2 flex items-start gap-2">
+                      <div className="relative inline-block">
+                        <img
+                          src={imagePreview}
+                          alt="미리보기"
+                          className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          onClick={clearAdminImage}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2">
+                    <div className="flex flex-col justify-end">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 text-gray-400 hover:text-indigo-500 transition-colors rounded-lg hover:bg-gray-100"
+                        title="이미지 첨부"
+                      >
+                        <Paperclip className="w-5 h-5" />
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAdminFileChange}
+                      />
+                    </div>
                     <Textarea
                       value={replyText}
                       onChange={e => setReplyText(e.target.value)}
                       onKeyDown={handleKeyDown}
+                      onPaste={handleAdminPaste}
                       placeholder="답변을 입력하세요... (Ctrl+Enter로 전송)"
                       className="resize-none min-h-[80px]"
                       rows={3}
                     />
                     <Button
                       onClick={sendReply}
-                      disabled={!replyText.trim() || sending}
+                      disabled={(!replyText.trim() && !imageFile) || sending}
                       className="self-end"
                     >
                       <Send className="w-4 h-4" />

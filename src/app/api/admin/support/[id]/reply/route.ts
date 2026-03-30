@@ -24,9 +24,12 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { body: replyBody } = await req.json();
-    if (!replyBody || replyBody.trim().length === 0) {
-      return NextResponse.json({ error: 'Reply body is required' }, { status: 400 });
+    const { body: replyBody, image_url: imageUrl } = await req.json();
+    const hasBody = replyBody && replyBody.trim().length > 0;
+    const hasImage = imageUrl && typeof imageUrl === 'string' && imageUrl.trim().length > 0;
+
+    if (!hasBody && !hasImage) {
+      return NextResponse.json({ error: 'Reply body or image is required' }, { status: 400 });
     }
 
     const admin = createAdminClient();
@@ -43,14 +46,19 @@ export async function POST(
     }
 
     // Save reply
+    const insertData: Record<string, string> = {
+      ticket_id: id,
+      sender_type: 'admin',
+      sender_name: 'Referio 운영팀',
+      body: hasBody ? replyBody.trim() : '',
+    };
+    if (hasImage) {
+      insertData.image_url = imageUrl.trim();
+    }
+
     const { data: reply, error: replyError } = await admin
       .from('support_replies')
-      .insert({
-        ticket_id: id,
-        sender_type: 'admin',
-        sender_name: 'Referio 운영팀',
-        body: replyBody.trim(),
-      })
+      .insert(insertData)
       .select('*')
       .single();
 

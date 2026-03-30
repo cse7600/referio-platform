@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Send, ArrowLeft, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MessageSquare, Send, ArrowLeft, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -20,6 +21,7 @@ interface Reply {
   sender_type: string;
   sender_name: string;
   body: string;
+  image_url?: string | null;
   created_at: string;
 }
 
@@ -47,6 +49,11 @@ export default function PartnerSupportPage() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+  const [newMessage, setNewMessage] = useState('');
+  const [newSending, setNewSending] = useState(false);
+  const [newError, setNewError] = useState('');
   const threadEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,6 +128,40 @@ export default function PartnerSupportPage() {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       sendReply();
+    }
+  };
+
+  const submitNewInquiry = async () => {
+    if (!newMessage.trim() || newSending) return;
+    setNewSending(true);
+    setNewError('');
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: newMessage.trim(),
+          subject: newSubject.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setNewError(data.error || '전송에 실패했습니다');
+        return;
+      }
+
+      // Success: reset form and refresh list
+      setNewSubject('');
+      setNewMessage('');
+      setShowNewForm(false);
+      setNewError('');
+      await fetchTickets();
+    } catch {
+      setNewError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setNewSending(false);
     }
   };
 
@@ -199,6 +240,15 @@ export default function PartnerSupportPage() {
                           : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                       }`}>
                         <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
+                        {reply.image_url && (
+                          <img
+                            src={reply.image_url}
+                            alt="Attachment"
+                            className="max-w-full rounded-lg mt-2 cursor-pointer"
+                            style={{ maxHeight: '240px' }}
+                            onClick={() => window.open(reply.image_url!, '_blank')}
+                          />
+                        )}
                       </div>
                       <p className={`text-[11px] text-gray-400 mt-1 ${
                         reply.sender_type === 'user' ? 'text-right' : ''
@@ -242,16 +292,70 @@ export default function PartnerSupportPage() {
   // List view
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">내 문의</h1>
-        <p className="text-sm text-gray-500 mt-1">운영팀에 보낸 문의와 답변을 확인합니다</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">내 문의</h1>
+          <p className="text-sm text-gray-500 mt-1">운영팀에 보낸 문의와 답변을 확인합니다</p>
+        </div>
+        <Button
+          onClick={() => setShowNewForm(!showNewForm)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          새 문의하기
+        </Button>
       </div>
+
+      {/* New inquiry inline form */}
+      {showNewForm && (
+        <div className="bg-white rounded-xl border shadow-sm p-5 mb-6">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">새 문의 작성</h2>
+          <div className="space-y-3">
+            <Input
+              value={newSubject}
+              onChange={(e) => setNewSubject(e.target.value)}
+              placeholder="문의 제목 (선택사항)"
+              className="text-sm"
+            />
+            <Textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="문의 내용을 입력하세요..."
+              rows={3}
+              className="resize-none text-sm"
+            />
+            {newError && (
+              <p className="text-red-500 text-xs">{newError}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowNewForm(false);
+                  setNewSubject('');
+                  setNewMessage('');
+                  setNewError('');
+                }}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={submitNewInquiry}
+                disabled={!newMessage.trim() || newSending}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {newSending ? '전송 중...' : '문의 전송'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tickets.length === 0 ? (
         <div className="bg-white rounded-xl border shadow-sm p-12 text-center">
           <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <p className="text-gray-500 mb-1">문의 내역이 없습니다</p>
-          <p className="text-sm text-gray-400">하단의 문의하기 버튼으로 새 문의를 보낼 수 있습니다</p>
+          <p className="text-sm text-gray-400">위의 &apos;새 문의하기&apos; 버튼으로 문의를 남겨주세요</p>
         </div>
       ) : (
         <div className="space-y-3">

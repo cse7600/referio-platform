@@ -20,6 +20,7 @@ interface Reply {
   sender_type: string;
   sender_name: string;
   body: string;
+  image_url?: string | null;
   created_at: string;
 }
 
@@ -194,6 +195,15 @@ export default function AdvertiserSupportPage() {
                           : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                       }`}>
                         <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
+                        {reply.image_url && (
+                          <img
+                            src={reply.image_url}
+                            alt="Attachment"
+                            className="max-w-full rounded-lg mt-2 cursor-pointer"
+                            style={{ maxHeight: '240px' }}
+                            onClick={() => window.open(reply.image_url!, '_blank')}
+                          />
+                        )}
                       </div>
                       <p className={`text-[11px] text-gray-400 mt-1 ${
                         reply.sender_type === 'user' ? 'text-right' : ''
