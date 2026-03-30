@@ -17,6 +17,7 @@ import {
   UserPlus,
   Megaphone,
   MessageSquare,
+  Star,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
@@ -42,6 +43,20 @@ export default function AdminNav({ children }: { children: React.ReactNode }) {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  const handleReferioManage = async () => {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return;
+
+    const res = await fetch('/api/admin/impersonate', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${session.access_token}` },
+    })
+    if (res.ok) {
+      window.location.href = '/advertiser/dashboard'
+    }
   }
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
@@ -87,6 +102,10 @@ export default function AdminNav({ children }: { children: React.ReactNode }) {
 
           {/* Footer */}
           <div className="p-4 border-t space-y-2">
+            <Button variant="outline" className="w-full justify-start text-purple-600 border-purple-200 hover:bg-purple-50" onClick={handleReferioManage}>
+              <Star className="w-4 h-4 mr-2" />
+              Referio 프로그램 관리
+            </Button>
             <Link href="/dashboard">
               <Button variant="outline" className="w-full justify-start">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -125,6 +144,10 @@ export default function AdminNav({ children }: { children: React.ReactNode }) {
               </nav>
 
               <div className="p-4 border-t space-y-2">
+                <Button variant="outline" className="w-full justify-start text-purple-600 border-purple-200 hover:bg-purple-50" onClick={handleReferioManage}>
+                  <Star className="w-4 h-4 mr-2" />
+                  Referio 프로그램 관리
+                </Button>
                 <Link href="/dashboard">
                   <Button variant="outline" className="w-full justify-start">
                     <ArrowLeft className="w-4 h-4 mr-2" />
