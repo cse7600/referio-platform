@@ -32,6 +32,12 @@ Referio self-promotion affiliate system: click tracking, landing pages, conversi
 - Landing pages are public (no auth required)
 - Conversion API uses admin client (server-side, bypasses RLS)
 
+## 빌드 이력
+
+| 날짜 | 빌드 유형 | 변경 내용 요약 | 결과 |
+|------|-----------|----------------|------|
+| 2026-03-30 | production | click/convert API DB 컬럼 불일치 버그 수정 (metadata→개별컬럼) | 성공 |
+
 ## File Structure
 ```
 src/app/api/r/[code]/route.ts          # Click tracking + redirect

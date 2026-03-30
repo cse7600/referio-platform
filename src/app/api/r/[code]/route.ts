@@ -47,11 +47,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     admin.from('referio_affiliate_events').insert({
       link_id: link.id,
       event_type: 'click',
-      metadata: {
-        ip: clientIp,
-        user_agent: userAgent,
-        referer,
-      },
+      ip_address: clientIp,
+      user_agent: userAgent,
+      referrer: referer,
     }),
     admin
       .from('referio_affiliate_links')
