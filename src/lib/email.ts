@@ -326,15 +326,10 @@ export async function sendAdvertiserNewLeadEmail(options: {
 }
 
 // 4. 정산 정보 입력 요청 - 파트너에게 계좌/개인정보 입력을 요청
-export async function sendSettlementInfoRequestEmail(options: {
-  partnerEmail: string
-  partnerName: string
-  pendingAmount: number
-  advertiserName?: string
-}): Promise<boolean> {
-  const { partnerEmail, partnerName, pendingAmount } = options
 
-  const html = `
+// Generate settlement info request HTML (exported for preview)
+export function generateSettlementInfoRequestHtml(partnerName: string, pendingAmount: number): string {
+  return `
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -382,6 +377,17 @@ export async function sendSettlementInfoRequestEmail(options: {
   </div>
 </body>
 </html>`
+}
+
+export async function sendSettlementInfoRequestEmail(options: {
+  partnerEmail: string
+  partnerName: string
+  pendingAmount: number
+  advertiserName?: string
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, pendingAmount } = options
+
+  const html = generateSettlementInfoRequestHtml(partnerName, pendingAmount)
 
   return sendEmail({
     to: partnerEmail,

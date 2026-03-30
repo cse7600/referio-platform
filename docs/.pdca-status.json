@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-30T07:20:11.567Z",
+  "lastUpdated": "2026-03-30T08:01:29.072Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -68,7 +68,8 @@
     "profile",
     "request-info",
     "export",
-    "impersonate"
+    "impersonate",
+    "preview-email"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -211,9 +212,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-03-30T05:52:35.597Z"
+        "lastUpdated": "2026-03-30T08:01:08.168Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/settlements/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/settlements/page.tsx"
     },
     "partners": {
       "phase": "do",
@@ -341,7 +342,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-30T07:02:02.489Z"
+        "lastUpdated": "2026-03-30T08:01:29.071Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
@@ -934,9 +935,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T05:45:01.824Z",
-        "lastUpdated": "2026-03-30T05:45:24.324Z"
+        "lastUpdated": "2026-03-30T07:59:04.623Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/export/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/settlements/export/route.ts"
     },
     "impersonate": {
       "phase": "do",
@@ -950,6 +951,19 @@
         "lastUpdated": "2026-03-30T06:58:59.856Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/impersonate/route.ts"
+    },
+    "preview-email": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T07:59:27.612Z",
+        "lastUpdated": "2026-03-30T07:59:27.612Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/settlements/preview-email/route.ts"
     }
   },
   "pipeline": {
@@ -960,7 +974,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-30T07:20:11.567Z"
+    "lastActivity": "2026-03-30T08:01:29.072Z"
   },
   "history": [
     {
@@ -5850,6 +5864,84 @@
     {
       "timestamp": "2026-03-30T07:20:11.567Z",
       "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:26:04.548Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:28:31.662Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:31:52.359Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:32:04.073Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:58:31.332Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:58:37.588Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:58:43.446Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:59:04.623Z",
+      "feature": "export",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:59:11.921Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:59:17.162Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:59:27.612Z",
+      "feature": "preview-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T08:01:08.168Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T08:01:29.071Z",
+      "feature": "referio-platform",
       "phase": "do",
       "action": "updated"
     }

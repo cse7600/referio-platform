@@ -29,6 +29,7 @@ interface SettlementRow {
   id: string;
   referral_id: string | null;
   referral_name: string | null;
+  advertiser_name: string | null;
   amount: number;
   type: string | null;
   status: string;
@@ -61,6 +62,9 @@ export async function GET(request: NextRequest) {
       ),
       referrals (
         name
+      ),
+      advertisers (
+        company_name
       )
     `)
     .order('created_at', { ascending: false });
@@ -115,10 +119,12 @@ export async function GET(request: NextRequest) {
     group.settlement_count += 1;
 
     const ref = s.referrals as { name: string } | null;
+    const adv = s.advertisers as { company_name: string } | null;
     group.settlements.push({
       id: s.id,
       referral_id: s.referral_id,
       referral_name: ref?.name || null,
+      advertiser_name: adv?.company_name || null,
       amount: s.amount || 0,
       type: s.type || null,
       status: s.status,

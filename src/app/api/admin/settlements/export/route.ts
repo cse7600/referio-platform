@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
       ),
       referrals (
         name
+      ),
+      advertisers (
+        company_name
       )
     `)
     .order('created_at', { ascending: false });
@@ -82,11 +85,11 @@ export async function GET(request: NextRequest) {
     '정산ID',
     '파트너명',
     '이메일',
+    '브랜드',
     '은행명',
     '계좌번호',
     '예금주',
     '주민번호',
-    '연결고객',
     '금액',
     '정산유형',
     '상태',
@@ -105,7 +108,7 @@ export async function GET(request: NextRequest) {
       ssn_encrypted: string | null;
     } | null;
 
-    const ref = s.referrals as { name: string } | null;
+    const adv = s.advertisers as { company_name: string } | null;
 
     // Decrypt SSN if available
     let ssn = '';
@@ -122,18 +125,21 @@ export async function GET(request: NextRequest) {
       return new Date(d).toLocaleDateString('ko-KR');
     };
 
+    const typeKey = s.type as string | null;
+    const statusKey = s.status as string;
+
     return [
       s.id,
       partner?.name || '',
       partner?.email || '',
+      adv?.company_name || '',
       partner?.bank_name || '',
       partner?.bank_account || '',
       partner?.account_holder || '',
       ssn,
-      ref?.name || '',
       s.amount || 0,
-      TYPE_LABELS[s.type] || s.type || '',
-      STATUS_LABELS[s.status] || s.status,
+      (typeKey ? TYPE_LABELS[typeKey] : '') || typeKey || '',
+      STATUS_LABELS[statusKey] || statusKey,
       formatDate(s.created_at),
       formatDate(s.settled_at),
     ];

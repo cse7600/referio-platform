@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -49,6 +50,8 @@ import {
   ChevronUp,
   Users,
   AlertTriangle,
+  Send,
+  Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Partner, Referral } from '@/types/database'
@@ -59,6 +62,7 @@ interface SettlementRow {
   id: string
   referral_id: string | null
   referral_name: string | null
+  advertiser_name: string | null
   amount: number
   type: string | null
   status: string
@@ -133,6 +137,9 @@ export default function AdminSettlementsPage() {
   // Expanded cards
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
+  // Checkbox selection
+  const [selectedPartners, setSelectedPartners] = useState<Set<string>>(new Set())
+
   // Create settlement dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newSettlement, setNewSettlement] = useState({
@@ -144,6 +151,14 @@ export default function AdminSettlementsPage() {
   // Email sending states
   const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
   const [sendingBulkEmail, setSendingBulkEmail] = useState(false)
+  const [sendingSelectedEmail, setSendingSelectedEmail] = useState(false)
+
+  // Email preview dialog
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [previewTargets, setPreviewTargets] = useState<{ id: string; name: string; email: string }[]>([])
+  const [previewMode, setPreviewMode] = useState<'single' | 'selected' | 'bulk'>('bulk')
+  const [loadingPreview, setLoadingPreview] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -196,6 +211,19 @@ export default function AdminSettlementsPage() {
   // Toggle card expand/collapse
   const toggleCard = (partnerId: string) => {
     setExpandedCards(prev => {
+      const next = new Set(prev)
+      if (next.has(partnerId)) {
+        next.delete(partnerId)
+      } else {
+        next.add(partnerId)
+      }
+      return next
+    })
+  }
+
+  // Toggle partner checkbox
+  const togglePartnerSelection = (partnerId: string) => {
+    setSelectedPartners(prev => {
       const next = new Set(prev)
       if (next.has(partnerId)) {
         next.delete(partnerId)
@@ -269,33 +297,58 @@ export default function AdminSettlementsPage() {
     fetchData()
   }
 
-  // Send info request email for a single partner
-  const handleSendInfoRequest = async (partnerId: string, partnerName: string) => {
-    setSendingEmailFor(partnerId)
+  // Fetch email preview HTML
+  const fetchEmailPreview = async (partnerName: string, pendingAmount: number) => {
+    setLoadingPreview(true)
     try {
-      const res = await fetch('/api/admin/settlements/request-info', {
+      const res = await fetch('/api/admin/settlements/preview-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partner_ids: [partnerId] }),
+        body: JSON.stringify({ partnerName, pendingAmount }),
       })
-
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
-
-      if (data.sent > 0) {
-        toast.success(`${partnerName}님께 정산 정보 요청 메일을 발송했습니다`)
-      } else {
-        toast.error(`${partnerName}님 메일 발송 실패`)
-      }
+      setPreviewHtml(data.html || '')
     } catch {
-      toast.error('메일 발송에 실패했습니다')
+      setPreviewHtml('<p>미리보기를 불러올 수 없습니다</p>')
     } finally {
-      setSendingEmailFor(null)
+      setLoadingPreview(false)
     }
   }
 
-  // Bulk send info request to all partners missing account/SSN
-  const handleBulkInfoRequest = async () => {
+  // Open preview dialog for a single partner
+  const handlePreviewSingle = async (group: PartnerGroup) => {
+    setPreviewMode('single')
+    setPreviewTargets([{
+      id: group.partner_id,
+      name: group.partner_name,
+      email: group.partner_email,
+    }])
+    await fetchEmailPreview(group.partner_name, group.pending_amount)
+    setPreviewDialogOpen(true)
+  }
+
+  // Open preview dialog for selected partners
+  const handlePreviewSelected = async () => {
+    const targets = filteredGroups
+      .filter(g => selectedPartners.has(g.partner_id) && g.partner_email)
+      .map(g => ({ id: g.partner_id, name: g.partner_name, email: g.partner_email }))
+
+    if (targets.length === 0) {
+      toast.error('이메일이 있는 선택된 파트너가 없습니다')
+      return
+    }
+
+    setPreviewMode('selected')
+    setPreviewTargets(targets)
+    // Use first partner for preview sample
+    const first = filteredGroups.find(g => g.partner_id === targets[0].id)
+    await fetchEmailPreview(targets[0].name, first?.pending_amount || 0)
+    setPreviewDialogOpen(true)
+  }
+
+  // Open preview dialog for bulk (all missing info)
+  const handlePreviewBulk = async () => {
     const missingPartners = filteredGroups.filter(
       p => !p.has_ssn || !p.bank_name || !p.bank_account
     )
@@ -305,16 +358,33 @@ export default function AdminSettlementsPage() {
       return
     }
 
-    const partnerIds = missingPartners
+    const targets = missingPartners
       .filter(p => p.partner_email)
-      .map(p => p.partner_id)
+      .map(p => ({ id: p.partner_id, name: p.partner_name, email: p.partner_email }))
 
-    if (partnerIds.length === 0) {
+    if (targets.length === 0) {
       toast.error('이메일이 있는 대상 파트너가 없습니다')
       return
     }
 
-    setSendingBulkEmail(true)
+    setPreviewMode('bulk')
+    setPreviewTargets(targets)
+    await fetchEmailPreview(targets[0].name, missingPartners[0].pending_amount)
+    setPreviewDialogOpen(true)
+  }
+
+  // Confirm and send emails from preview dialog
+  const handleConfirmSend = async () => {
+    const partnerIds = previewTargets.map(t => t.id)
+
+    if (previewMode === 'single') {
+      setSendingEmailFor(partnerIds[0])
+    } else if (previewMode === 'selected') {
+      setSendingSelectedEmail(true)
+    } else {
+      setSendingBulkEmail(true)
+    }
+
     try {
       const res = await fetch('/api/admin/settlements/request-info', {
         method: 'POST',
@@ -325,11 +395,18 @@ export default function AdminSettlementsPage() {
       if (!res.ok) throw new Error('Failed')
       const data = await res.json()
 
-      toast.success(`${data.sent}명 발송 성공, ${data.failed}명 실패`)
+      if (data.sent > 0) {
+        toast.success(`${data.sent}명 발송 성공${data.failed > 0 ? `, ${data.failed}명 실패` : ''}`)
+      } else {
+        toast.error('메일 발송 실패')
+      }
     } catch {
-      toast.error('일괄 메일 발송에 실패했습니다')
+      toast.error('메일 발송에 실패했습니다')
     } finally {
+      setSendingEmailFor(null)
       setSendingBulkEmail(false)
+      setSendingSelectedEmail(false)
+      setPreviewDialogOpen(false)
     }
   }
 
@@ -367,6 +444,9 @@ export default function AdminSettlementsPage() {
   const hasMissingInfo = (group: PartnerGroup) =>
     !group.bank_name || !group.bank_account || !group.account_holder || !group.has_ssn
 
+  // Selected count
+  const selectedCount = selectedPartners.size
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -386,10 +466,22 @@ export default function AdminSettlementsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {mounted && (
             <>
+              {/* Selected partners email button */}
+              {selectedCount > 0 && (
+                <Button
+                  variant="default"
+                  onClick={handlePreviewSelected}
+                  disabled={sendingSelectedEmail}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  {sendingSelectedEmail ? '발송 중...' : `선택 발송 (${selectedCount}명)`}
+                </Button>
+              )}
+
               {/* Bulk email button */}
               <Button
                 variant="outline"
-                onClick={handleBulkInfoRequest}
+                onClick={handlePreviewBulk}
                 disabled={sendingBulkEmail}
               >
                 <Mail className="w-4 h-4 mr-2" />
@@ -585,6 +677,7 @@ export default function AdminSettlementsPage() {
             const isExpanded = expandedCards.has(group.partner_id)
             const hasPendingSettlements = group.pending_amount > 0
             const needsInfo = hasMissingInfo(group)
+            const isSelected = selectedPartners.has(group.partner_id)
 
             return (
               <Card key={group.partner_id} className={needsInfo ? 'border-orange-200' : ''}>
@@ -595,6 +688,17 @@ export default function AdminSettlementsPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-wrap min-w-0">
+                      {/* Checkbox */}
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center"
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => togglePartnerSelection(group.partner_id)}
+                        />
+                      </div>
+
                       {/* Partner name */}
                       <span className="font-semibold text-base">{group.partner_name}</span>
 
@@ -657,7 +761,7 @@ export default function AdminSettlementsPage() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleSendInfoRequest(group.partner_id, group.partner_name)
+                            handlePreviewSingle(group)
                           }}
                           disabled={sendingEmailFor === group.partner_id}
                         >
@@ -704,7 +808,7 @@ export default function AdminSettlementsPage() {
                         <TableHeader>
                           <TableRow>
                             <TableHead className="text-xs">정산ID</TableHead>
-                            <TableHead className="text-xs">고객명</TableHead>
+                            <TableHead className="text-xs">브랜드</TableHead>
                             <TableHead className="text-xs">정산유형</TableHead>
                             <TableHead className="text-xs text-right">금액</TableHead>
                             <TableHead className="text-xs">상태</TableHead>
@@ -719,7 +823,7 @@ export default function AdminSettlementsPage() {
                                 #{s.id}
                               </TableCell>
                               <TableCell className="text-sm">
-                                {s.referral_name || <span className="text-gray-400">-</span>}
+                                {s.advertiser_name || <span className="text-gray-400">-</span>}
                               </TableCell>
                               <TableCell className="text-xs">
                                 {TYPE_LABELS[s.type || ''] || s.type || '-'}
@@ -777,6 +881,70 @@ export default function AdminSettlementsPage() {
           })
         )}
       </div>
+
+      {/* Email preview dialog */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              이메일 발송 미리보기
+            </DialogTitle>
+            <DialogDescription>
+              발송 전 수신자와 이메일 내용을 확인하세요
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Recipients list */}
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">
+                수신자 ({previewTargets.length}명)
+              </p>
+              <div className="max-h-40 overflow-y-auto border rounded-lg divide-y">
+                {previewTargets.map((t) => (
+                  <div key={t.id} className="px-3 py-2 flex items-center justify-between text-sm">
+                    <span className="font-medium">{t.name}</span>
+                    <span className="text-gray-500">{t.email}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Email preview */}
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">이메일 미리보기</p>
+              {loadingPreview ? (
+                <div className="border rounded-lg p-8 text-center text-gray-400">
+                  로딩 중...
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-[400px] border-0"
+                    title="이메일 미리보기"
+                    sandbox=""
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleConfirmSend}
+              disabled={sendingEmailFor !== null || sendingBulkEmail || sendingSelectedEmail}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {previewTargets.length}명에게 발송
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
