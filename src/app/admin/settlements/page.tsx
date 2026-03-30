@@ -716,7 +716,7 @@ export default function AdminSettlementsPage() {
                           {group.settlements.map((s) => (
                             <TableRow key={s.id}>
                               <TableCell className="text-xs text-gray-500 font-mono">
-                                {s.id.slice(0, 8)}...
+                                #{s.id}
                               </TableCell>
                               <TableCell className="text-sm">
                                 {s.referral_name || <span className="text-gray-400">-</span>}

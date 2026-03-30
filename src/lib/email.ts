@@ -86,7 +86,7 @@ export async function sendReferralNotification(options: {
       <p style="margin:0 0 8px;color:#6b7280;font-size:13px;">
         ${advertiserCompanyName} 담당자가 고객에게 연락할 예정입니다. 상담이 유효 처리되면 커미션이 자동으로 적립됩니다.
       </p>
-      <a href="https://referio.kr/dashboard/customers"
+      <a href="https://referio.puzl.co.kr/dashboard/customers"
          style="display:inline-block;margin-top:16px;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
         내 추천 현황 보기
       </a>
@@ -94,7 +94,7 @@ export async function sendReferralNotification(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
@@ -128,8 +128,8 @@ export async function sendPartnerApprovalEmail(options: {
 
   const displayName = programName || advertiserCompanyName
   const programPageUrl = advertiserId
-    ? `https://referio.kr/dashboard/programs/${advertiserId}`
-    : 'https://referio.kr/dashboard/programs'
+    ? `https://referio.puzl.co.kr/dashboard/programs/${advertiserId}`
+    : 'https://referio.puzl.co.kr/dashboard/programs'
 
   // Commission info section (only if at least one value exists)
   const hasCommission = (leadCommission && leadCommission > 0) || (contractCommission && contractCommission > 0)
@@ -240,7 +240,7 @@ export async function sendPartnerApprovalEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
@@ -302,7 +302,7 @@ export async function sendAdvertiserNewLeadEmail(options: {
           ${partnerLine}
         </table>
       </div>
-      <a href="https://referio.kr/advertiser/referrals"
+      <a href="https://referio.puzl.co.kr/advertiser/referrals"
          style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
         리드 관리 바로가기 →
       </a>
@@ -310,7 +310,7 @@ export async function sendAdvertiserNewLeadEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio에서 자동 발송됩니다.
-        수신 설정은 <a href="https://referio.kr/advertiser/settings" style="color:#6b7280;">설정 페이지</a>에서 변경하세요.<br/>
+        수신 설정은 <a href="https://referio.puzl.co.kr/advertiser/settings" style="color:#6b7280;">설정 페이지</a>에서 변경하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
@@ -332,65 +332,51 @@ export async function sendSettlementInfoRequestEmail(options: {
   pendingAmount: number
   advertiserName?: string
 }): Promise<boolean> {
-  const { partnerEmail, partnerName, pendingAmount, advertiserName } = options
-
-  const programLine = advertiserName
-    ? `<tr>
-        <td style="padding:6px 0;color:#6b7280;font-size:13px;width:110px;">프로그램</td>
-        <td style="padding:6px 0;color:#111827;font-size:13px;font-weight:600;">${advertiserName}</td>
-      </tr>`
-    : ''
+  const { partnerEmail, partnerName, pendingAmount } = options
 
   const html = `
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
     <div style="background:#4f46e5;padding:28px 32px;">
-      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">Referio</h1>
     </div>
-    <div style="padding:32px;">
-      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">정산을 위해 정보 입력이 필요합니다</h2>
-      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
-        ${partnerName}님, 아래 정산 예정 금액을 지급받기 위해 계좌 및 개인 정보를 입력해 주세요.
+    <div style="padding:36px 32px;">
+      <h2 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#111827;">정산 정보 입력 요청</h2>
+      <p style="margin:0 0 28px;color:#4b5563;font-size:15px;line-height:1.6;">
+        ${partnerName}님, 정산 처리를 위해 아래 정보를 입력해 주세요.
       </p>
 
-      <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-bottom:24px;">
-        <table style="width:100%;border-collapse:collapse;">
-          ${programLine}
-          <tr>
-            <td style="padding:6px 0;color:#6b7280;font-size:13px;width:110px;">정산 예정 금액</td>
-            <td style="padding:6px 0;color:#4f46e5;font-size:16px;font-weight:700;">${pendingAmount.toLocaleString()}원</td>
-          </tr>
-        </table>
-      </div>
-
-      <div style="background:#fef3c7;border-radius:8px;padding:16px 20px;margin-bottom:24px;border:1px solid #fde68a;">
-        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#92400e;">입력이 필요한 항목</p>
-        <ul style="margin:0;padding-left:18px;color:#78350f;font-size:13px;line-height:1.8;">
+      <!-- 입력 필요 항목 -->
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:20px 24px;margin-bottom:20px;">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#92400e;">입력이 필요한 항목</p>
+        <ul style="margin:0;padding-left:20px;color:#78350f;font-size:14px;line-height:2.2;">
           <li>은행명</li>
           <li>계좌번호</li>
-          <li>예금주</li>
-          <li>주민등록번호 (세금 신고용)</li>
+          <li>예금주명</li>
+          <li>주민번호 (원천징수 처리용)</li>
         </ul>
       </div>
 
-      <div style="text-align:center;margin-bottom:8px;">
-        <a href="https://referio.kr/dashboard/profile"
-           style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
-          프로필에서 정보 입력하기
-        </a>
+      <!-- 정산 예정 금액 -->
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:18px 24px;margin-bottom:28px;">
+        <p style="margin:0;font-size:15px;color:#166534;">
+          정산 예정 금액: <strong style="font-size:18px;">₩${pendingAmount.toLocaleString()}</strong>
+        </p>
       </div>
-      <p style="margin:8px 0 0;text-align:center;color:#9ca3af;font-size:12px;">
-        정보 입력이 완료되어야 정산이 진행됩니다.
-      </p>
+
+      <!-- CTA 버튼 -->
+      <a href="https://referio.puzl.co.kr/dashboard/profile"
+         style="display:inline-block;padding:15px 36px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
+        정산 정보 입력하기 →
+      </a>
     </div>
-    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+    <div style="padding:16px 32px;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
-        이 메일은 Referio 정산 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
-        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+        이 메일은 Referio에서 자동 발송됩니다.
+        문의: <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>
       </p>
     </div>
   </div>
@@ -434,7 +420,7 @@ export async function sendWelcomeEmail(options: {
           <li>추천 링크를 통해 고객이 상담을 신청하면 커미션이 지급됩니다</li>
         </ol>
       </div>
-      <a href="https://referio.kr/dashboard/programs"
+      <a href="https://referio.puzl.co.kr/dashboard/programs"
          style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
         프로그램 둘러보기
       </a>

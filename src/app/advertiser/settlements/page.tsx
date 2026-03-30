@@ -447,7 +447,7 @@ function PartnerCard({
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-slate-500 font-mono">
-                      {s.id.slice(0, 8)}
+                      #{s.id}
                     </TableCell>
                     <TableCell>
                       {s.referral_name ? `${s.referral_name.substring(0, 1)}**` : '-'}
