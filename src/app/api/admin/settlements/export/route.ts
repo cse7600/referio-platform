@@ -134,9 +134,9 @@ export async function GET(request: NextRequest) {
       partner?.email || '',
       adv?.company_name || '',
       partner?.bank_name || '',
-      partner?.bank_account || '',
+      partner?.bank_account || '',  // index 5: 계좌번호 → forceText 처리
       partner?.account_holder || '',
-      ssn,
+      ssn,                          // index 7: 주민번호 → forceText 처리
       s.amount || 0,
       (typeKey ? TYPE_LABELS[typeKey] : '') || typeKey || '',
       STATUS_LABELS[statusKey] || statusKey,
@@ -154,9 +154,26 @@ export async function GET(request: NextRequest) {
     return `"${str}"`;
   };
 
+  // Force Excel to treat as text (prevents scientific notation for account/SSN numbers)
+  // Uses ="value" formula syntax: in CSV this becomes "=""value"""
+  const forceText = (val: string) => {
+    if (!val) return '""';
+    const escaped = val.replace(/"/g, '""');
+    return `"=""${escaped}"""`;
+  };
+
+  // Columns that need forced text treatment (index 5: 계좌번호, index 7: 주민번호)
+  const TEXT_FORCE_INDICES = new Set([5, 7]);
+
   const csvContent = [
     headers.map(h => escapeCsv(h)).join(','),
-    ...rows.map(row => row.map(cell => escapeCsv(cell)).join(',')),
+    ...rows.map(row =>
+      row.map((cell, idx) =>
+        TEXT_FORCE_INDICES.has(idx)
+          ? forceText(String(cell))
+          : escapeCsv(cell)
+      ).join(',')
+    ),
   ].join('\n');
 
   // UTF-8 BOM for Korean compatibility
