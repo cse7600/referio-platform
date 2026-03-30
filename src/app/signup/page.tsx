@@ -20,14 +20,14 @@ function deleteCookie(name: string) {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 }
 
-async function trackAffiliateConversion(eventType: string, meta: Record<string, string>) {
+async function trackAffiliateConversion(eventType: string, partnerId?: string) {
   const ref = getCookie('affiliate_ref');
   if (!ref) return;
   try {
     await fetch('/api/affiliate/convert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ short_code: ref, event_type: eventType, metadata: meta }),
+      body: JSON.stringify({ short_code: ref, event_type: eventType, partner_id: partnerId }),
     });
     deleteCookie('affiliate_ref');
   } catch {
@@ -116,8 +116,13 @@ export default function SignupPage() {
         }
       }
 
-      // Track affiliate conversion if came from affiliate link
-      await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
+      // Track affiliate conversion — get partner id for entity linking
+      const { data: resolvedPartner } = await supabase
+        .from('partners')
+        .select('id')
+        .eq('auth_user_id', data.user.id)
+        .single();
+      await trackAffiliateConversion('signup', resolvedPartner?.id);
       trackPartnerSignup();
       router.push('/onboarding')
       return
@@ -165,9 +170,16 @@ export default function SignupPage() {
             })
           }
         }
+        // Track affiliate conversion — get partner id for entity linking
+        if (user) {
+          const { data: resolvedPartner2 } = await supabase
+            .from('partners')
+            .select('id')
+            .eq('auth_user_id', user.id)
+            .single();
+          await trackAffiliateConversion('signup', resolvedPartner2?.id);
+        }
       }
-      // Track affiliate conversion if came from affiliate link
-      await trackAffiliateConversion('signup', { email, source: 'partner_signup' });
       trackPartnerSignup();
       router.push('/onboarding')
       return
