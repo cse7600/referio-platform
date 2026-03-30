@@ -13,6 +13,7 @@ interface AirtableConfig {
   invalid_values: string[]
   sales_rep_field?: string
   contract_date_field?: string
+  utm_source_field?: string // optional: Airtable 테이블의 UTM 소스 필드명
 }
 
 interface WebhookIntegration {
@@ -143,6 +144,7 @@ export async function POST(request: NextRequest) {
     const phone = fields[airtableConfig.phone_field]
     const refCode = fields[airtableConfig.ref_code_field]
     const status = fields[airtableConfig.status_field]
+    const utmSource = airtableConfig.utm_source_field ? fields[airtableConfig.utm_source_field] || null : null
 
     if (!name && !phone && !refCode) {
       return NextResponse.json(
@@ -283,6 +285,7 @@ export async function POST(request: NextRequest) {
           referral_code_input: refCode || null,
           partner_id: partnerId,
           airtable_record_id: airtableRecordId || null,
+          channel: utmSource,
           contract_status: action === 'contract' ? 'completed' : 'pending',
           is_valid: action === 'valid' || action === 'contract' ? true
             : action === 'invalid' ? false : null,

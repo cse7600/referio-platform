@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
@@ -36,7 +36,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   Search,
   MoreVertical,
@@ -46,25 +45,50 @@ import {
   Wallet,
   Download,
   Mail,
-  Lock,
-  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Users,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Settlement, Partner, Referral } from '@/types/database'
+import type { Partner, Referral } from '@/types/database'
 
-interface SettlementWithRelations extends Settlement {
-  partners?: {
-    id: string
-    name: string
-    email: string
-    bank_name: string | null
-    bank_account: string | null
-    account_holder: string | null
-  }
-  referrals?: {
-    name: string
-  }
+// --- Types ---
+
+interface SettlementRow {
+  id: string
+  referral_id: string | null
+  referral_name: string | null
+  amount: number
+  type: string | null
+  status: string
+  settled_at: string | null
+  created_at: string
 }
+
+interface PartnerGroup {
+  partner_id: string
+  partner_name: string
+  partner_email: string
+  bank_name: string | null
+  bank_account: string | null
+  account_holder: string | null
+  has_ssn: boolean
+  total_amount: number
+  pending_amount: number
+  settlement_count: number
+  settlements: SettlementRow[]
+}
+
+interface TotalStats {
+  partner_count: number
+  total_settlements: number
+  total_amount: number
+  total_pending: number
+  pending_count: number
+}
+
+// --- Constants ---
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-orange-100 text-orange-700',
@@ -76,17 +100,40 @@ const STATUS_LABELS: Record<string, string> = {
   completed: '완료',
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  contract: '계약',
+  valid: '유효',
+}
+
+// --- Helper ---
+
+function formatDate(dateString: string | null) {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleDateString('ko-KR')
+}
+
+// --- Component ---
+
 export default function AdminSettlementsPage() {
-  const [settlements, setSettlements] = useState<SettlementWithRelations[]>([])
-  const [partners, setPartners] = useState<Partner[]>([])
+  const [partnerGroups, setPartnerGroups] = useState<PartnerGroup[]>([])
+  const [approvedPartners, setApprovedPartners] = useState<Partner[]>([])
+  const [totalStats, setTotalStats] = useState<TotalStats>({
+    partner_count: 0,
+    total_settlements: 0,
+    total_amount: 0,
+    total_pending: 0,
+    pending_count: 0,
+  })
   const [referrals, setReferrals] = useState<Referral[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [mounted, setMounted] = useState(false)
-  const [selectedSettlements, setSelectedSettlements] = useState<Set<string>>(new Set())
 
-  // 신규 정산 폼
+  // Expanded cards
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+
+  // Create settlement dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newSettlement, setNewSettlement] = useState({
     partner_id: '',
@@ -94,36 +141,34 @@ export default function AdminSettlementsPage() {
     amount: '',
   })
 
-  // CSV 다운로드 다이얼로그
-  const [isCsvDialogOpen, setIsCsvDialogOpen] = useState(false)
-  const [csvPassword, setCsvPassword] = useState('')
-  const [csvPasswordConfirm, setCsvPasswordConfirm] = useState('')
-
-  // 정보 요청 다이얼로그
-  const [isInfoRequestDialogOpen, setIsInfoRequestDialogOpen] = useState(false)
-  const [infoRequestPartner, setInfoRequestPartner] = useState<SettlementWithRelations | null>(null)
+  // Email sending states
+  const [sendingEmailFor, setSendingEmailFor] = useState<string | null>(null)
+  const [sendingBulkEmail, setSendingBulkEmail] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const fetchSettlements = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/settlements?status=${statusFilter}`)
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      setSettlements(data.settlements || [])
-      setPartners(data.partners || [])
+      setPartnerGroups(data.partners || [])
+      setApprovedPartners(data.approved_partners || [])
+      setTotalStats(data.total_stats || {
+        partner_count: 0,
+        total_settlements: 0,
+        total_amount: 0,
+        total_pending: 0,
+        pending_count: 0,
+      })
     } catch {
       // silently fail
     } finally {
       setLoading(false)
     }
-  }
-
-  const fetchPartners = async () => {
-    // Partners are already fetched in fetchSettlements
-  }
+  }, [statusFilter])
 
   const fetchReferrals = async (partnerId: string) => {
     try {
@@ -137,9 +182,8 @@ export default function AdminSettlementsPage() {
   }
 
   useEffect(() => {
-    fetchSettlements()
-    fetchPartners()
-  }, [statusFilter])
+    fetchData()
+  }, [fetchData])
 
   useEffect(() => {
     if (newSettlement.partner_id) {
@@ -149,9 +193,22 @@ export default function AdminSettlementsPage() {
     }
   }, [newSettlement.partner_id])
 
+  // Toggle card expand/collapse
+  const toggleCard = (partnerId: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev)
+      if (next.has(partnerId)) {
+        next.delete(partnerId)
+      } else {
+        next.add(partnerId)
+      }
+      return next
+    })
+  }
+
+  // Status change for individual settlement
   const handleStatusChange = async (settlementId: string, newStatus: 'pending' | 'completed') => {
     const updateData: { status: string; settled_at?: string | null } = { status: newStatus }
-
     if (newStatus === 'completed') {
       updateData.settled_at = new Date().toISOString()
     } else {
@@ -170,9 +227,10 @@ export default function AdminSettlementsPage() {
     }
 
     toast.success(newStatus === 'completed' ? '정산 완료 처리되었습니다' : '대기 상태로 변경되었습니다')
-    fetchSettlements()
+    fetchData()
   }
 
+  // Create settlement
   const handleCreateSettlement = async () => {
     if (!newSettlement.partner_id || !newSettlement.amount) {
       toast.error('파트너와 금액은 필수입니다')
@@ -196,7 +254,7 @@ export default function AdminSettlementsPage() {
       body: JSON.stringify({
         partner_id: newSettlement.partner_id,
         referral_id: newSettlement.referral_id || null,
-        amount: amount,
+        amount,
       }),
     })
 
@@ -208,144 +266,106 @@ export default function AdminSettlementsPage() {
     toast.success('정산이 생성되었습니다')
     setIsDialogOpen(false)
     setNewSettlement({ partner_id: '', referral_id: '', amount: '' })
-    fetchSettlements()
+    fetchData()
   }
 
-  // CSV 다운로드 (암호 보호)
+  // Send info request email for a single partner
+  const handleSendInfoRequest = async (partnerId: string, partnerName: string) => {
+    setSendingEmailFor(partnerId)
+    try {
+      const res = await fetch('/api/admin/settlements/request-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner_ids: [partnerId] }),
+      })
+
+      if (!res.ok) throw new Error('Failed')
+      const data = await res.json()
+
+      if (data.sent > 0) {
+        toast.success(`${partnerName}님께 정산 정보 요청 메일을 발송했습니다`)
+      } else {
+        toast.error(`${partnerName}님 메일 발송 실패`)
+      }
+    } catch {
+      toast.error('메일 발송에 실패했습니다')
+    } finally {
+      setSendingEmailFor(null)
+    }
+  }
+
+  // Bulk send info request to all partners missing account/SSN
+  const handleBulkInfoRequest = async () => {
+    const missingPartners = filteredGroups.filter(
+      p => !p.has_ssn || !p.bank_name || !p.bank_account
+    )
+
+    if (missingPartners.length === 0) {
+      toast.info('계좌/주민번호 미입력 파트너가 없습니다')
+      return
+    }
+
+    const partnerIds = missingPartners
+      .filter(p => p.partner_email)
+      .map(p => p.partner_id)
+
+    if (partnerIds.length === 0) {
+      toast.error('이메일이 있는 대상 파트너가 없습니다')
+      return
+    }
+
+    setSendingBulkEmail(true)
+    try {
+      const res = await fetch('/api/admin/settlements/request-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner_ids: partnerIds }),
+      })
+
+      if (!res.ok) throw new Error('Failed')
+      const data = await res.json()
+
+      toast.success(`${data.sent}명 발송 성공, ${data.failed}명 실패`)
+    } catch {
+      toast.error('일괄 메일 발송에 실패했습니다')
+    } finally {
+      setSendingBulkEmail(false)
+    }
+  }
+
+  // CSV download via server API
   const handleCsvDownload = async () => {
-    if (csvPassword.length < 4) {
-      toast.error('비밀번호는 최소 4자리 이상이어야 합니다')
-      return
-    }
-    if (csvPassword !== csvPasswordConfirm) {
-      toast.error('비밀번호가 일치하지 않습니다')
-      return
-    }
+    try {
+      const url = `/api/admin/settlements/export?status=${statusFilter}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed')
 
-    // 선택된 정산 또는 전체 정산 데이터 추출
-    const targetSettlements = selectedSettlements.size > 0
-      ? filteredSettlements.filter(s => selectedSettlements.has(s.id))
-      : filteredSettlements
+      const blob = await res.blob()
+      const downloadUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `정산내역_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(downloadUrl)
 
-    // CSV 데이터 생성
-    const csvHeaders = [
-      '정산ID',
-      '파트너명',
-      '파트너이메일',
-      '은행명',
-      '계좌번호',
-      '예금주',
-      '연결고객',
-      '금액',
-      '상태',
-      '생성일',
-      '완료일'
-    ]
-
-    const csvRows = targetSettlements.map(s => [
-      s.id,
-      s.partners?.name || '',
-      s.partners?.email || '',
-      s.partners?.bank_name || '',
-      s.partners?.bank_account || '',
-      s.partners?.account_holder || '',
-      s.referrals?.name || '',
-      s.amount || 0,
-      STATUS_LABELS[s.status],
-      formatDate(s.created_at),
-      formatDate(s.settled_at)
-    ])
-
-    // CSV 문자열 생성
-    const csvContent = [
-      csvHeaders.join(','),
-      ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-
-    // UTF-8 BOM 추가 (한글 호환)
-    const bom = '\uFEFF'
-    const csvWithBom = bom + csvContent
-
-    // 파일 다운로드
-    const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `정산내역_${new Date().toISOString().split('T')[0]}_비밀번호_${csvPassword}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    toast.success(`${targetSettlements.length}건의 정산 내역이 다운로드되었습니다. 비밀번호: ${csvPassword}`)
-    setIsCsvDialogOpen(false)
-    setCsvPassword('')
-    setCsvPasswordConfirm('')
-  }
-
-  // 정산 정보 요청 메일 발송 (UI만)
-  const handleInfoRequest = (settlement: SettlementWithRelations) => {
-    setInfoRequestPartner(settlement)
-    setIsInfoRequestDialogOpen(true)
-  }
-
-  const sendInfoRequestEmail = async () => {
-    if (!infoRequestPartner) return
-
-    // 실제 메일 발송은 추후 구현 (여기서는 UI만)
-    toast.success(`${infoRequestPartner.partners?.name}님께 정산 정보 요청 메일이 발송되었습니다`)
-    setIsInfoRequestDialogOpen(false)
-    setInfoRequestPartner(null)
-  }
-
-  // 정산 정보 누락 체크
-  const hasMissingInfo = (settlement: SettlementWithRelations) => {
-    return !settlement.partners?.bank_name ||
-           !settlement.partners?.bank_account ||
-           !settlement.partners?.account_holder
-  }
-
-  // 선택 토글
-  const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedSettlements)
-    if (newSelected.has(id)) {
-      newSelected.delete(id)
-    } else {
-      newSelected.add(id)
-    }
-    setSelectedSettlements(newSelected)
-  }
-
-  // 전체 선택
-  const toggleSelectAll = () => {
-    if (selectedSettlements.size === filteredSettlements.length) {
-      setSelectedSettlements(new Set())
-    } else {
-      setSelectedSettlements(new Set(filteredSettlements.map(s => s.id)))
+      toast.success('CSV 다운로드 완료')
+    } catch {
+      toast.error('CSV 다운로드에 실패했습니다')
     }
   }
 
-  const filteredSettlements = settlements.filter(settlement => {
+  // Filter partner groups by search
+  const filteredGroups = partnerGroups.filter(group => {
     if (!searchTerm) return true
     const search = searchTerm.toLowerCase()
-    return (
-      settlement.partners?.name?.toLowerCase().includes(search) ||
-      settlement.referrals?.name?.toLowerCase().includes(search)
-    )
+    return group.partner_name.toLowerCase().includes(search)
   })
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('ko-KR')
-  }
-
-  const totalPending = settlements
-    .filter(s => s.status === 'pending')
-    .reduce((sum, s) => sum + (s.amount || 0), 0)
-
-  const totalCompleted = settlements
-    .filter(s => s.status === 'completed')
-    .reduce((sum, s) => sum + (s.amount || 0), 0)
+  // Check if partner has missing info
+  const hasMissingInfo = (group: PartnerGroup) =>
+    !group.bank_name || !group.bank_account || !group.account_holder || !group.has_ssn
 
   if (loading) {
     return (
@@ -357,77 +377,32 @@ export default function AdminSettlementsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold">정산 관리</h1>
-          <p className="text-gray-500 mt-1">파트너 정산 생성 및 관리</p>
+          <p className="text-gray-500 mt-1">파트너별 정산 그룹 관리</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {mounted && (
             <>
-              {/* CSV 다운로드 버튼 */}
-              <Dialog open={isCsvDialogOpen} onOpenChange={setIsCsvDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    CSV 다운로드
-                    {selectedSettlements.size > 0 && (
-                      <Badge className="ml-2 bg-blue-100 text-blue-700">
-                        {selectedSettlements.size}건
-                      </Badge>
-                    )}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Lock className="w-5 h-5" />
-                      정산 내역 다운로드
-                    </DialogTitle>
-                    <DialogDescription>
-                      고객 정보 보호를 위해 비밀번호를 설정해주세요.
-                      {selectedSettlements.size > 0
-                        ? ` 선택된 ${selectedSettlements.size}건이 다운로드됩니다.`
-                        : ` 전체 ${filteredSettlements.length}건이 다운로드됩니다.`}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>비밀번호 *</Label>
-                      <Input
-                        type="password"
-                        placeholder="비밀번호 (최소 4자리)"
-                        value={csvPassword}
-                        onChange={(e) => setCsvPassword(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>비밀번호 확인 *</Label>
-                      <Input
-                        type="password"
-                        placeholder="비밀번호 확인"
-                        value={csvPasswordConfirm}
-                        onChange={(e) => setCsvPasswordConfirm(e.target.value)}
-                      />
-                    </div>
-                    <div className="bg-yellow-50 p-3 rounded-lg text-sm text-yellow-800">
-                      <AlertCircle className="w-4 h-4 inline mr-2" />
-                      다운로드 파일명에 비밀번호가 포함됩니다. 파일 관리에 주의해주세요.
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCsvDialogOpen(false)}>
-                      취소
-                    </Button>
-                    <Button onClick={handleCsvDownload}>
-                      <Download className="w-4 h-4 mr-2" />
-                      다운로드
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              {/* Bulk email button */}
+              <Button
+                variant="outline"
+                onClick={handleBulkInfoRequest}
+                disabled={sendingBulkEmail}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {sendingBulkEmail ? '발송 중...' : '전체 이메일 발송'}
+              </Button>
 
-              {/* 정산 생성 다이얼로그 */}
+              {/* CSV download */}
+              <Button variant="outline" onClick={handleCsvDownload}>
+                <Download className="w-4 h-4 mr-2" />
+                CSV 다운로드
+              </Button>
+
+              {/* Create settlement dialog */}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -455,7 +430,7 @@ export default function AdminSettlementsPage() {
                           <SelectValue placeholder="파트너 선택" />
                         </SelectTrigger>
                         <SelectContent>
-                          {partners.map((partner) => (
+                          {approvedPartners.map((partner) => (
                             <SelectItem key={partner.id} value={partner.id}>
                               {partner.name} ({partner.email})
                             </SelectItem>
@@ -511,61 +486,45 @@ export default function AdminSettlementsPage() {
         </div>
       </div>
 
-      {/* 정보 요청 다이얼로그 */}
-      {mounted && (
-        <Dialog open={isInfoRequestDialogOpen} onOpenChange={setIsInfoRequestDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                정산 정보 요청
-              </DialogTitle>
-              <DialogDescription>
-                {infoRequestPartner?.partners?.name}님께 정산 정보 요청 메일을 발송합니다.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p className="font-medium">수신자</p>
-                <p className="text-sm text-gray-600">{infoRequestPartner?.partners?.email}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p className="font-medium">요청 내용</p>
-                <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-                  {!infoRequestPartner?.partners?.bank_name && <li>은행명</li>}
-                  {!infoRequestPartner?.partners?.bank_account && <li>계좌번호</li>}
-                  {!infoRequestPartner?.partners?.account_holder && <li>예금주</li>}
-                </ul>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
-                <Mail className="w-4 h-4 inline mr-2" />
-                파트너에게 정산 정보 입력을 요청하는 이메일이 발송됩니다.
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsInfoRequestDialogOpen(false)}>
-                취소
-              </Button>
-              <Button onClick={sendInfoRequestEmail}>
-                <Mail className="w-4 h-4 mr-2" />
-                메일 발송
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* 요약 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">전체 정산</p>
-                <p className="text-2xl font-bold">{settlements.length}건</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <Users className="w-5 h-5 text-gray-600" />
               </div>
-              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-500">파트너 수</p>
+                <p className="text-xl font-bold">{totalStats.partner_count}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-gray-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">총 정산 건수</p>
+                <p className="text-xl font-bold">{totalStats.total_settlements}건</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">총 정산 금액</p>
+                <p className="text-xl font-bold">₩{totalStats.total_amount.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -573,45 +532,27 @@ export default function AdminSettlementsPage() {
 
         <Card className="border-orange-200">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-orange-600" />
+              </div>
               <div>
-                <p className="text-sm text-gray-500">대기 중 금액</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  ₩{totalPending.toLocaleString()}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">완료 금액</p>
-                <p className="text-2xl font-bold text-green-600">
-                  ₩{totalCompleted.toLocaleString()}
-                </p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <p className="text-sm text-gray-500">대기 건수</p>
+                <p className="text-xl font-bold text-orange-600">{totalStats.pending_count}건</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* 필터 */}
+      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="파트너명, 고객명으로 검색..."
+                placeholder="파트너명으로 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -631,123 +572,211 @@ export default function AdminSettlementsPage() {
         </CardContent>
       </Card>
 
-      {/* 정산 목록 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            정산 목록 ({filteredSettlements.length}건)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedSettlements.size === filteredSettlements.length && filteredSettlements.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>생성일</TableHead>
-                  <TableHead>파트너</TableHead>
-                  <TableHead>연결 고객</TableHead>
-                  <TableHead className="text-right">금액</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>완료일</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSettlements.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-gray-500 py-8">
-                      정산 내역이 없습니다
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredSettlements.map((settlement) => (
-                    <TableRow key={settlement.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedSettlements.has(settlement.id)}
-                          onCheckedChange={() => toggleSelect(settlement.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(settlement.created_at)}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <span className="font-medium">{settlement.partners?.name || '-'}</span>
-                          {hasMissingInfo(settlement) && (
-                            <span className="ml-2 text-xs text-red-500">
-                              <AlertCircle className="w-3 h-3 inline" /> 정보 누락
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {settlement.referrals?.name || (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        ₩{(settlement.amount || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_COLORS[settlement.status]}>
-                          {STATUS_LABELS[settlement.status]}
+      {/* Partner card list */}
+      <div className="space-y-3">
+        {filteredGroups.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-gray-500">
+              정산 내역이 없습니다
+            </CardContent>
+          </Card>
+        ) : (
+          filteredGroups.map((group) => {
+            const isExpanded = expandedCards.has(group.partner_id)
+            const hasPendingSettlements = group.pending_amount > 0
+            const needsInfo = hasMissingInfo(group)
+
+            return (
+              <Card key={group.partner_id} className={needsInfo ? 'border-orange-200' : ''}>
+                {/* Card header - clickable */}
+                <div
+                  className="px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => toggleCard(group.partner_id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-wrap min-w-0">
+                      {/* Partner name */}
+                      <span className="font-semibold text-base">{group.partner_name}</span>
+
+                      {/* Settlement count */}
+                      <Badge variant="secondary" className="text-xs">
+                        {group.settlement_count}건
+                      </Badge>
+
+                      {/* Total amount */}
+                      <span className="font-medium text-sm">
+                        ₩{group.total_amount.toLocaleString()}
+                      </span>
+
+                      {/* Bank badge */}
+                      {group.bank_name ? (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
+                          {group.bank_name}
                         </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(settlement.settled_at)}</TableCell>
-                      <TableCell>
-                        {mounted && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {settlement.status === 'pending' ? (
-                                <DropdownMenuItem
-                                  onClick={() => handleStatusChange(settlement.id, 'completed')}
-                                  className="text-green-600"
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-2" />
-                                  완료 처리
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem
-                                  onClick={() => handleStatusChange(settlement.id, 'pending')}
-                                  className="text-orange-600"
-                                >
-                                  <Clock className="w-4 h-4 mr-2" />
-                                  대기로 변경
-                                </DropdownMenuItem>
-                              )}
-                              {hasMissingInfo(settlement) && (
-                                <DropdownMenuItem
-                                  onClick={() => handleInfoRequest(settlement)}
-                                  className="text-blue-600"
-                                >
-                                  <Mail className="w-4 h-4 mr-2" />
-                                  정보 요청 메일
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      ) : (
+                        <Badge className="bg-red-100 text-red-700 hover:bg-red-100 text-xs">
+                          계좌미입력
+                        </Badge>
+                      )}
+
+                      {/* Status badge */}
+                      {hasPendingSettlements ? (
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-xs">
+                          대기
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">
+                          완료
+                        </Badge>
+                      )}
+
+                      {/* SSN badge */}
+                      {group.has_ssn ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">
+                          주민번호 ✓
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 text-xs">
+                          주민번호 미입력
+                        </Badge>
+                      )}
+
+                      {/* No email warning */}
+                      {!group.partner_email && (
+                        <Badge className="bg-gray-100 text-gray-500 hover:bg-gray-100 text-xs">
+                          이메일없음
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-4 shrink-0">
+                      {/* Info request button - shown when missing info */}
+                      {mounted && needsInfo && group.partner_email && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSendInfoRequest(group.partner_id, group.partner_name)
+                          }}
+                          disabled={sendingEmailFor === group.partner_id}
+                        >
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />
+                          {sendingEmailFor === group.partner_id ? '발송중...' : '계좌요청'}
+                        </Button>
+                      )}
+
+                      {/* Expand/collapse icon */}
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div className="px-6 pb-5 border-t">
+                    {/* Account info */}
+                    {group.bank_name && (
+                      <div className="mt-4 mb-3 p-3 bg-gray-50 rounded-lg text-sm">
+                        <span className="text-gray-500">계좌:</span>{' '}
+                        <span className="font-medium">{group.bank_name}</span>
+                        {' · '}
+                        <span>{group.bank_account}</span>
+                        {' · '}
+                        <span>예금주 {group.account_holder}</span>
+                      </div>
+                    )}
+
+                    {!group.bank_name && (
+                      <div className="mt-4 mb-3 p-3 bg-orange-50 rounded-lg text-sm text-orange-700 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        계좌 정보가 입력되지 않았습니다
+                      </div>
+                    )}
+
+                    {/* Settlements table */}
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs">정산ID</TableHead>
+                            <TableHead className="text-xs">고객명</TableHead>
+                            <TableHead className="text-xs">정산유형</TableHead>
+                            <TableHead className="text-xs text-right">금액</TableHead>
+                            <TableHead className="text-xs">상태</TableHead>
+                            <TableHead className="text-xs">생성일</TableHead>
+                            <TableHead className="text-xs w-10"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.settlements.map((s) => (
+                            <TableRow key={s.id}>
+                              <TableCell className="text-xs text-gray-500 font-mono">
+                                {s.id.slice(0, 8)}...
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {s.referral_name || <span className="text-gray-400">-</span>}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {TYPE_LABELS[s.type || ''] || s.type || '-'}
+                              </TableCell>
+                              <TableCell className="text-sm text-right font-medium">
+                                ₩{s.amount.toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`${STATUS_COLORS[s.status]} text-xs`}>
+                                  {STATUS_LABELS[s.status]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {formatDate(s.created_at)}
+                              </TableCell>
+                              <TableCell>
+                                {mounted && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                                        <MoreVertical className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      {s.status === 'pending' ? (
+                                        <DropdownMenuItem
+                                          onClick={() => handleStatusChange(s.id, 'completed')}
+                                          className="text-green-600"
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-2" />
+                                          완료 처리
+                                        </DropdownMenuItem>
+                                      ) : (
+                                        <DropdownMenuItem
+                                          onClick={() => handleStatusChange(s.id, 'pending')}
+                                          className="text-orange-600"
+                                        >
+                                          <Clock className="w-4 h-4 mr-2" />
+                                          대기로 변경
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </Card>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }

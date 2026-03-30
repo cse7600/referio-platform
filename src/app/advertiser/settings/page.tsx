@@ -90,6 +90,7 @@ export default function AdvertiserSettingsPage() {
         contract_values: string[]
         invalid_values: string[]
         contract_date_field?: string
+        utm_source_field?: string
       }
     }
   }
@@ -112,6 +113,7 @@ export default function AdvertiserSettingsPage() {
   const [airtablePhoneField, setAirtablePhoneField] = useState('전화번호')
   const [airtableRefCodeField, setAirtableRefCodeField] = useState('추천코드')
   const [airtableStatusField, setAirtableStatusField] = useState('영업상태')
+  const [airtableUtmSourceField, setAirtableUtmSourceField] = useState('UTM 소스')
   const [airtableValidValues, setAirtableValidValues] = useState('유효')
   const [airtableContractValues, setAirtableContractValues] = useState('계약완료')
   const [airtableInvalidValues, setAirtableInvalidValues] = useState('무효')
@@ -144,6 +146,7 @@ export default function AdvertiserSettingsPage() {
           setAirtablePhoneField(cfg.phone_field || '전화번호')
           setAirtableRefCodeField(cfg.ref_code_field || '추천코드')
           setAirtableStatusField(cfg.status_field || '영업상태')
+          setAirtableUtmSourceField(cfg.utm_source_field || 'UTM 소스')
           setAirtableValidValues((cfg.valid_values || ['유효']).join(', '))
           setAirtableContractValues((cfg.contract_values || ['계약']).join(', '))
           setAirtableInvalidValues((cfg.invalid_values || ['무효']).join(', '))
@@ -205,6 +208,7 @@ export default function AdvertiserSettingsPage() {
             phone_field: airtablePhoneField,
             ref_code_field: airtableRefCodeField,
             status_field: airtableStatusField,
+            utm_source_field: airtableUtmSourceField || undefined,
             valid_values: airtableValidValues.split(',').map(s => s.trim()).filter(Boolean),
             contract_values: airtableContractValues.split(',').map(s => s.trim()).filter(Boolean),
             invalid_values: airtableInvalidValues.split(',').map(s => s.trim()).filter(Boolean),
@@ -330,35 +334,46 @@ export default function AdvertiserSettingsPage() {
   }
 
   const getRefCaptureScript = () => {
-    const fieldName = airtableRefCodeField || '추천코드'
-    return `<!-- Referio 추천코드 자동 캡처 스크립트 -->
+    const refFieldName = airtableRefCodeField || '추천코드'
+    const utmFieldName = airtableUtmSourceField || 'UTM 소스'
+    return `<!-- Referio 추천코드 + UTM 자동 캡처 스크립트 -->
 <!-- 이 코드를 광고주 웹사이트의 <head> 또는 폼 페이지 하단에 삽입하세요 -->
 <script>
 (function() {
-  // 파트너 추천 링크(?ref=코드)에서 추천코드 자동 캡처
   var params = new URLSearchParams(window.location.search);
   var ref = params.get('ref');
+  var utm = params.get('utm_source');
 
+  // 30일간 저장 (다른 페이지로 이동해도 유지)
   if (ref) {
-    // 30일간 저장 (다른 페이지로 이동해도 유지)
     localStorage.setItem('referio_ref', ref);
     localStorage.setItem('referio_ref_exp', Date.now() + 30 * 86400000);
   }
-
-  // 저장된 코드 불러오기
-  var stored = localStorage.getItem('referio_ref');
-  var exp = localStorage.getItem('referio_ref_exp');
-  if (stored && exp && Date.now() < Number(exp)) {
-    ref = ref || stored;
+  if (utm) {
+    localStorage.setItem('referio_utm_source', utm);
+    localStorage.setItem('referio_utm_exp', Date.now() + 30 * 86400000);
   }
 
-  // 폼의 추천코드 필드에 자동 입력
-  // Airtable 필드명 "${fieldName}"과 동일한 input name을 가진 필드에 삽입
+  // 저장된 값 불러오기
+  var storedRef = localStorage.getItem('referio_ref');
+  var refExp = localStorage.getItem('referio_ref_exp');
+  if (storedRef && refExp && Date.now() < Number(refExp)) ref = ref || storedRef;
+
+  var storedUtm = localStorage.getItem('referio_utm_source');
+  var utmExp = localStorage.getItem('referio_utm_exp');
+  if (storedUtm && utmExp && Date.now() < Number(utmExp)) utm = utm || storedUtm;
+
+  // 폼 필드에 자동 입력
   function fill() {
-    var fields = document.querySelectorAll(
-      'input[name="${fieldName}"], input[data-referio="ref"], [placeholder*="추천코드"]'
+    var refFields = document.querySelectorAll(
+      'input[name="${refFieldName}"], input[data-referio="ref"], [placeholder*="추천코드"]'
     );
-    fields.forEach(function(el) { if (ref) el.value = ref; });
+    refFields.forEach(function(el) { if (ref) el.value = ref; });
+
+    var utmFields = document.querySelectorAll(
+      'input[name="${utmFieldName}"], input[data-referio="utm_source"]'
+    );
+    utmFields.forEach(function(el) { if (utm) el.value = utm; });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', fill);
@@ -373,6 +388,7 @@ export default function AdvertiserSettingsPage() {
       phone: airtablePhoneField || '전화번호',
       refCode: airtableRefCodeField || '추천코드',
       status: airtableStatusField || '영업상태',
+      utmSource: airtableUtmSourceField || 'UTM 소스',
     }
     const secretLine = apiSecret ? `\nconst API_SECRET = '${apiSecret}';` : ''
     const hmacBlock = apiSecret ? `
@@ -419,6 +435,7 @@ const payload = {
     '${fields.phone}': fields['${fields.phone}'],
     '${fields.refCode}': fields['${fields.refCode}'],
     '${fields.status}': fields['${fields.status}'],
+    '${fields.utmSource}': fields['${fields.utmSource}'] || null,
   }
 };
 ${hmacBlock}
@@ -1242,6 +1259,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
                             setAirtablePhoneField(cfg.phone_field || '')
                             setAirtableRefCodeField(cfg.ref_code_field || '')
                             setAirtableStatusField(cfg.status_field || '')
+                            setAirtableUtmSourceField(cfg.utm_source_field || '')
                             setAirtableValidValues((cfg.valid_values || []).join(', '))
                             setAirtableContractValues((cfg.contract_values || []).join(', '))
                             setAirtableInvalidValues((cfg.invalid_values || []).join(', '))
@@ -1270,6 +1288,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
                           { label: '연락처 필드', value: airtablePhoneField, setter: setAirtablePhoneField, placeholder: '연락처' },
                           { label: '추천코드 필드', value: airtableRefCodeField, setter: setAirtableRefCodeField, placeholder: '입력한추천인코드' },
                           { label: '영업상태 필드', value: airtableStatusField, setter: setAirtableStatusField, placeholder: '계약상태' },
+                          { label: 'UTM 소스 필드 (선택)', value: airtableUtmSourceField, setter: setAirtableUtmSourceField, placeholder: 'UTM 소스' },
                         ].map(({ label, value, setter, placeholder }) => (
                           <div key={label} className="space-y-1.5">
                             <Label className="text-sm">{label}</Label>
@@ -1420,6 +1439,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
                               { label: '연락처 필드', value: airtablePhoneField, setter: setAirtablePhoneField, placeholder: '전화번호' },
                               { label: '추천코드 필드', value: airtableRefCodeField, setter: setAirtableRefCodeField, placeholder: '추천코드' },
                               { label: '영업상태 필드', value: airtableStatusField, setter: setAirtableStatusField, placeholder: '영업상태' },
+                              { label: 'UTM 소스 필드 (선택)', value: airtableUtmSourceField, setter: setAirtableUtmSourceField, placeholder: 'UTM 소스' },
                             ].map(({ label, value, setter, placeholder }) => (
                               <div key={label} className="space-y-2">
                                 <Label className="text-sm">{label}</Label>

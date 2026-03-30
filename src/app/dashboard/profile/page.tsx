@@ -69,6 +69,12 @@ export default function ProfilePage() {
   const [accountHolder, setAccountHolder] = useState('')
   const [mainChannelLink, setMainChannelLink] = useState('')
 
+  // 주민번호 (SSN)
+  const [hasSSN, setHasSSN] = useState(false)
+  const [ssnInput, setSsnInput] = useState('')
+  const [savingSSN, setSavingSSN] = useState(false)
+  const [ssnEditMode, setSsnEditMode] = useState(false)
+
   // 소셜 채널
   const [channelType, setChannelType] = useState('')
   const [naverBlogUrl, setNaverBlogUrl] = useState('')
@@ -98,6 +104,8 @@ export default function ProfilePage() {
           setBankAccount(partnerData.bank_account || '')
           setAccountHolder(partnerData.account_holder || '')
           setMainChannelLink(partnerData.main_channel_link || '')
+          // SSN: only store whether it exists, discard the encrypted value
+          setHasSSN(!!(partnerData as Record<string, unknown>).ssn_encrypted)
           // 소셜 채널
           const pd = partnerData as typeof partnerData & {
             channel_type?: string
@@ -177,6 +185,34 @@ export default function ProfilePage() {
       toast.error('저장에 실패했습니다')
     }
     setSavingChannels(false)
+  }
+
+  const handleSaveSSN = async () => {
+    const clean = ssnInput.replace(/[^0-9]/g, '')
+    if (clean.length !== 13) {
+      toast.error('주민번호는 하이픈 없이 13자리 숫자를 입력해주세요')
+      return
+    }
+    setSavingSSN(true)
+    try {
+      const res = await fetch('/api/partner/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ssn: clean }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setHasSSN(true)
+        setSsnInput('') // clear from memory immediately
+        setSsnEditMode(false)
+        toast.success('주민번호가 안전하게 등록되었습니다')
+      } else {
+        toast.error(data.error || '저장에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setSavingSSN(false)
   }
 
   const handleCopy = async () => {
@@ -638,6 +674,66 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          <Separator className="my-4" />
+
+          {/* 주민번호 섹션 */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">주민번호 (세금 신고용)</p>
+                <p className="text-xs text-gray-500">정산 시 원천징수 신고에 필요합니다. 암호화하여 안전하게 보관됩니다.</p>
+              </div>
+              {hasSSN && !ssnEditMode && (
+                <Badge className="bg-green-100 text-green-700">
+                  <Check className="w-3 h-3 mr-1" />
+                  등록 완료
+                </Badge>
+              )}
+            </div>
+
+            {hasSSN && !ssnEditMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSsnEditMode(true)}
+              >
+                재등록
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="password"
+                  placeholder="주민번호 13자리 (하이픈 없이)"
+                  value={ssnInput}
+                  onChange={(e) => setSsnInput(e.target.value)}
+                  maxLength={13}
+                  className="max-w-xs"
+                />
+                <Button
+                  onClick={handleSaveSSN}
+                  disabled={savingSSN || ssnInput.length === 0}
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  {savingSSN ? '저장 중...' : '등록'}
+                </Button>
+                {ssnEditMode && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSsnEditMode(false)
+                      setSsnInput('')
+                    }}
+                  >
+                    취소
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

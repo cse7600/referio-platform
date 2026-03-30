@@ -51,6 +51,7 @@ interface Referral {
   priority: string | null
   next_action: string | null
   next_action_at: string | null
+  channel: string | null
   created_at: string
 }
 
@@ -264,12 +265,13 @@ export default function AdvertiserReferralsPage() {
   }
 
   const handleExportCsv = () => {
-    const headers = ['유입일', '고객명', '연락처', '추천파트너', '계약상태', '유효여부', '우선순위', '메모', '문의내용']
+    const headers = ['유입일', '고객명', '연락처', '추천파트너', '유입채널', '계약상태', '유효여부', '우선순위', '메모', '문의내용']
     const rows = filteredReferrals.map(r => [
       new Date(r.created_at).toLocaleDateString('ko-KR'),
       r.name,
       r.phone || '',
       r.partner_name || r.referral_code_input || '직접유입',
+      r.channel || '',
       statusLabels[r.contract_status]?.label || r.contract_status,
       r.is_valid === true ? '유효' : r.is_valid === false ? '무효' : '미정',
       r.priority || 'normal',
@@ -484,6 +486,7 @@ export default function AdvertiserReferralsPage() {
               <TableHead>고객명</TableHead>
               <TableHead>연락처</TableHead>
               <TableHead>추천 파트너</TableHead>
+              <TableHead>유입채널</TableHead>
               <TableHead>계약 상태</TableHead>
               <TableHead>유효 여부</TableHead>
               <TableHead>메모</TableHead>
@@ -535,6 +538,15 @@ export default function AdvertiserReferralsPage() {
                       </code>
                     ) : (
                       <span className="text-slate-400">직접유입</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {referral.channel ? (
+                      <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-100 font-normal text-xs">
+                        {referral.channel}
+                      </Badge>
+                    ) : (
+                      <span className="text-slate-300 text-xs">-</span>
                     )}
                   </TableCell>
                   <TableCell>

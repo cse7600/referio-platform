@@ -196,7 +196,7 @@ export default function ProgramDetailPage() {
     const base = buildReferralLink()
     if (!base || !channel) return base
     const separator = base.includes('?') ? '&' : '?'
-    return `${base}${separator}ch=${encodeURIComponent(channel)}`
+    return `${base}${separator}utm_source=${encodeURIComponent(channel)}`
   }
 
   const handleCopyLink = async () => {
@@ -306,37 +306,6 @@ export default function ProgramDetailPage() {
                   >
                     {copied ? <><Check className="w-3 h-3 mr-1" />복사됨</> : <><Copy className="w-3 h-3 mr-1" />복사</>}
                   </Button>
-                </div>
-                <div className="border-t border-green-200 pt-3">
-                  <p className="text-xs text-green-700 mb-2 font-medium">채널별 링크 <span className="font-normal text-green-600">— 어디서 유입됐는지 추적</span></p>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {['블로그', '유튜브', '인스타', '카페', '지인소개'].map((ch) => (
-                      <button
-                        key={ch}
-                        onClick={() => handleCopyChannelLink(ch)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-green-300 bg-white text-green-700 hover:bg-green-100 transition-colors"
-                      >
-                        {copiedChannel === ch ? <><Check className="w-3 h-3" />복사됨</> : <><Copy className="w-3 h-3" />{ch}</>}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="text"
-                      value={customChannel}
-                      onChange={(e) => setCustomChannel(e.target.value.slice(0, 20))}
-                      placeholder="직접입력 (예: 네이버카페)"
-                      className="flex-1 text-xs h-7 px-2 rounded border border-green-300 bg-white text-green-900 placeholder-green-400 focus:outline-none focus:border-green-500"
-                    />
-                    <button
-                      onClick={() => customChannel.trim() && handleCopyChannelLink(customChannel.trim())}
-                      disabled={!customChannel.trim()}
-                      className="px-2.5 py-1 rounded text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-7"
-                    >
-                      {copiedChannel === customChannel.trim() && customChannel.trim() ? '복사됨' : '복사'}
-                    </button>
-                  </div>
-                  <p className="text-xs text-green-500 mt-1.5">고객 목록에서 어떤 채널로 유입됐는지 확인할 수 있어요</p>
                 </div>
               </div>
             )}
@@ -559,38 +528,6 @@ export default function ProgramDetailPage() {
                 </Button>
               </div>
 
-              {/* 채널별 링크 */}
-              <div className="border-t border-green-200 pt-3">
-                <p className="text-xs text-green-700 mb-2 font-medium">채널별 링크 <span className="font-normal text-green-600">— 어디서 유입됐는지 추적</span></p>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {['블로그', '유튜브', '인스타', '카페', '지인소개'].map((ch) => (
-                    <button
-                      key={ch}
-                      onClick={() => handleCopyChannelLink(ch)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border border-green-300 bg-white text-green-700 hover:bg-green-100 transition-colors"
-                    >
-                      {copiedChannel === ch ? <><Check className="w-3 h-3" />복사됨</> : <><Copy className="w-3 h-3" />{ch}</>}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    value={customChannel}
-                    onChange={(e) => setCustomChannel(e.target.value.slice(0, 20))}
-                    placeholder="직접입력 (예: 네이버카페)"
-                    className="flex-1 text-xs h-7 px-2 rounded border border-green-300 bg-white text-green-900 placeholder-green-400 focus:outline-none focus:border-green-500"
-                  />
-                  <button
-                    onClick={() => customChannel.trim() && handleCopyChannelLink(customChannel.trim())}
-                    disabled={!customChannel.trim()}
-                    className="px-2.5 py-1 rounded text-xs bg-green-600 text-white hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-7"
-                  >
-                    {copiedChannel === customChannel.trim() && customChannel.trim() ? '복사됨' : '복사'}
-                  </button>
-                </div>
-                <p className="text-xs text-green-500 mt-1.5">고객 목록에서 어떤 채널로 유입됐는지 확인할 수 있어요</p>
-              </div>
             </div>
           )}
 

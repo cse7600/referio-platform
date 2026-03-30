@@ -136,6 +136,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         referral_code_input: partnerData!.referral_code,
         inquiry: inquiry || null,
+        channel: utm_source || null,
         contract_status: 'pending',
         is_valid: null,
       })

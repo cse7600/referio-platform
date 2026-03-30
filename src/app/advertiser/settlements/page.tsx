@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -12,17 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp, Mail, Check, Send } from 'lucide-react'
 
-interface Settlement {
+// ── Types ──
+
+interface SettlementItem {
   id: string
-  type: 'valid' | 'contract'
-  partner_id: string
-  partner_name?: string
+  type: string | null
   referral_id: string | null
-  referral_name?: string
+  referral_name: string | null
   amount: number
   status: 'pending' | 'completed'
   settled_at: string | null
@@ -30,7 +29,22 @@ interface Settlement {
   created_at: string
 }
 
-interface SettlementStats {
+interface PartnerGroup {
+  partner_id: string
+  partner_name: string
+  partner_email: string
+  bank_name: string | null
+  bank_account: string | null
+  account_holder: string | null
+  has_ssn: boolean
+  total_amount: number
+  pending_amount: number
+  settlement_count: number
+  settlements: SettlementItem[]
+}
+
+interface Stats {
+  totalPartners: number
   totalPending: number
   totalPendingAmount: number
   totalCompleted: number
@@ -38,123 +52,154 @@ interface SettlementStats {
   thisMonthAmount: number
 }
 
+// ── Helpers ──
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat('ko-KR', {
+    style: 'currency',
+    currency: 'KRW',
+    maximumFractionDigits: 0,
+  }).format(n)
+
+// ── Page Component ──
+
 export default function AdvertiserSettlementsPage() {
-  const [settlements, setSettlements] = useState<Settlement[]>([])
-  const [stats, setStats] = useState<SettlementStats | null>(null)
+  const [partners, setPartners] = useState<PartnerGroup[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+  // Track expanded cards and selected settlements per partner
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<Record<string, Set<string>>>({})
+
   const [processing, setProcessing] = useState(false)
+  const [emailSending, setEmailSending] = useState<string | null>(null) // partner_id or 'all'
 
-  useEffect(() => {
-    fetchSettlements()
-  }, [])
-
-  const fetchSettlements = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const response = await fetch('/api/advertiser/settlements')
-      if (response.ok) {
-        const data = await response.json()
-        setSettlements(data.settlements || [])
+      const res = await fetch('/api/advertiser/settlements')
+      if (res.ok) {
+        const data = await res.json()
+        setPartners(data.partners || [])
         setStats(data.stats || null)
       }
-    } catch (error) {
-      console.error('Settlements fetch error:', error)
+    } catch (err) {
+      console.error('Settlements fetch error:', err)
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // ── Actions ──
+
+  const toggleExpand = (id: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelect = (partnerId: string, settlementId: string) => {
+    setSelected(prev => {
+      const set = new Set(prev[partnerId] || [])
+      if (set.has(settlementId)) set.delete(settlementId)
+      else set.add(settlementId)
+      return { ...prev, [partnerId]: set }
+    })
+  }
+
+  const toggleSelectAllPending = (partnerId: string, pendingIds: string[]) => {
+    setSelected(prev => {
+      const current = prev[partnerId] || new Set()
+      const allSelected = pendingIds.every(id => current.has(id))
+      return {
+        ...prev,
+        [partnerId]: allSelected ? new Set() : new Set(pendingIds),
+      }
+    })
   }
 
   const handleComplete = async (settlementIds: string[]) => {
     if (settlementIds.length === 0) return
-
     setProcessing(true)
     try {
-      const response = await fetch('/api/advertiser/settlements/complete', {
+      const res = await fetch('/api/advertiser/settlements/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settlement_ids: settlementIds }),
       })
-
-      if (response.ok) {
-        setSettlements(prev =>
-          prev.map(s =>
-            settlementIds.includes(s.id)
-              ? { ...s, status: 'completed' as const, settled_at: new Date().toISOString() }
-              : s
-          )
-        )
-        setSelectedIds([])
-        // 통계 새로고침
-        fetchSettlements()
+      if (res.ok) {
+        // Clear selections and refresh
+        setSelected({})
+        await fetchData()
       }
-    } catch (error) {
-      console.error('Complete error:', error)
+    } catch (err) {
+      console.error('Complete error:', err)
     } finally {
       setProcessing(false)
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ko-KR', {
-      style: 'currency',
-      currency: 'KRW',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const pendingSettlements = settlements.filter(s => s.status === 'pending')
-  const completedSettlements = settlements.filter(s => s.status === 'completed')
-
-  const filteredPending = pendingSettlements.filter(s =>
-    (s.partner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-    (s.referral_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
-  )
-
-  const filteredCompleted = completedSettlements.filter(s =>
-    (s.partner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-    (s.referral_name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
-  )
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    )
-  }
-
-  const selectAll = () => {
-    if (selectedIds.length === filteredPending.length) {
-      setSelectedIds([])
-    } else {
-      setSelectedIds(filteredPending.map(s => s.id))
+  const handleRequestInfo = async (partnerIds: string[]) => {
+    if (partnerIds.length === 0) return
+    const key = partnerIds.length === 1 ? partnerIds[0] : 'all'
+    setEmailSending(key)
+    try {
+      const res = await fetch('/api/advertiser/settlements/request-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner_ids: partnerIds }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        alert(`발송 완료: ${data.sent}건 성공${data.failed ? `, ${data.failed}건 실패` : ''}`)
+      } else {
+        alert('이메일 발송에 실패했습니다')
+      }
+    } catch (err) {
+      console.error('Request info error:', err)
+      alert('이메일 발송 중 오류가 발생했습니다')
+    } finally {
+      setEmailSending(null)
     }
   }
 
-  const selectedAmount = filteredPending
-    .filter(s => selectedIds.includes(s.id))
-    .reduce((sum, s) => sum + s.amount, 0)
-
-  const handleExportCsv = () => {
-    const headers = ['생성일', '정산완료일', '파트너', '고객명', '유형', '금액', '상태', '비고']
-    const rows = settlements.map(s => [
-      new Date(s.created_at).toLocaleDateString('ko-KR'),
-      s.settled_at ? new Date(s.settled_at).toLocaleDateString('ko-KR') : '',
-      s.partner_name || '',
-      s.referral_name || '',
-      s.type === 'valid' ? '유효DB' : '계약',
-      s.amount.toString(),
-      s.status === 'pending' ? '대기' : '완료',
-      (s.note || '').replace(/,/g, ' ').replace(/\n/g, ' '),
-    ])
-    const csv = [headers, ...rows].map(row => row.map(v => `"${v}"`).join(',')).join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `정산목록_${new Date().toLocaleDateString('ko-KR').replace(/\./g, '').replace(/ /g, '')}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleExportCsv = async () => {
+    try {
+      const res = await fetch('/api/advertiser/settlements/export')
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `정산목록_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('CSV export error:', err)
+      alert('CSV 다운로드에 실패했습니다')
+    }
   }
+
+  // ── Derived data ──
+
+  const filtered = partners.filter(p =>
+    p.partner_name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Partners missing account or SSN info
+  const missingInfoPartnerIds = partners
+    .filter(p => !p.bank_name || !p.bank_account || !p.has_ssn)
+    .map(p => p.partner_id)
+
+  // ── Loading skeleton ──
 
   if (loading) {
     return (
@@ -167,242 +212,283 @@ export default function AdvertiserSettlementsPage() {
             </Card>
           ))}
         </div>
+        {[1, 2, 3].map(i => (
+          <Card key={i} className="p-4">
+            <div className="h-12 bg-slate-200 rounded animate-pulse" />
+          </Card>
+        ))}
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">정산 관리</h1>
           <p className="text-slate-500 mt-1">파트너 정산 처리 및 내역 관리</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleExportCsv}
-          disabled={settlements.length === 0}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          CSV 내보내기
-        </Button>
+        <div className="flex gap-2">
+          {missingInfoPartnerIds.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => handleRequestInfo(missingInfoPartnerIds)}
+              disabled={emailSending === 'all'}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {emailSending === 'all' ? '발송 중...' : `전체 이메일 발송 (${missingInfoPartnerIds.length}명)`}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={partners.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            CSV 다운로드
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">대기 중</p>
-              <p className="text-2xl font-bold text-orange-600 mt-1">
-                {stats?.totalPending ?? 0}건
-              </p>
-              <p className="text-sm text-slate-500 mt-1">
-                {formatCurrency(stats?.totalPendingAmount ?? 0)}
-              </p>
-            </div>
-            <div className="text-3xl">⏳</div>
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-5">
+          <p className="text-sm text-slate-500">파트너 수</p>
+          <p className="text-2xl font-bold text-slate-900 mt-1">
+            {stats?.totalPartners ?? 0}명
+          </p>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">정산 완료</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">
-                {stats?.totalCompleted ?? 0}건
-              </p>
-              <p className="text-sm text-slate-500 mt-1">
-                {formatCurrency(stats?.totalCompletedAmount ?? 0)}
-              </p>
-            </div>
-            <div className="text-3xl">✅</div>
-          </div>
+        <Card className="p-5">
+          <p className="text-sm text-slate-500">대기 건수</p>
+          <p className="text-2xl font-bold text-orange-600 mt-1">
+            {stats?.totalPending ?? 0}건
+          </p>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">이번 달 정산</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
-                {formatCurrency(stats?.thisMonthAmount ?? 0)}
-              </p>
-            </div>
-            <div className="text-3xl">📅</div>
-          </div>
+        <Card className="p-5">
+          <p className="text-sm text-slate-500">대기 금액</p>
+          <p className="text-2xl font-bold text-orange-600 mt-1">
+            {fmt(stats?.totalPendingAmount ?? 0)}
+          </p>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">선택된 금액</p>
-              <p className="text-2xl font-bold text-purple-600 mt-1">
-                {formatCurrency(selectedAmount)}
-              </p>
-              <p className="text-sm text-slate-500 mt-1">
-                {selectedIds.length}건 선택
-              </p>
-            </div>
-            <div className="text-3xl">🎯</div>
-          </div>
+        <Card className="p-5">
+          <p className="text-sm text-slate-500">이번 달 정산</p>
+          <p className="text-2xl font-bold text-blue-600 mt-1">
+            {fmt(stats?.thisMonthAmount ?? 0)}
+          </p>
         </Card>
       </div>
 
-      {/* Search and Actions */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <Input
-          placeholder="파트너명 또는 고객명으로 검색..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-        {selectedIds.length > 0 && (
-          <Button
-            onClick={() => handleComplete(selectedIds)}
-            disabled={processing}
-          >
-            {processing ? '처리 중...' : `선택 정산 완료 (${selectedIds.length}건)`}
-          </Button>
-        )}
+      {/* Search */}
+      <Input
+        placeholder="파트너명으로 검색..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        className="max-w-sm"
+      />
+
+      {/* Partner Cards */}
+      {filtered.length === 0 ? (
+        <Card className="p-12 text-center text-slate-500">
+          {searchTerm ? '검색 결과가 없습니다' : '정산 내역이 없습니다'}
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(p => (
+            <PartnerCard
+              key={p.partner_id}
+              partner={p}
+              isExpanded={expanded.has(p.partner_id)}
+              selectedIds={selected[p.partner_id] || new Set()}
+              processing={processing}
+              emailSending={emailSending}
+              onToggleExpand={() => toggleExpand(p.partner_id)}
+              onToggleSelect={(sid) => toggleSelect(p.partner_id, sid)}
+              onToggleSelectAll={(ids) => toggleSelectAllPending(p.partner_id, ids)}
+              onComplete={(ids) => handleComplete(ids)}
+              onRequestInfo={(pid) => handleRequestInfo([pid])}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Partner Card ──
+
+function PartnerCard({
+  partner: p,
+  isExpanded,
+  selectedIds,
+  processing,
+  emailSending,
+  onToggleExpand,
+  onToggleSelect,
+  onToggleSelectAll,
+  onComplete,
+  onRequestInfo,
+}: {
+  partner: PartnerGroup
+  isExpanded: boolean
+  selectedIds: Set<string>
+  processing: boolean
+  emailSending: string | null
+  onToggleExpand: () => void
+  onToggleSelect: (id: string) => void
+  onToggleSelectAll: (ids: string[]) => void
+  onComplete: (ids: string[]) => void
+  onRequestInfo: (partnerId: string) => void
+}) {
+  const pendingItems = p.settlements.filter(s => s.status === 'pending')
+  const pendingIds = pendingItems.map(s => s.id)
+  const selectedCount = Array.from(selectedIds).filter(id => pendingIds.includes(id)).length
+  const needsInfo = !p.bank_name || !p.bank_account || !p.has_ssn
+
+  return (
+    <Card className="overflow-hidden">
+      {/* Card Header */}
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+        onClick={onToggleExpand}
+      >
+        <div className="flex items-center gap-3 flex-wrap min-w-0">
+          <span className="font-semibold text-slate-900 text-base">{p.partner_name}</span>
+          <span className="text-sm text-slate-500">{p.settlement_count}건</span>
+          <span className="font-medium text-slate-700">{fmt(p.total_amount)}</span>
+
+          {/* Bank badge */}
+          {p.bank_name ? (
+            <Badge className="bg-blue-100 text-blue-800 text-xs">{p.bank_name}</Badge>
+          ) : (
+            <Badge className="bg-red-100 text-red-700 text-xs">계좌미입력</Badge>
+          )}
+
+          {/* Status badge */}
+          {pendingItems.length > 0 ? (
+            <Badge className="bg-orange-100 text-orange-800 text-xs">대기 {pendingItems.length}건</Badge>
+          ) : (
+            <Badge className="bg-green-100 text-green-800 text-xs">완료</Badge>
+          )}
+
+          {/* SSN badge */}
+          {p.has_ssn ? (
+            <Badge className="bg-green-100 text-green-700 text-xs">주민번호 완료</Badge>
+          ) : (
+            <Badge className="bg-amber-100 text-amber-700 text-xs">주민번호 미입력</Badge>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 ml-2 shrink-0" onClick={e => e.stopPropagation()}>
+          {needsInfo && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onRequestInfo(p.partner_id)}
+              disabled={emailSending === p.partner_id}
+            >
+              <Mail className="w-3.5 h-3.5 mr-1" />
+              {emailSending === p.partner_id ? '발송 중' : '계좌요청'}
+            </Button>
+          )}
+          {selectedCount > 0 && (
+            <Button
+              size="sm"
+              onClick={() => onComplete(Array.from(selectedIds))}
+              disabled={processing}
+            >
+              <Check className="w-3.5 h-3.5 mr-1" />
+              {processing ? '처리 중...' : `정산 완료 (${selectedCount}건)`}
+            </Button>
+          )}
+          <div className="ml-1 text-slate-400" onClick={onToggleExpand}>
+            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending">
-            대기 ({pendingSettlements.length})
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            완료 ({completedSettlements.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="pending">
-          <Card>
+      {/* Expanded content */}
+      {isExpanded && (
+        <div className="border-t">
+          {/* Settlement table */}
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.length === filteredPending.length && filteredPending.length > 0}
-                      onChange={selectAll}
-                      className="rounded"
-                    />
+                  <TableHead className="w-10">
+                    {pendingIds.length > 0 && (
+                      <input
+                        type="checkbox"
+                        checked={pendingIds.length > 0 && pendingIds.every(id => selectedIds.has(id))}
+                        onChange={() => onToggleSelectAll(pendingIds)}
+                        className="rounded"
+                      />
+                    )}
                   </TableHead>
-                  <TableHead>생성일</TableHead>
-                  <TableHead>파트너</TableHead>
-                  <TableHead>고객</TableHead>
-                  <TableHead>유형</TableHead>
+                  <TableHead>정산ID</TableHead>
+                  <TableHead>고객명</TableHead>
+                  <TableHead>정산유형</TableHead>
                   <TableHead className="text-right">금액</TableHead>
-                  <TableHead className="text-right">관리</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>생성일</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPending.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-slate-500">
-                      대기 중인 정산이 없습니다
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPending.map((settlement) => (
-                    <TableRow key={settlement.id}>
-                      <TableCell>
+                {p.settlements.map(s => (
+                  <TableRow key={s.id}>
+                    <TableCell>
+                      {s.status === 'pending' && (
                         <input
                           type="checkbox"
-                          checked={selectedIds.includes(settlement.id)}
-                          onChange={() => toggleSelect(settlement.id)}
+                          checked={selectedIds.has(s.id)}
+                          onChange={() => onToggleSelect(s.id)}
                           className="rounded"
                         />
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {new Date(settlement.created_at).toLocaleDateString('ko-KR')}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {settlement.partner_name || '-'}
-                      </TableCell>
-                      <TableCell>
-                        {settlement.referral_name ? `${settlement.referral_name.substring(0, 1)}**` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={settlement.type === 'valid' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                          {settlement.type === 'valid' ? '유효' : '계약'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(settlement.amount)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          onClick={() => handleComplete([settlement.id])}
-                          disabled={processing}
-                        >
-                          완료
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="completed">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>정산일</TableHead>
-                  <TableHead>파트너</TableHead>
-                  <TableHead>고객</TableHead>
-                  <TableHead>유형</TableHead>
-                  <TableHead className="text-right">금액</TableHead>
-                  <TableHead>비고</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompleted.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-slate-500">
-                      완료된 정산이 없습니다
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500 font-mono">
+                      {s.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell>
+                      {s.referral_name ? `${s.referral_name.substring(0, 1)}**` : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={s.type === 'valid' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
+                        {s.type === 'valid' ? '유효' : s.type === 'contract' ? '계약' : (s.type || '-')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {fmt(s.amount)}
+                    </TableCell>
+                    <TableCell>
+                      {s.status === 'pending' ? (
+                        <Badge className="bg-orange-100 text-orange-800">대기</Badge>
+                      ) : (
+                        <Badge className="bg-green-100 text-green-800">완료</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                      {new Date(s.created_at).toLocaleDateString('ko-KR')}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredCompleted.map((settlement) => (
-                    <TableRow key={settlement.id}>
-                      <TableCell className="text-sm">
-                        {settlement.settled_at
-                          ? new Date(settlement.settled_at).toLocaleDateString('ko-KR')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {settlement.partner_name || '-'}
-                      </TableCell>
-                      <TableCell>
-                        {settlement.referral_name ? `${settlement.referral_name.substring(0, 1)}**` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={settlement.type === 'valid' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                          {settlement.type === 'valid' ? '유효' : '계약'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        {formatCurrency(settlement.amount)}
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {settlement.note || '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+          </div>
+
+          {/* Account info footer */}
+          <div className="px-4 py-3 bg-slate-50 border-t text-sm text-slate-600">
+            {p.bank_name && p.bank_account ? (
+              <span>
+                계좌: {p.bank_name} · {p.bank_account}
+                {p.account_holder && ` · 예금주 ${p.account_holder}`}
+              </span>
+            ) : (
+              <span className="text-red-500">계좌 정보가 등록되지 않았습니다</span>
+            )}
+          </div>
+        </div>
+      )}
+    </Card>
   )
 }

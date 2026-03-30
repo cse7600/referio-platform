@@ -1,8 +1,8 @@
 // Resend 이메일 라이브러리
-// 환경변수: RESEND_API_KEY, FROM_EMAIL (기본값: noreply@referio.kr)
+// 환경변수: RESEND_API_KEY, FROM_EMAIL (기본값: noreply@updates.puzl.co.kr)
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@referio.kr'
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@updates.puzl.co.kr'
 const FROM_NAME = 'Referio'
 
 interface SendEmailOptions {
@@ -325,7 +325,86 @@ export async function sendAdvertiserNewLeadEmail(options: {
   })
 }
 
-// 4. 파트너 가입 환영 이메일 - Referio에 처음 가입했을 때
+// 4. 정산 정보 입력 요청 - 파트너에게 계좌/개인정보 입력을 요청
+export async function sendSettlementInfoRequestEmail(options: {
+  partnerEmail: string
+  partnerName: string
+  pendingAmount: number
+  advertiserName?: string
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, pendingAmount, advertiserName } = options
+
+  const programLine = advertiserName
+    ? `<tr>
+        <td style="padding:6px 0;color:#6b7280;font-size:13px;width:110px;">프로그램</td>
+        <td style="padding:6px 0;color:#111827;font-size:13px;font-weight:600;">${advertiserName}</td>
+      </tr>`
+    : ''
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">정산을 위해 정보 입력이 필요합니다</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님, 아래 정산 예정 금액을 지급받기 위해 계좌 및 개인 정보를 입력해 주세요.
+      </p>
+
+      <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-bottom:24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          ${programLine}
+          <tr>
+            <td style="padding:6px 0;color:#6b7280;font-size:13px;width:110px;">정산 예정 금액</td>
+            <td style="padding:6px 0;color:#4f46e5;font-size:16px;font-weight:700;">${pendingAmount.toLocaleString()}원</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#fef3c7;border-radius:8px;padding:16px 20px;margin-bottom:24px;border:1px solid #fde68a;">
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#92400e;">입력이 필요한 항목</p>
+        <ul style="margin:0;padding-left:18px;color:#78350f;font-size:13px;line-height:1.8;">
+          <li>은행명</li>
+          <li>계좌번호</li>
+          <li>예금주</li>
+          <li>주민등록번호 (세금 신고용)</li>
+        </ul>
+      </div>
+
+      <div style="text-align:center;margin-bottom:8px;">
+        <a href="https://referio.kr/dashboard/profile"
+           style="display:inline-block;padding:14px 32px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
+          프로필에서 정보 입력하기
+        </a>
+      </div>
+      <p style="margin:8px 0 0;text-align:center;color:#9ca3af;font-size:12px;">
+        정보 입력이 완료되어야 정산이 진행됩니다.
+      </p>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio 정산 알림 메일입니다.
+        수신 거부를 원하시면 <a href="https://referio.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: '[Referio] 정산을 위해 계좌 및 개인 정보를 입력해 주세요',
+    html,
+  })
+}
+
+// 5. 파트너 가입 환영 이메일 - Referio에 처음 가입했을 때
 export async function sendWelcomeEmail(options: {
   partnerEmail: string
   partnerName: string

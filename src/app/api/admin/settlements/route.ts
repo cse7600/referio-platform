@@ -11,6 +11,31 @@ async function verifyAdmin() {
   return user;
 }
 
+interface PartnerGroup {
+  partner_id: string;
+  partner_name: string;
+  partner_email: string;
+  bank_name: string | null;
+  bank_account: string | null;
+  account_holder: string | null;
+  has_ssn: boolean;
+  total_amount: number;
+  pending_amount: number;
+  settlement_count: number;
+  settlements: SettlementRow[];
+}
+
+interface SettlementRow {
+  id: string;
+  referral_id: string | null;
+  referral_name: string | null;
+  amount: number;
+  type: string | null;
+  status: string;
+  settled_at: string | null;
+  created_at: string;
+}
+
 export async function GET(request: NextRequest) {
   const user = await verifyAdmin();
   if (!user) {
@@ -18,8 +43,8 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminClient();
-
   const statusFilter = request.nextUrl.searchParams.get('status');
+  const advertiserFilter = request.nextUrl.searchParams.get('advertiser_id');
 
   let query = admin
     .from('settlements')
@@ -31,7 +56,8 @@ export async function GET(request: NextRequest) {
         email,
         bank_name,
         bank_account,
-        account_holder
+        account_holder,
+        ssn_encrypted
       ),
       referrals (
         name
@@ -43,18 +69,92 @@ export async function GET(request: NextRequest) {
     query = query.eq('status', statusFilter);
   }
 
-  const { data } = await query;
+  if (advertiserFilter && advertiserFilter !== 'all') {
+    query = query.eq('advertiser_id', advertiserFilter);
+  }
+
+  const { data: rawSettlements } = await query;
+
+  // Group settlements by partner
+  const partnerMap = new Map<string, PartnerGroup>();
+
+  for (const s of rawSettlements || []) {
+    const p = s.partners as {
+      id: string;
+      name: string;
+      email: string;
+      bank_name: string | null;
+      bank_account: string | null;
+      account_holder: string | null;
+      ssn_encrypted: string | null;
+    } | null;
+
+    const partnerId = p?.id || s.partner_id;
+
+    if (!partnerMap.has(partnerId)) {
+      partnerMap.set(partnerId, {
+        partner_id: partnerId,
+        partner_name: p?.name || 'Unknown',
+        partner_email: p?.email || '',
+        bank_name: p?.bank_name || null,
+        bank_account: p?.bank_account || null,
+        account_holder: p?.account_holder || null,
+        has_ssn: !!p?.ssn_encrypted,
+        total_amount: 0,
+        pending_amount: 0,
+        settlement_count: 0,
+        settlements: [],
+      });
+    }
+
+    const group = partnerMap.get(partnerId)!;
+    group.total_amount += s.amount || 0;
+    if (s.status === 'pending') {
+      group.pending_amount += s.amount || 0;
+    }
+    group.settlement_count += 1;
+
+    const ref = s.referrals as { name: string } | null;
+    group.settlements.push({
+      id: s.id,
+      referral_id: s.referral_id,
+      referral_name: ref?.name || null,
+      amount: s.amount || 0,
+      type: s.type || null,
+      status: s.status,
+      settled_at: s.settled_at,
+      created_at: s.created_at,
+    });
+  }
+
+  const partners = Array.from(partnerMap.values()).sort(
+    (a, b) => b.pending_amount - a.pending_amount
+  );
+
+  // Total stats
+  const totalAmount = partners.reduce((sum, p) => sum + p.total_amount, 0);
+  const totalPending = partners.reduce((sum, p) => sum + p.pending_amount, 0);
+  const totalSettlements = partners.reduce((sum, p) => sum + p.settlement_count, 0);
+  const pendingCount = (rawSettlements || []).filter(s => s.status === 'pending').length;
 
   // Also fetch approved partners for the create form
-  const { data: partners } = await admin
+  // Only select fields needed for the create form — never expose ssn_encrypted
+  const { data: approvedPartners } = await admin
     .from('partners')
-    .select('*')
+    .select('id, name, email, bank_name, bank_account, account_holder')
     .eq('status', 'approved')
     .order('name');
 
   return NextResponse.json({
-    settlements: data || [],
-    partners: partners || [],
+    partners,
+    approved_partners: approvedPartners || [],
+    total_stats: {
+      partner_count: partners.length,
+      total_settlements: totalSettlements,
+      total_amount: totalAmount,
+      total_pending: totalPending,
+      pending_count: pendingCount,
+    },
   });
 }
 

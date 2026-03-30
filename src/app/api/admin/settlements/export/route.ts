@@ -1,0 +1,169 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { decryptSSN } from '@/lib/crypto';
+
+async function verifyAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  if (!masterEmail || user.email !== masterEmail) return null;
+  return user;
+}
+
+export async function GET(request: NextRequest) {
+  const user = await verifyAdmin();
+  if (!user) {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
+
+  const statusFilter = request.nextUrl.searchParams.get('status') || 'all';
+  const advertiserFilter = request.nextUrl.searchParams.get('advertiser_id');
+
+  const admin = createAdminClient();
+
+  let query = admin
+    .from('settlements')
+    .select(`
+      *,
+      partners (
+        id,
+        name,
+        email,
+        bank_name,
+        bank_account,
+        account_holder,
+        ssn_encrypted
+      ),
+      referrals (
+        name
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter);
+  }
+
+  if (advertiserFilter && advertiserFilter !== 'all') {
+    query = query.eq('advertiser_id', advertiserFilter);
+  }
+
+  const { data: settlements, error } = await query;
+
+  if (error) {
+    return new NextResponse(`Query error: ${error.message}`, { status: 500 });
+  }
+
+  // Access log for SSN decryption
+  const ssnCount = (settlements || []).filter(
+    s => (s.partners as { ssn_encrypted: string | null } | null)?.ssn_encrypted
+  ).length;
+
+  console.log('[SSN-ACCESS]', {
+    admin_email: user.email,
+    timestamp: new Date().toISOString(),
+    count: ssnCount,
+  });
+
+  // CSV columns
+  const STATUS_LABELS: Record<string, string> = {
+    pending: '대기',
+    completed: '완료',
+  };
+
+  const TYPE_LABELS: Record<string, string> = {
+    contract: '계약',
+    valid: '유효',
+  };
+
+  const headers = [
+    '정산ID',
+    '파트너명',
+    '이메일',
+    '은행명',
+    '계좌번호',
+    '예금주',
+    '주민번호',
+    '연결고객',
+    '금액',
+    '정산유형',
+    '상태',
+    '생성일',
+    '완료일',
+  ];
+
+  const rows = (settlements || []).map(s => {
+    const partner = s.partners as {
+      id: string;
+      name: string;
+      email: string;
+      bank_name: string | null;
+      bank_account: string | null;
+      account_holder: string | null;
+      ssn_encrypted: string | null;
+    } | null;
+
+    const ref = s.referrals as { name: string } | null;
+
+    // Decrypt SSN if available
+    let ssn = '';
+    if (partner?.ssn_encrypted) {
+      try {
+        ssn = decryptSSN(partner.ssn_encrypted);
+      } catch {
+        ssn = '복호화실패';
+      }
+    }
+
+    const formatDate = (d: string | null) => {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('ko-KR');
+    };
+
+    return [
+      s.id,
+      partner?.name || '',
+      partner?.email || '',
+      partner?.bank_name || '',
+      partner?.bank_account || '',
+      partner?.account_holder || '',
+      ssn,
+      ref?.name || '',
+      s.amount || 0,
+      TYPE_LABELS[s.type] || s.type || '',
+      STATUS_LABELS[s.status] || s.status,
+      formatDate(s.created_at),
+      formatDate(s.settled_at),
+    ];
+  });
+
+  // Build CSV string with escaping
+  const escapeCsv = (val: string | number) => {
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return `"${str}"`;
+  };
+
+  const csvContent = [
+    headers.map(h => escapeCsv(h)).join(','),
+    ...rows.map(row => row.map(cell => escapeCsv(cell)).join(',')),
+  ].join('\n');
+
+  // UTF-8 BOM for Korean compatibility
+  const bom = '\uFEFF';
+  const body = bom + csvContent;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  return new NextResponse(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename=정산내역_${today}.csv`,
+    },
+  });
+}
