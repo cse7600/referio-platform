@@ -34,7 +34,8 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
 
   // --- 비밀번호 설정 모드 (이관 유저) ---
   const [isPasswordMode, setIsPasswordMode] = useState(!!code)
-  const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>('idle')
+  // When code prop exists (PKCE flow), start in loading state to avoid blank card
+  const [resetStatus, setResetStatus] = useState<'idle' | 'loading' | 'ready' | 'success' | 'error'>(code ? 'loading' : 'idle')
   const [resetPassword, setResetPassword] = useState('')
   const [resetConfirm, setResetConfirm] = useState('')
   const [resetError, setResetError] = useState('')
@@ -117,6 +118,8 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
       setResetError('비밀번호 설정에 실패했습니다. 다시 시도해주세요.')
       setResetSubmitting(false)
     } else {
+      // Recovery 세션을 정리하고 새 비밀번호로 로그인하도록 유도
+      await supabaseRef.current.auth.signOut()
       setResetStatus('success')
       // 3초 후 로그인 페이지로 자동 이동
       setTimeout(() => router.push('/login'), 3000)

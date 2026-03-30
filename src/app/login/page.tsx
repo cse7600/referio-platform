@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +18,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resetMsg, setResetMsg] = useState('')
+  const [resetCooldown, setResetCooldown] = useState(0)
+
+  // Cooldown timer: decrement every second, cleanup on unmount
+  useEffect(() => {
+    if (resetCooldown <= 0) return
+    const timer = setInterval(() => {
+      setResetCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [resetCooldown])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -150,6 +163,7 @@ export default function LoginPage() {
               <div className="text-center text-sm text-gray-400">
                 <button
                   type="button"
+                  disabled={resetCooldown > 0}
                   onClick={async () => {
                     if (!email) {
                       setError('이메일을 먼저 입력해주세요')
@@ -164,11 +178,12 @@ export default function LoginPage() {
                     } else {
                       setError('')
                       setResetMsg('비밀번호 재설정 메일을 발송했습니다. 이메일을 확인해주세요.')
+                      setResetCooldown(60)
                     }
                   }}
-                  className="hover:text-slate-600 transition-colors"
+                  className={`transition-colors ${resetCooldown > 0 ? 'text-gray-300 cursor-not-allowed' : 'hover:text-slate-600'}`}
                 >
-                  비밀번호를 잊으셨나요?
+                  {resetCooldown > 0 ? `재요청 대기 (${resetCooldown}초)` : '비밀번호를 잊으셨나요?'}
                 </button>
               </div>
             </form>

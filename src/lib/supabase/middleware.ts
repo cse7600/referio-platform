@@ -35,8 +35,12 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     // 보호된 라우트 체크
-    const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
-                       request.nextUrl.pathname.startsWith('/signup')
+    // /signup/* + ?code= 는 recovery 플로우이므로 로그인 사용자도 접근 허용
+    const hasRecoveryCode = !!request.nextUrl.searchParams.get('code')
+    const isSignupWithCode = request.nextUrl.pathname.startsWith('/signup/') && hasRecoveryCode
+    const isAuthPage = (request.nextUrl.pathname.startsWith('/login') ||
+                        request.nextUrl.pathname.startsWith('/signup')) &&
+                       !isSignupWithCode
     const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
     const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
     const isAdmin = request.nextUrl.pathname.startsWith('/admin')

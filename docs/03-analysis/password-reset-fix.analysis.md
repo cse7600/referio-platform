@@ -1,72 +1,52 @@
 # password-reset-fix Gap Analysis
 
-> **Feature**: password-reset-fix
-> **Date**: 2026-03-26
-> **Analyzer**: CTO Lead (gap-detector)
 > **Match Rate**: 100%
-> **Critical Issues**: 0
-> **Design Doc**: [password-reset-fix.design.md](../02-design/features/password-reset-fix.design.md)
+> **Verdict**: PASS
+> **Date**: 2026-03-30
+> **Feature**: password-reset-fix
 
 ---
 
 ## Summary
 
-| Metric | Value |
-|--------|-------|
-| Total Design Items | 12 |
-| Matched Items | 12 |
-| Gap Items | 0 |
-| Match Rate | **100%** |
-| Critical Issues | 0 |
-| Status | PASS — Proceed to Report |
+Plan 문서 기준 10개 검증 항목 전원 구현 완료. 설계-구현 간 차이 없음.
 
 ---
 
-## Detailed Comparison
+## Item-by-Item Results
 
-### Issue 1 — reset-password/page.tsx: 최소 길이 6자 통일
+### Original Requirements (FR-01 ~ FR-06)
 
-| Design Spec | Implementation | Status |
-|-------------|----------------|--------|
-| 조건 `password.length < 6` | `if (password.length < 6)` | MATCH |
-| 에러 메시지 "비밀번호는 6자 이상이어야 합니다" | "비밀번호는 6자 이상이어야 합니다" | MATCH |
-| placeholder "6자 이상 입력" | placeholder="6자 이상 입력" | MATCH |
-| minLength={6} | minLength={6} | MATCH |
-| 좌측 배경 문구 "6자 이상" | "6자 이상의 안전한 비밀번호를 사용하세요" | MATCH |
+| ID | Requirement | Status | Evidence |
+|----|-------------|:------:|----------|
+| FR-01 | reset-password/page.tsx 최소 길이 6자 | PASS | line 54, 92, 208, 213 |
+| FR-02 | login/page.tsx resetPasswordForEmail() 에러 처리 | PASS | line 162 — if (resetError) 인라인 메시지 |
+| FR-03 | login/page.tsx React state 사용 (DOM 접근 제거) | PASS | line 16, 154 — document.getElementById 없음 |
+| FR-04 | login/page.tsx alert() 제거 | PASS | alert() 없음, resetMsg/error state 사용 |
+| FR-05 | reset-password/page.tsx 성공 후 signOut() | PASS | line 72 — updateUser 성공 직후 |
+| FR-06 | advertiser/login/page.tsx 안내 문구 개선 | PASS | line 124-130 — referio@puzl.co.kr 문의 안내 |
 
-### Issue 2 — login/page.tsx: 에러 처리 및 DOM 접근 제거
+### Additional Requirements (2026-03-30)
 
-| Design Spec | Implementation | Status |
-|-------------|----------------|--------|
-| `document.getElementById` 제거, `email` state 직접 사용 | `if (!email)` | MATCH |
-| `resetError` 변수로 에러 캡처 | `const { error: resetError }` | MATCH |
-| 에러 시 `setError()` 인라인 표시 | `setError('메일 발송에 실패했습니다...')` | MATCH |
-| `alert()` 제거 | alert 없음 | MATCH |
-| `resetMsg` state 추가 | `const [resetMsg, setResetMsg] = useState('')` | MATCH |
-| 성공 시 `{resetMsg && <p>}` UI 렌더링 | `{resetMsg && <p className="text-green-600 text-sm">}` | MATCH |
-
-### Issue 3 — reset-password/page.tsx: signOut 추가
-
-| Design Spec | Implementation | Status |
-|-------------|----------------|--------|
-| `await supabase.auth.signOut()` 성공 후 호출 | `await supabase.auth.signOut()` → `setStatus('success')` | MATCH |
-
-### Issue 4 — advertiser/login/page.tsx: 안내 문구 개선
-
-| Design Spec | Implementation | Status |
-|-------------|----------------|--------|
-| mailto href에 `&body=로그인 ID: ` 추가 | `&body=로그인 ID: ` 포함됨 | MATCH |
-| 링크 텍스트 변경 | "support@referio.kr로 로그인 ID와 함께 문의하세요" | MATCH |
+| ID | Requirement | Status | Evidence |
+|----|-------------|:------:|----------|
+| 추가-1 | reset-password: 만료 링크 재발급 UI | PASS | line 128-178 — 이메일 Input + 재발급 Button |
+| 추가-2 | middleware: /signup/* + ?code= 우회 | PASS | line 39-43 — hasRecoveryCode + isSignupWithCode |
+| 추가-3 | BrandedSignupForm: 성공 후 signOut() | PASS | line 121 — updateUser 성공 직후 signOut |
+| 추가-4 | resend-setup-link: 이메일 1시간 만료 안내 | PASS | line 76 — 빨간색 경고 문구 |
 
 ---
 
-## TypeScript Validation
+## Gaps Found
 
-- `tsc --noEmit` 실행 결과: **에러 없음**
-- 타입 추론 오류: 0건
+없음.
 
 ---
 
-## Decision
+## Score
 
-Match Rate >= 90% AND Critical Issues = 0 → **Proceed to Report**
+| Category | Items | Pass | Match Rate |
+|----------|:-----:|:----:|:----------:|
+| Original FR | 6 | 6 | 100% |
+| Additional | 4 | 4 | 100% |
+| Total | 10 | 10 | 100% |

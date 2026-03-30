@@ -6,11 +6,62 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@updates.puzl.co.kr'
 const SITE_URL = 'https://referio.puzl.co.kr'
 
+// In-memory rate limiter (per serverless instance)
+// Not perfect across instances, but provides basic defense
+const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const RATE_LIMIT_MAX = 3 // max 3 requests per email per minute
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(email: string): boolean {
+  const now = Date.now()
+  const key = email.toLowerCase()
+  const entry = rateLimitMap.get(key)
+
+  if (!entry || now >= entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  entry.count++
+  if (entry.count > RATE_LIMIT_MAX) {
+    return true
+  }
+  return false
+}
+
+// Periodically clean up stale entries to prevent memory leak
+function cleanupRateLimitMap() {
+  const now = Date.now()
+  for (const [key, entry] of rateLimitMap) {
+    if (now >= entry.resetAt) {
+      rateLimitMap.delete(key)
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const { email, advertiserId } = await req.json()
+  // Parse request body safely
+  let body: { email?: string; advertiserId?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
+  }
+
+  const { email, advertiserId } = body
 
   if (!email || !advertiserId) {
     return NextResponse.json({ error: 'email and advertiserId required' }, { status: 400 })
+  }
+
+  // Rate limiting check
+  if (isRateLimited(email)) {
+    // Clean up stale entries on rate limit hit
+    cleanupRateLimitMap()
+    return NextResponse.json(
+      { error: '요청이 너무 많습니다. 1분 후에 다시 시도해주세요.' },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    )
   }
 
   const admin = createAdminClient()
@@ -43,7 +94,12 @@ export async function POST(req: NextRequest) {
   })
 
   if (linkError) {
-    return NextResponse.json({ error: linkError.message }, { status: 500 })
+    // Mask internal error details from client
+    console.error('[resend-setup-link] generateLink error:', linkError.message)
+    return NextResponse.json(
+      { error: '링크 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+      { status: 500 }
+    )
   }
 
   const actionLink = linkData.properties?.action_link
@@ -72,7 +128,8 @@ export async function POST(req: NextRequest) {
   <div style="background:#fff;padding:36px 32px;">
     <p style="margin:0 0 24px;color:#4b5563;font-size:14px;line-height:1.8;">
       ${partner.name}님, 안녕하세요.<br>
-      요청하신 ${companyName} 파트너 포털 비밀번호 설정 링크를 발송했습니다.
+      요청하신 ${companyName} 파트너 포털 비밀번호 설정 링크를 발송했습니다.<br>
+      <span style="color:#ef4444;font-weight:600;">이 링크는 발송 후 1시간 내에만 유효합니다.</span>
     </p>
     ${referralCode ? `
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin:0 0 28px;">

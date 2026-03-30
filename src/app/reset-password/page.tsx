@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Lock, CheckCircle, AlertCircle, Loader2, Mail } from 'lucide-react'
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -19,6 +19,21 @@ function ResetPasswordForm() {
   const [confirm, setConfirm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [resendEmail, setResendEmail] = useState('')
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [cooldown, setCooldown] = useState(0)
+
+  // Cooldown timer: decrement every second, cleanup on unmount
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [cooldown])
 
   useEffect(() => {
     const initialize = async () => {
@@ -129,6 +144,46 @@ function ResetPasswordForm() {
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-red-700 text-sm">{errorMsg}</p>
                 </div>
+                {resendStatus === 'sent' && cooldown > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <p className="text-green-700 text-sm">재설정 메일을 발송했습니다. 이메일을 확인해주세요.</p>
+                    </div>
+                    <p className="text-xs text-gray-400 text-center">{cooldown}초 후 다시 요청할 수 있습니다</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-500">이메일을 입력하면 새 재설정 링크를 받을 수 있습니다.</p>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        type="email"
+                        placeholder="가입 이메일 주소 입력"
+                        value={resendEmail}
+                        onChange={(e) => setResendEmail(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button
+                      className="w-full bg-indigo-600 hover:bg-indigo-700"
+                      disabled={resendStatus === 'sending' || !resendEmail || cooldown > 0}
+                      onClick={async () => {
+                        setResendStatus('sending')
+                        const supabase = createClient()
+                        await supabase.auth.resetPasswordForEmail(resendEmail, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        })
+                        setResendStatus('sent')
+                        setCooldown(60)
+                      }}
+                    >
+                      {resendStatus === 'sending' ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />발송 중...</>
+                      ) : cooldown > 0 ? `재발급 대기 (${cooldown}초)` : '재설정 링크 재발급'}
+                    </Button>
+                  </div>
+                )}
                 <Button
                   className="w-full"
                   variant="outline"

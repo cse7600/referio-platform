@@ -6,7 +6,7 @@
 > **Version**: Next.js 15 App Router + Supabase Auth
 > **Author**: CTO Lead
 > **Date**: 2026-03-26
-> **Status**: Draft
+> **Status**: 완료 (2026-03-30 추가 수정)
 
 ---
 
@@ -121,8 +121,15 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 
 ---
 
+## 빌드 이력
+
+| 날짜 | 빌드 유형 | 변경 내용 요약 | 결과 |
+|------|-----------|---------------|------|
+| 2026-03-30 | production | 4가지 추가 수정: 재설정 링크 만료 시 재발급 UI, 미들웨어 recovery code 우회, BrandedSignupForm signOut 추가, 이메일 만료 안내 문구 | 성공 |
+
 ## Version History
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 0.1 | 2026-03-26 | Initial draft | CTO Lead |
+| 0.2 | 2026-03-30 | 추가 수정: 만료 링크 재발급 UI, 미들웨어 recovery 우회, signOut 누락, 이메일 만료 안내 | CTO Lead |

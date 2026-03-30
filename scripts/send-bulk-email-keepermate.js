@@ -12,6 +12,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = 'https://eqdnirtgmevhobmycxzn.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxZG5pcnRnbWV2aG9ibXljeHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDI1OTIwMSwiZXhwIjoyMDg1ODM1MjAxfQ.n9mhy92E3ePAXAvlat60wVKqd2H0BpdNmrmKindHlxU';
+const SUPABASE_MANAGEMENT_API_KEY = 'sbp_1340fa6745900f442022994429553f793589652c';
+const SUPABASE_PROJECT_REF = 'eqdnirtgmevhobmycxzn';
 const RESEND_API_KEY = 're_eS5DK9gX_JWh6hjbLK2NdbLLcghtmFuot';
 const FROM_EMAIL = 'noreply@updates.puzl.co.kr';
 const SITE_URL = 'https://referio.puzl.co.kr';
@@ -127,6 +129,23 @@ async function main() {
   console.log(DRY_RUN ? '=== [DRY-RUN] 발송 대상 확인 ===' : '=== 한화비전 키퍼메이트 파트너 일괄 이메일 발송 시작 ===');
   console.log();
 
+  // 미로그인 파트너 auth_user_id 목록 조회 (Management API SQL)
+  const sqlRes = await fetch(
+    `https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_REF}/database/query`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SUPABASE_MANAGEMENT_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `SELECT p.auth_user_id FROM auth.users u JOIN partners p ON p.auth_user_id = u.id JOIN partner_programs pp ON pp.partner_id = p.id WHERE pp.advertiser_id = '${KEEPERMATE_ADVERTISER_ID}' AND u.last_sign_in_at IS NULL`,
+      }),
+    }
+  );
+  const neverLoggedIn = await sqlRes.json();
+  const neverLoggedInIds = new Set(neverLoggedIn.map((r) => r.auth_user_id));
+
   // 발송 대상 조회
   const { data: programs, error } = await admin
     .from('partner_programs')
@@ -139,9 +158,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`총 발송 대상: ${programs.length}명`);
+  // 미로그인 인원만 필터링
+  const filtered = programs.filter((p) => neverLoggedInIds.has(p.partners.auth_user_id));
+
+  console.log(`전체 파트너: ${programs.length}명 → 미로그인(발송 대상): ${filtered.length}명`);
   if (DRY_RUN) {
-    programs.forEach((p, i) =>
+    filtered.forEach((p, i) =>
       console.log(`  ${i + 1}. ${p.partners.name} <${p.partners.email}> | 코드: ${p.referral_code}`)
     );
     console.log('\n[DRY-RUN] 실제 발송하지 않았습니다. --dry-run 플래그를 제거하면 발송됩니다.');
@@ -152,9 +174,9 @@ async function main() {
 
   const results = { ok: [], failed: [] };
 
-  for (let i = 0; i < programs.length; i++) {
-    const { referral_code, partners: partner } = programs[i];
-    process.stdout.write(`[${i + 1}/${programs.length}] ${partner.name} (${partner.email}) ... `);
+  for (let i = 0; i < filtered.length; i++) {
+    const { referral_code, partners: partner } = filtered[i];
+    process.stdout.write(`[${i + 1}/${filtered.length}] ${partner.name} (${partner.email}) ... `);
 
     try {
       // recovery 링크 생성
@@ -194,7 +216,7 @@ async function main() {
     }
 
     // rate limit 방어
-    if (i < programs.length - 1) await sleep(DELAY_MS);
+    if (i < filtered.length - 1) await sleep(DELAY_MS);
   }
 
   console.log('\n=== 발송 완료 ===');
