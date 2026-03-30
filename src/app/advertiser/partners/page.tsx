@@ -554,7 +554,7 @@ export default function AdvertiserPartnersPage() {
                 <div className="mt-2">
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <div
-                      onClick={() => setEditIsActive(!editIsActive)}
+                      onClick={() => selectedPartner && handleToggleActive(selectedPartner.id, !editIsActive)}
                       className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${editIsActive ? 'bg-green-500' : 'bg-slate-200'}`}
                     >
                       <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${editIsActive ? 'translate-x-5' : 'translate-x-0'}`} />
