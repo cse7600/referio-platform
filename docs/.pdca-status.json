@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-30T07:20:05.186Z",
+  "lastUpdated": "2026-03-30T07:20:11.567Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -224,7 +224,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-03-30T07:20:05.186Z"
+        "lastUpdated": "2026-03-30T07:20:11.567Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
     },
@@ -960,7 +960,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-30T07:20:05.186Z"
+    "lastActivity": "2026-03-30T07:20:11.567Z"
   },
   "history": [
     {
@@ -5843,6 +5843,12 @@
     },
     {
       "timestamp": "2026-03-30T07:20:05.186Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T07:20:11.567Z",
       "feature": "partners",
       "phase": "do",
       "action": "updated"
