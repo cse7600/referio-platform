@@ -52,6 +52,7 @@ import {
   AlertTriangle,
   Send,
   Eye,
+  Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Partner, Referral } from '@/types/database'
@@ -159,6 +160,10 @@ export default function AdminSettlementsPage() {
   const [previewTargets, setPreviewTargets] = useState<{ id: string; name: string; email: string }[]>([])
   const [previewMode, setPreviewMode] = useState<'single' | 'selected' | 'bulk'>('bulk')
   const [loadingPreview, setLoadingPreview] = useState(false)
+
+  // Settlement edit dialog
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({ id: '', amount: '', type: '' })
 
   useEffect(() => {
     setMounted(true)
@@ -410,27 +415,46 @@ export default function AdminSettlementsPage() {
     }
   }
 
-  // CSV download via server API
-  const handleCsvDownload = async () => {
-    try {
-      const url = `/api/admin/settlements/export?status=${statusFilter}`
-      const res = await fetch(url)
-      if (!res.ok) throw new Error('Failed')
+  // CSV download via direct URL (browser handles filename from Content-Disposition)
+  const handleCsvDownload = () => {
+    const url = `/api/admin/settlements/export?status=${statusFilter}`
+    const link = document.createElement('a')
+    link.href = url
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
-      const blob = await res.blob()
-      const downloadUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = `정산내역_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(downloadUrl)
+  // Open edit dialog
+  const handleOpenEdit = (s: SettlementRow, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditForm({ id: s.id, amount: String(s.amount), type: s.type || '' })
+    setEditDialogOpen(true)
+  }
 
-      toast.success('CSV 다운로드 완료')
-    } catch {
-      toast.error('CSV 다운로드에 실패했습니다')
+  // Save settlement edit
+  const handleSaveEdit = async () => {
+    const amount = parseInt(editForm.amount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('올바른 금액을 입력하세요')
+      return
     }
+    const updates: Record<string, unknown> = { amount }
+    if (editForm.type) updates.type = editForm.type
+
+    const res = await fetch('/api/admin/settlements', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settlementId: editForm.id, updates }),
+    })
+
+    if (!res.ok) {
+      toast.error('정산 수정에 실패했습니다')
+      return
+    }
+    toast.success('정산이 수정되었습니다')
+    setEditDialogOpen(false)
+    fetchData()
   }
 
   // Filter partner groups by search
@@ -783,24 +807,47 @@ export default function AdminSettlementsPage() {
                 {/* Expanded content */}
                 {isExpanded && (
                   <div className="px-6 pb-5 border-t">
-                    {/* Account info */}
-                    {group.bank_name && (
-                      <div className="mt-4 mb-3 p-3 bg-gray-50 rounded-lg text-sm">
-                        <span className="text-gray-500">계좌:</span>{' '}
-                        <span className="font-medium">{group.bank_name}</span>
-                        {' · '}
-                        <span>{group.bank_account}</span>
-                        {' · '}
-                        <span>예금주 {group.account_holder}</span>
+                    {/* Partner info section */}
+                    <div className="mt-4 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Account info */}
+                      <div className={`p-3 rounded-lg text-sm ${group.bank_name ? 'bg-gray-50' : 'bg-orange-50'}`}>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">계좌 정보</p>
+                        {group.bank_name ? (
+                          <div className="space-y-0.5">
+                            <p className="font-medium">{group.bank_name}</p>
+                            <p className="text-gray-600">{group.bank_account}</p>
+                            <p className="text-gray-500 text-xs">예금주: {group.account_holder}</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-orange-700">
+                            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                            <span>계좌 정보 미입력</span>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {!group.bank_name && (
-                      <div className="mt-4 mb-3 p-3 bg-orange-50 rounded-lg text-sm text-orange-700 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4" />
-                        계좌 정보가 입력되지 않았습니다
+                      {/* SSN & contact info */}
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">파트너 정보</p>
+                        <div className="space-y-1">
+                          <p className="text-gray-600 text-xs">{group.partner_email || '이메일 없음'}</p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {group.has_ssn ? (
+                              <>
+                                <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                                <span className="text-green-700 font-medium text-xs">주민번호 등록됨</span>
+                                <span className="text-gray-400 text-xs">(CSV 다운로드 시 확인 가능)</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                                <span className="text-orange-600 font-medium text-xs">주민번호 미입력</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    )}
+                    </div>
 
                     {/* Settlements table */}
                     <div className="overflow-x-auto">
@@ -848,6 +895,12 @@ export default function AdminSettlementsPage() {
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={(e) => handleOpenEdit(s, e)}
+                                      >
+                                        <Pencil className="w-4 h-4 mr-2" />
+                                        금액 수정
+                                      </DropdownMenuItem>
                                       {s.status === 'pending' ? (
                                         <DropdownMenuItem
                                           onClick={() => handleStatusChange(s.id, 'completed')}
@@ -924,7 +977,7 @@ export default function AdminSettlementsPage() {
                     srcDoc={previewHtml}
                     className="w-full h-[400px] border-0"
                     title="이메일 미리보기"
-                    sandbox=""
+                    sandbox="allow-same-origin"
                   />
                 </div>
               )}
@@ -942,6 +995,48 @@ export default function AdminSettlementsPage() {
               <Send className="w-4 h-4 mr-2" />
               {previewTargets.length}명에게 발송
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settlement edit dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>정산 수정</DialogTitle>
+            <DialogDescription>
+              정산 금액과 유형을 수정합니다
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>금액 *</Label>
+              <Input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                placeholder="금액 입력"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>정산 유형</Label>
+              <Select
+                value={editForm.type}
+                onValueChange={(v) => setEditForm({ ...editForm, type: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="유형 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="contract">계약</SelectItem>
+                  <SelectItem value="valid">유효</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>취소</Button>
+            <Button onClick={handleSaveEdit}>저장</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

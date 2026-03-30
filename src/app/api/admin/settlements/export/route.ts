@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename=정산내역_${today}.csv`,
+      'Content-Disposition': `attachment; filename="settlements.csv"; filename*=UTF-8''%EC%A0%95%EC%82%B0%EB%82%B4%EC%97%AD_${today}.csv`,
     },
   });
 }
