@@ -31,6 +31,7 @@ import {
   ChevronDown,
   Building,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react'
 import { ProgramProvider, useProgram } from './ProgramContext'
 import { FeedbackWidget } from '@/components/ui/feedback-widget'
@@ -41,6 +42,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
   { href: '/dashboard/activity', label: '활동 지원', icon: Megaphone },
+  { href: '/dashboard/support', label: '문의', icon: MessageSquare },
   { href: '/dashboard/profile', label: '활동정보', icon: User },
 ]
 

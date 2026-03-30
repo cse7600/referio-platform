@@ -56,7 +56,7 @@ export async function GET() {
     const admin = createAdminClient();
     const { data: tickets } = await admin
       .from('support_tickets')
-      .select('id, message, created_at')
+      .select('id, message, subject, status, unread_by_user, created_at')
       .eq('user_type', currentUser.type)
       .eq('user_id', currentUser.userId)
       .order('created_at', { ascending: false })
@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
     const admin = createAdminClient();
 
     // DB 저장
+    const trimmedMessage = message.trim();
     const { data: ticket, error: dbError } = await admin
       .from('support_tickets')
       .insert({
@@ -98,7 +99,9 @@ export async function POST(req: NextRequest) {
         user_id: currentUser.userId,
         name: currentUser.name,
         email: currentUser.email,
-        message: message.trim(),
+        message: trimmedMessage,
+        subject: trimmedMessage.substring(0, 50),
+        unread_by_admin: true,
       })
       .select('id, message, created_at')
       .single();
