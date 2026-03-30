@@ -108,13 +108,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '저장에 실패했습니다.' }, { status: 500 });
     }
 
-    // Slack 알림 (비동기)
-    notifyFeedback({
-      userName: currentUser.name,
-      userEmail: currentUser.email,
-      userType: currentUser.type,
-      message: message.trim(),
-    }).catch(() => {});
+    // Slack 알림 + 이메일 발송 (await 필수: Vercel serverless는 response 후 Lambda freeze)
+    const notifications: Promise<void>[] = [];
+
+    // Slack 알림
+    notifications.push(
+      notifyFeedback({
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        userType: currentUser.type,
+        message: message.trim(),
+      }).catch(err => console.error('[Feedback] Slack 전송 실패:', err))
+    );
 
     // 이메일 발송
     const apiKey = process.env.RESEND_API_KEY;
@@ -156,21 +161,32 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`;
 
-      fetch(RESEND_API_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: `Referio 문의 <${FROM_EMAIL}>`,
-          to: TO_EMAIL,
-          reply_to: currentUser.email,
-          subject: `[파트너 문의] ${currentUser.name}님의 문의`,
-          html,
-        }),
-      }).catch(err => console.error('[Feedback] 이메일 전송 실패:', err));
+      notifications.push(
+        fetch(RESEND_API_URL, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: `Referio 문의 <${FROM_EMAIL}>`,
+            to: TO_EMAIL,
+            reply_to: currentUser.email,
+            subject: `[파트너 문의] ${currentUser.name}님의 문의`,
+            html,
+          }),
+        }).then(res => {
+          if (!res.ok) {
+            res.text().then(t => console.error('[Feedback] 이메일 API 응답 에러:', res.status, t));
+          }
+        }).catch(err => console.error('[Feedback] 이메일 전송 실패:', err))
+      );
+    } else {
+      console.warn('[Feedback] RESEND_API_KEY 환경변수 없음 — 이메일 발송 건너뜀');
     }
+
+    // 모든 알림이 완료될 때까지 대기 (Lambda freeze 방지)
+    await Promise.allSettled(notifications);
 
     return NextResponse.json({ success: true, ticket });
   } catch (error) {
