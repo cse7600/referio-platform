@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
+import { sendSettlementConfirmedEmail, sendSettlementInfoRequestEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,6 +74,50 @@ export async function POST(request: NextRequest) {
         { error: '정산 완료 처리에 실패했습니다' },
         { status: 500 }
       )
+    }
+
+    // Send settlement emails to each partner
+    try {
+      // Get settlement details with partner info
+      const { data: settlements } = await supabase
+        .from('settlements')
+        .select(`
+          id,
+          amount,
+          partner_id,
+          partners!inner(id, name, email),
+          partner_profiles(bank_account, has_ssn)
+        `)
+        .in('id', validIds)
+
+      if (settlements) {
+        for (const settlement of settlements) {
+          const partner = Array.isArray(settlement.partners) ? settlement.partners[0] : settlement.partners
+          const profile = Array.isArray(settlement.partner_profiles) ? settlement.partner_profiles?.[0] : settlement.partner_profiles
+
+          if (!partner?.email) continue
+
+          const hasBankInfo = !!(profile?.bank_account)
+
+          if (hasBankInfo) {
+            // Email 10: 정산 확정 안내 (정산 정보 등록 완료)
+            await sendSettlementConfirmedEmail({
+              partnerEmail: partner.email,
+              partnerName: partner.name || '파트너',
+              totalAmount: settlement.amount,
+            }).catch(() => {})
+          } else {
+            // Email 11: 정산 정보 입력 요청 (정산 정보 미등록)
+            await sendSettlementInfoRequestEmail({
+              partnerEmail: partner.email,
+              partnerName: partner.name || '파트너',
+              pendingAmount: settlement.amount,
+            }).catch(() => {})
+          }
+        }
+      }
+    } catch (emailErr) {
+      console.error('[Email] Settlement email error:', emailErr)
     }
 
     return NextResponse.json({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
-import { sendPartnerApprovalEmail } from '@/lib/email'
+import { sendPartnerApprovalEmail, sendProgramRejectedEmail } from '@/lib/email'
 import { notifyPartnerApproval } from '@/lib/slack'
 
 export async function PATCH(
@@ -131,6 +131,36 @@ export async function PATCH(
         } catch (emailErr) {
           // Email failure should not block the approval response
           console.error('[Email] Failed to send approval email:', emailErr)
+        }
+      }
+
+      // Send rejection email when status changes to 'rejected'
+      if (status === 'rejected') {
+        try {
+          const { data: partner } = await supabase
+            .from('partners')
+            .select('email, name')
+            .eq('id', id)
+            .single()
+
+          const { data: advertiser } = await supabase
+            .from('advertisers')
+            .select('company_name, program_name')
+            .eq('id', session.advertiserUuid)
+            .single()
+
+          if (partner?.email && advertiser) {
+            await sendProgramRejectedEmail({
+              partnerEmail: partner.email,
+              partnerName: partner.name || '파트너',
+              programName: advertiser.program_name || '',
+              advertiserCompanyName: advertiser.company_name,
+              rejectionReason: body.rejection_reason,
+            })
+            console.log(`[Email] Program rejection email sent to ${partner.email}`)
+          }
+        } catch (emailErr) {
+          console.error('[Email] Failed to send rejection email:', emailErr)
         }
       }
     }

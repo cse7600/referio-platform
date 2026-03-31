@@ -1,7 +1,7 @@
 ---
 feature: event-detail-page
 phase: 2 (Phase 1: 이벤트 탭 기본 기능 — 2026-03-31 완료)
-status: in_progress
+status: implemented_pending_deploy
 started: 2026-03-31
 ---
 
@@ -42,3 +42,8 @@ started: 2026-03-31
 ## 테스트 이력
 | 날짜 | 테스트 대상 | 결과 | 에러 수 | 경고 수 | 주요 발견 | 조치 |
 |------|-----------|------|--------|--------|---------|------|
+| 2026-03-31 | Playwright 브라우저 직접 테스트 (7개 항목) | PASS | 0 | 0 | Tiptap 에디터/상세 페이지/모달/라우팅 모두 정상, Tiptap JSON DB 저장 확인 | 없음 |
+
+## 미완료
+- [ ] git commit & push → Vercel 배포
+- [ ] keepermate 계정으로 실제 이벤트 생성 (키퍼메이트 첫 활동 인증 이벤트 docx 내용)

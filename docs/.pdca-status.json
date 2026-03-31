@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T08:10:09.071Z",
+  "lastUpdated": "2026-03-31T08:24:13.245Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -348,9 +348,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-30T09:26:28.245Z"
+        "lastUpdated": "2026-03-31T08:24:13.245Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/types/database.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
     "[id]": {
       "phase": "do",
@@ -361,9 +361,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-31T08:09:30.983Z"
+        "lastUpdated": "2026-03-31T08:23:51.240Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/[id]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
     },
     "schema": {
       "phase": "do",
@@ -707,7 +707,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-25T11:08:08.057Z",
-        "lastUpdated": "2026-03-25T11:08:23.225Z"
+        "lastUpdated": "2026-03-31T08:24:06.587Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/complete/route.ts"
     },
@@ -1058,7 +1058,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T08:10:09.071Z"
+    "lastActivity": "2026-03-31T08:24:13.245Z"
   },
   "history": [
     {
@@ -6536,6 +6536,42 @@
     {
       "timestamp": "2026-03-31T08:10:09.071Z",
       "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:21:59.135Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:23:42.643Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:23:51.240Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:23:56.376Z",
+      "feature": "complete",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:24:06.587Z",
+      "feature": "complete",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:24:13.245Z",
+      "feature": "referio-platform",
       "phase": "do",
       "action": "updated"
     }

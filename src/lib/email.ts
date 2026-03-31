@@ -446,3 +446,247 @@ export async function sendWelcomeEmail(options: {
     html,
   })
 }
+
+// CRM 이메일 10: 정산 확정 안내 (정산 정보 등록 완료된 파트너)
+export async function sendSettlementConfirmedEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  totalAmount: number;
+  paymentDueDate?: string; // 예: '2026-04-15'
+  accountLastFour?: string; // 계좌 끝 4자리
+  settlementItems?: Array<{ programName: string; count: number; amount: number }>;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, totalAmount, paymentDueDate, accountLastFour, settlementItems } = options;
+
+  const itemRows = settlementItems?.map(item => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${item.programName}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;text-align:center;">${item.count}건</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#111827;font-weight:600;text-align:right;">₩${item.amount.toLocaleString()}</td>
+    </tr>`).join('') ?? '';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">정산이 확정됐습니다 ✅</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님의 활동에 대한 정산이 확정됐습니다.<br/>
+        별도로 하실 일은 없습니다. 등록하신 계좌로 입금이 진행됩니다.
+      </p>
+
+      <!-- 정산 금액 -->
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:20px 24px;margin-bottom:20px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;color:#166534;">확정 정산 금액</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#15803d;">₩${totalAmount.toLocaleString()}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">세금 처리 전 금액 · 최종 입금액은 원천징수 후 산정됩니다</p>
+      </div>
+
+      <!-- 정산 내역 테이블 -->
+      ${settlementItems && settlementItems.length > 0 ? `
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f9fafb;">
+            <th style="padding:10px 12px;text-align:left;font-size:12px;color:#6b7280;font-weight:600;">프로그램</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;color:#6b7280;font-weight:600;">건수</th>
+            <th style="padding:10px 12px;text-align:right;font-size:12px;color:#6b7280;font-weight:600;">금액</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+        <tfoot>
+          <tr style="background:#f9fafb;">
+            <td colspan="2" style="padding:10px 12px;font-size:13px;font-weight:700;color:#111827;">합계</td>
+            <td style="padding:10px 12px;font-size:14px;font-weight:700;color:#4f46e5;text-align:right;">₩${totalAmount.toLocaleString()}</td>
+          </tr>
+        </tfoot>
+      </table>` : ''}
+
+      <!-- 입금 일정 -->
+      <div style="background:#f8fafc;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          ${paymentDueDate ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">입금 예정일</td>
+            <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:600;">${paymentDueDate}</td>
+          </tr>` : ''}
+          ${accountLastFour ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">입금 계좌</td>
+            <td style="padding:4px 0;color:#111827;font-size:13px;">등록된 계좌 (끝 4자리: ${accountLastFour})</td>
+          </tr>` : ''}
+        </table>
+      </div>
+
+      <a href="https://referio.puzl.co.kr/dashboard/settlements"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        정산 내역 확인하기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 정산 처리에 관한 필수 안내 메일입니다.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ${partnerName}님, ₩${totalAmount.toLocaleString()} 정산이 확정됐습니다`,
+    html,
+  });
+}
+
+// CRM 이메일 12: 입금 완료 확인
+export async function sendSettlementPaidEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  paidAmount: number;
+  paidAt?: string; // 예: '2026-04-15 14:30'
+  accountLastFour?: string;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, paidAmount, paidAt, accountLastFour } = options;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">입금이 완료됐습니다 💰</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님께 정산 금액이 정상 입금됐습니다.
+      </p>
+
+      <!-- 입금 금액 -->
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:20px 24px;margin-bottom:20px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;color:#166534;">입금 완료 금액</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#15803d;">₩${paidAmount.toLocaleString()}</p>
+      </div>
+
+      <!-- 입금 상세 -->
+      <div style="background:#f8fafc;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <table style="width:100%;border-collapse:collapse;">
+          ${paidAt ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;width:80px;">입금 일시</td>
+            <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:600;">${paidAt}</td>
+          </tr>` : ''}
+          ${accountLastFour ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">입금 계좌</td>
+            <td style="padding:4px 0;color:#111827;font-size:13px;">끝 4자리 ${accountLastFour}</td>
+          </tr>` : ''}
+        </table>
+      </div>
+
+      <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">
+        입금이 확인되지 않으시면 은행 처리 지연일 수 있습니다 (영업일 기준 1~2일 소요).
+      </p>
+
+      <a href="https://referio.puzl.co.kr/dashboard/settlements"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        정산 내역 확인하기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 입금 완료에 관한 필수 안내 메일입니다.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ₩${paidAmount.toLocaleString()} 입금이 완료됐습니다`,
+    html,
+  });
+}
+
+// CRM 이메일 15: 파트너 신청 거절 안내
+export async function sendProgramRejectedEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  programName: string;
+  advertiserCompanyName: string;
+  rejectionReason?: string;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, programName, advertiserCompanyName, rejectionReason } = options;
+
+  const reasonBlock = rejectionReason ? `
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#713f12;">거절 사유</p>
+        <p style="margin:0;font-size:13px;color:#78350f;line-height:1.6;">${rejectionReason}</p>
+      </div>` : '';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">파트너 신청 결과 안내</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님, <strong>${programName || advertiserCompanyName}</strong> 파트너 신청을 검토한 결과를 안내드립니다.
+      </p>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+        <p style="margin:0;font-size:14px;color:#991b1b;">
+          아쉽게도 이번 신청은 <strong>승인되지 않았습니다</strong>.
+        </p>
+        <p style="margin:8px 0 0;font-size:13px;color:#b91c1c;">
+          이는 ${partnerName}님의 능력이나 신뢰도 문제가 아니라,
+          현재 ${advertiserCompanyName}의 파트너 모집 기준과의 적합성 문제입니다.
+        </p>
+      </div>
+
+      ${reasonBlock}
+
+      <div style="background:#f8fafc;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#111827;">다른 프로그램도 둘러보세요</p>
+        <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
+          Referio에는 다양한 B2B 파트너 프로그램이 있습니다.
+          나에게 맞는 다른 프로그램에 신청해보세요.
+        </p>
+      </div>
+
+      <a href="https://referio.puzl.co.kr/dashboard/marketplace"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        다른 프로그램 둘러보기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 파트너 신청 결과 안내 메일입니다.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ${programName || advertiserCompanyName} 파트너 신청 결과 안내`,
+    html,
+  });
+}
