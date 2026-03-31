@@ -5,13 +5,19 @@
  * 1. Supabase Auth 계정 생성 (email_confirm: true, 비밀번호 없음)
  * 2. partners.auth_user_id 연결
  *
- * 실행: node scripts/migrate-keepermate-auth.js
+ * 실행: node --env-file=.env.local scripts/migrate-keepermate-auth.js
  */
 
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = 'https://eqdnirtgmevhobmycxzn.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxZG5pcnRnbWV2aG9ibXljeHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDI1OTIwMSwiZXhwIjoyMDg1ODM1MjAxfQ.n9mhy92E3ePAXAvlat60wVKqd2H0BpdNmrmKindHlxU';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ 환경변수 누락: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+  console.error('   실행 방법: node --env-file=.env.local scripts/migrate-keepermate-auth.js');
+  process.exit(1);
+}
 const KEEPERMATE_ADVERTISER_ID = 'ab7da1e1-2bef-4065-8c84-88c037f2b4dc';
 
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

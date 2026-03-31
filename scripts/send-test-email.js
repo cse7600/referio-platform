@@ -1,12 +1,20 @@
 /**
  * send-test-email.js
  * cym@puzl.co.kr 로 비밀번호 설정 테스트 이메일 발송
+ *
+ * 실행: node --env-file=.env.local scripts/send-test-email.js
  */
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = 'https://eqdnirtgmevhobmycxzn.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxZG5pcnRnbWV2aG9ibXljeHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDI1OTIwMSwiZXhwIjoyMDg1ODM1MjAxfQ.n9mhy92E3ePAXAvlat60wVKqd2H0BpdNmrmKindHlxU';
-const RESEND_API_KEY = 're_eS5DK9gX_JWh6hjbLK2NdbLLcghtmFuot';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !RESEND_API_KEY) {
+  console.error('❌ 환경변수 누락: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY');
+  console.error('   실행 방법: node --env-file=.env.local scripts/send-test-email.js');
+  process.exit(1);
+}
 const FROM_EMAIL = 'noreply@updates.puzl.co.kr';
 const SITE_URL = 'https://referio.puzl.co.kr';
 const KEEPERMATE_RESET_PATH = '/signup/keepermate';

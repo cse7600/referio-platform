@@ -58,7 +58,14 @@ function ResetPasswordForm() {
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
-      setErrorMsg('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
+      // Distinguish between session expiry and other errors for clearer UX
+      const isSessionError = error.message?.toLowerCase().includes('session') ||
+        error.message?.toLowerCase().includes('expired') ||
+        error.message?.toLowerCase().includes('not authenticated') ||
+        error.status === 401
+      setErrorMsg(isSessionError
+        ? '세션이 만료되었습니다. 로그인 페이지에서 비밀번호 재설정을 다시 요청해주세요.'
+        : '비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
       setSubmitting(false)
     } else {
       await supabase.auth.signOut()

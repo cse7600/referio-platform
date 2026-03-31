@@ -95,12 +95,34 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
     // Case 3: PKCE flow (?code= 쿼리 파라미터, 서버에서 prop으로 전달)
     if (!code) return
     setResetStatus('loading')
-    supabaseRef.current.auth.exchangeCodeForSession(code).then(({ error }) => {
+    const supabase = supabaseRef.current
+
+    const applySession = async (user: { email?: string; user_metadata?: Record<string, unknown> } | null) => {
+      const email = user?.email || ''
+      const name = (user?.user_metadata?.name as string) || ''
+      setPartnerEmail(email)
+      if (name) {
+        setPartnerName(name)
+      } else if (email) {
+        const { data: p } = await supabase.from('partners').select('name').eq('email', email).single()
+        if (p?.name) setPartnerName(p.name)
+      }
+      setResetStatus('ready')
+    }
+
+    supabase.auth.exchangeCodeForSession(code).then(async ({ data, error }) => {
       if (error) {
-        setResetStatus('error')
-        setResetError('링크가 만료되었거나 이미 사용된 링크입니다. 비밀번호 재설정을 다시 요청해주세요.')
+        // Exchange failed (e.g., PKCE code verifier missing for admin-generated recovery links).
+        // Check if a session was already established through another mechanism (e.g., implicit flow).
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          await applySession(session.user)
+        } else {
+          setResetStatus('error')
+          setResetError('링크가 만료되었거나 이미 사용된 링크입니다. 링크를 다시 요청해주세요.')
+        }
       } else {
-        setResetStatus('ready')
+        await applySession(data.user)
       }
     })
   }, [code])

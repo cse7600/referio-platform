@@ -152,12 +152,20 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`
 
-  await resend.emails.send({
+  const { error: sendError } = await resend.emails.send({
     from: `Referio <${FROM_EMAIL}>`,
     to: email,
     subject: `[${companyName}] 비밀번호 설정 링크 재발송`,
     html,
   })
+
+  if (sendError) {
+    console.error('[resend-setup-link] email send error:', sendError)
+    return NextResponse.json(
+      { error: '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+      { status: 500 }
+    )
+  }
 
   return NextResponse.json({ ok: true })
 }
