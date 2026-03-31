@@ -79,11 +79,33 @@ export interface Partner {
   auth_user_id: string | null
 }
 
+// 프로그램 (광고주당 N개 가능 — migration 022에서 advertisers에서 분리)
+export interface Program {
+  id: string
+  advertiser_id: string
+  name: string
+  description: string | null
+  category: string | null
+  homepage_url: string | null
+  landing_url: string | null
+  activity_guide: string | null
+  content_sources: string | null
+  prohibited_activities: string | null
+  precautions: string | null
+  default_lead_commission: number
+  default_contract_commission: number
+  is_active: boolean
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
 // 파트너 프로그램 (다대다 관계)
 export interface PartnerProgram {
   id: string
   partner_id: string
   advertiser_id: string
+  program_id: string | null // migration 022 이후 추가. 기존 레코드는 NULL
   status: PartnerStatus
   tier: PartnerTier
   referral_code: string

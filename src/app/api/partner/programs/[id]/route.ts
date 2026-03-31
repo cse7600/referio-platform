@@ -84,7 +84,130 @@ export async function GET(
       })
     }
 
-    // Regular advertiser program detail — admin client for RLS bypass
+    // programs 테이블 기반 조회 (신규) — 없으면 advertisers fallback (기존 호환)
+    const { data: prog } = await admin
+      .from('programs')
+      .select(`
+        id,
+        name,
+        description,
+        category,
+        homepage_url,
+        landing_url,
+        default_lead_commission,
+        default_contract_commission,
+        activity_guide,
+        content_sources,
+        prohibited_activities,
+        precautions,
+        advertiser_id,
+        advertisers!inner(
+          id,
+          company_name,
+          logo_url,
+          primary_color,
+          status
+        )
+      `)
+      .eq('id', id)
+      .eq('is_active', true)
+      .eq('is_public', true)
+      .maybeSingle()
+
+    // programs 테이블에서 찾은 경우
+    if (prog) {
+      const adv = prog.advertisers as any;
+
+      if (adv?.status !== 'active') {
+        return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+      }
+
+      // 참가 상태 확인 (program_id 기준 먼저, fallback advertiser_id)
+      const { data: enrollmentByProgram } = await supabase
+        .from('partner_programs')
+        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at')
+        .eq('partner_id', partner.id)
+        .eq('program_id', prog.id)
+        .maybeSingle()
+
+      const { data: enrollmentByAdv } = !enrollmentByProgram ? await supabase
+        .from('partner_programs')
+        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at')
+        .eq('partner_id', partner.id)
+        .eq('advertiser_id', prog.advertiser_id)
+        .is('program_id', null)
+        .maybeSingle() : { data: null }
+
+      const enrollment = enrollmentByProgram || enrollmentByAdv || null;
+
+      // 미디어 목록
+      const { data: media } = await supabase
+        .from('program_media')
+        .select('id, type, url, name, description')
+        .eq('advertiser_id', prog.advertiser_id)
+        .order('sort_order')
+
+      // 광고주 공지사항 (최근 10개)
+      const { data: announcements } = await supabase
+        .from('partner_messages')
+        .select('id, title, body, sent_at')
+        .eq('advertiser_id', prog.advertiser_id)
+        .eq('target_type', 'all')
+        .order('sent_at', { ascending: false })
+        .limit(10)
+
+      let readMessageIds: Set<string> = new Set()
+      if (announcements && announcements.length > 0) {
+        const { data: reads } = await supabase
+          .from('partner_message_reads')
+          .select('message_id')
+          .eq('partner_id', partner.id)
+          .in('message_id', announcements.map(a => a.id))
+        readMessageIds = new Set((reads || []).map(r => r.message_id))
+      }
+
+      const announcementsWithRead = (announcements || []).map(a => ({
+        ...a,
+        is_read: readMessageIds.has(a.id),
+      }))
+
+      // 게시판 게시물 (최근 20개)
+      const { data: boardPosts } = await admin
+        .from('activity_posts')
+        .select('id, title, content, post_type, created_at')
+        .eq('advertiser_id', prog.advertiser_id)
+        .eq('post_type', 'board')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      return NextResponse.json({
+        program: {
+          id: prog.id,
+          company_name: adv?.company_name ?? '',
+          program_name: prog.name,
+          program_description: prog.description,
+          logo_url: adv?.logo_url ?? null,
+          primary_color: adv?.primary_color ?? null,
+          category: prog.category,
+          homepage_url: prog.homepage_url,
+          landing_url: prog.landing_url,
+          default_lead_commission: prog.default_lead_commission,
+          default_contract_commission: prog.default_contract_commission,
+          activity_guide: prog.activity_guide,
+          content_sources: prog.content_sources,
+          prohibited_activities: prog.prohibited_activities,
+          precautions: prog.precautions,
+          advertiser_id: prog.advertiser_id,
+          enrollment,
+          media: media || [],
+          announcements: announcementsWithRead,
+          boardPosts: boardPosts || [],
+        },
+      })
+    }
+
+    // ── Fallback: advertisers 테이블 기준 (migration 전 기존 레코드 호환) ──
     const { data: advertiser } = await admin
       .from('advertisers')
       .select(`

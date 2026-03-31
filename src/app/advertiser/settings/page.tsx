@@ -10,8 +10,10 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw, ChevronDown, AlertCircle, Loader2, Users } from 'lucide-react'
+import { Image, Film, Youtube, Trash2, Upload, Plus, Copy, Check, ExternalLink, Zap, RefreshCw, ChevronDown, AlertCircle, Loader2, Users, Pencil, Eye, EyeOff } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 
 interface AdvertiserInfo {
   id: string
@@ -40,7 +42,36 @@ export default function AdvertiserSettingsPage() {
   const [contactPhone, setContactPhone] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#f97316')
 
-  // 프로그램 설정
+  // 프로그램 목록 관리
+  interface ProgramItem {
+    id: string
+    name: string
+    description: string | null
+    category: string | null
+    homepage_url: string | null
+    landing_url: string | null
+    activity_guide: string | null
+    content_sources: string | null
+    prohibited_activities: string | null
+    precautions: string | null
+    default_lead_commission: number
+    default_contract_commission: number
+    is_active: boolean
+    is_public: boolean
+    partner_count: number
+    created_at: string
+  }
+  const [programs, setPrograms] = useState<ProgramItem[]>([])
+  const [programsLoading, setProgramsLoading] = useState(false)
+  const [programSheetOpen, setProgramSheetOpen] = useState(false)
+  const [programSheetMode, setProgramSheetMode] = useState<'create' | 'edit'>('create')
+  const [editingProgram, setEditingProgram] = useState<ProgramItem | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingProgramId, setDeletingProgramId] = useState<string | null>(null)
+  const [programSaving, setProgramSaving] = useState(false)
+  const [programDeleting, setProgramDeleting] = useState(false)
+
+  // Sheet 내부 편집 폼 state
   const [programName, setProgramName] = useState('')
   const [programDescription, setProgramDescription] = useState('')
   const [defaultLeadCommission, setDefaultLeadCommission] = useState('')
@@ -130,7 +161,139 @@ export default function AdvertiserSettingsPage() {
     fetchAdvertiserInfo()
     fetchMedia()
     fetchAirtableIntegration()
+    fetchPrograms()
   }, [])
+
+  const fetchPrograms = async () => {
+    setProgramsLoading(true)
+    try {
+      const res = await fetch('/api/advertiser/programs')
+      if (res.ok) {
+        const { programs: data } = await res.json()
+        setPrograms(data || [])
+      }
+    } catch { /* ignore */ }
+    setProgramsLoading(false)
+  }
+
+  const openCreateSheet = () => {
+    setEditingProgram(null)
+    setProgramSheetMode('create')
+    setProgramName('')
+    setProgramDescription('')
+    setDefaultLeadCommission('')
+    setDefaultContractCommission('')
+    setIsPublic(false)
+    setCategory('')
+    setHomepageUrl('')
+    setLandingUrl('')
+    setActivityGuide('')
+    setContentSources('')
+    setProhibitedActivities('')
+    setPrecautions('')
+    setProgramSheetOpen(true)
+  }
+
+  const openEditSheet = (p: ProgramItem) => {
+    setEditingProgram(p)
+    setProgramSheetMode('edit')
+    setProgramName(p.name)
+    setProgramDescription(p.description || '')
+    setDefaultLeadCommission(String(p.default_lead_commission || 0))
+    setDefaultContractCommission(String(p.default_contract_commission || 0))
+    setIsPublic(p.is_public)
+    setCategory(p.category || '')
+    setHomepageUrl(p.homepage_url || '')
+    setLandingUrl(p.landing_url || '')
+    setActivityGuide(p.activity_guide || '')
+    setContentSources(p.content_sources || '')
+    setProhibitedActivities(p.prohibited_activities || '')
+    setPrecautions(p.precautions || '')
+    setProgramSheetOpen(true)
+  }
+
+  const handleProgramSheetSave = async () => {
+    if (!programName.trim()) {
+      toast.error('프로그램 이름을 입력해주세요')
+      return
+    }
+    setProgramSaving(true)
+    try {
+      const body = {
+        name: programName.trim(),
+        description: programDescription || null,
+        default_lead_commission: parseFloat(defaultLeadCommission) || 0,
+        default_contract_commission: parseFloat(defaultContractCommission) || 0,
+        is_public: isPublic,
+        category: category || null,
+        homepage_url: homepageUrl || null,
+        landing_url: landingUrl || null,
+        activity_guide: activityGuide || null,
+        content_sources: contentSources || null,
+        prohibited_activities: prohibitedActivities || null,
+        precautions: precautions || null,
+      }
+
+      if (programSheetMode === 'create') {
+        const res = await fetch('/api/advertiser/programs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          toast.error(data.error || '프로그램 생성에 실패했습니다')
+          return
+        }
+        toast.success('프로그램이 추가됐습니다')
+      } else {
+        if (!editingProgram) return
+        const res = await fetch(`/api/advertiser/programs/${editingProgram.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        if (!res.ok) {
+          const data = await res.json()
+          toast.error(data.error || '프로그램 저장에 실패했습니다')
+          return
+        }
+        toast.success('프로그램 설정이 저장됐습니다')
+      }
+      setProgramSheetOpen(false)
+      fetchPrograms()
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setProgramSaving(false)
+    }
+  }
+
+  const confirmDeleteProgram = (programId: string) => {
+    setDeletingProgramId(programId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleProgramDelete = async () => {
+    if (!deletingProgramId) return
+    setProgramDeleting(true)
+    try {
+      const res = await fetch(`/api/advertiser/programs/${deletingProgramId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        toast.error(data.error || '삭제에 실패했습니다')
+        return
+      }
+      toast.success('프로그램이 삭제됐습니다')
+      setDeleteDialogOpen(false)
+      setDeletingProgramId(null)
+      fetchPrograms()
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setProgramDeleting(false)
+    }
+  }
 
   const fetchAirtableIntegration = async () => {
     try {
@@ -543,18 +706,6 @@ console.log('Referio 응답:', JSON.stringify(result));`
           setContactEmail(adv.contact_email || '')
           setContactPhone(adv.contact_phone || '')
           setPrimaryColor(adv.primary_color || '#f97316')
-          setProgramName(adv.program_name || '')
-          setProgramDescription(adv.program_description || '')
-          setDefaultLeadCommission(String(adv.default_lead_commission || 0))
-          setDefaultContractCommission(String(adv.default_contract_commission || 0))
-          setIsPublic(adv.is_public || false)
-          setCategory(adv.category || '')
-          setHomepageUrl(adv.homepage_url || '')
-          setLandingUrl(adv.landing_url || '')
-          setActivityGuide(adv.activity_guide || '')
-          setContentSources(adv.content_sources || '')
-          setProhibitedActivities(adv.prohibited_activities || '')
-          setPrecautions(adv.precautions || '')
           setPartnerSignupEnabled(adv.partner_signup_enabled || false)
           setSignupWelcomeTitle(adv.signup_welcome_title || '')
           setSignupWelcomeMessage(adv.signup_welcome_message || '')
@@ -669,39 +820,6 @@ console.log('Referio 응답:', JSON.stringify(result));`
     setTimeout(() => setCopiedSignupLink(false), 2000)
   }
 
-  const handleProgramUpdate = async () => {
-    setSaving(true)
-    try {
-      const res = await fetch('/api/advertiser/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          program_name: programName || null,
-          program_description: programDescription || null,
-          default_lead_commission: parseFloat(defaultLeadCommission) || 0,
-          default_contract_commission: parseFloat(defaultContractCommission) || 0,
-          is_public: isPublic,
-          category: category || null,
-          homepage_url: homepageUrl || null,
-          landing_url: landingUrl || null,
-          activity_guide: activityGuide || null,
-          content_sources: contentSources || null,
-          prohibited_activities: prohibitedActivities || null,
-          precautions: precautions || null,
-        }),
-      })
-
-      if (!res.ok) {
-        toast.error('프로그램 설정 저장에 실패했습니다')
-      } else {
-        toast.success('프로그램 설정이 저장되었습니다')
-      }
-    } catch {
-      toast.error('서버 오류가 발생했습니다')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -873,234 +991,310 @@ console.log('Referio 응답:', JSON.stringify(result));`
           </Card>
         </TabsContent>
 
-        {/* 프로그램 설정 탭 */}
+        {/* 프로그램 탭 */}
         <TabsContent value="program" className="space-y-6">
+          {/* 프로그램 목록 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">어필리에이트 프로그램 설정</CardTitle>
-              <CardDescription>
-                파트너가 참가할 수 있는 어필리에이트 프로그램을 설정합니다.
-                프로그램을 공개하면 파트너 마켓플레이스에 노출됩니다.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">프로그램 공개</p>
-                  <p className="text-sm text-slate-500">
-                    공개 시 모든 파트너가 프로그램을 찾아 참가 신청할 수 있습니다
+                  <CardTitle className="text-lg">프로그램 관리</CardTitle>
+                  <CardDescription className="mt-1">
+                    파트너가 참가할 수 있는 어필리에이트 프로그램을 관리합니다.
+                    공개 설정한 프로그램은 파트너 마켓플레이스에 노출됩니다.
+                  </CardDescription>
+                </div>
+                <Button onClick={openCreateSheet} size="sm" className="shrink-0">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  새 프로그램 추가
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {programsLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                </div>
+              ) : programs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                    <Plus className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="font-medium text-slate-700">아직 프로그램이 없습니다</p>
+                  <p className="text-sm text-slate-500 mt-1 mb-4">
+                    첫 번째 파트너 프로그램을 추가해보세요
                   </p>
+                  <Button onClick={openCreateSheet} size="sm" variant="outline">
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    프로그램 추가하기
+                  </Button>
                 </div>
-                <Switch
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                />
-              </div>
-
-              {/* 기본 정보 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>프로그램 이름</Label>
-                  <Input
-                    value={programName}
-                    onChange={(e) => setProgramName(e.target.value)}
-                    placeholder="예: 리캐치 B2B 어필리에이트"
-                  />
-                  <p className="text-xs text-slate-500">
-                    비워두면 회사명이 사용됩니다
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>업종 카테고리</Label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <option value="">선택 안함</option>
-                    <option value="security">보안/CCTV</option>
-                    <option value="telecom">인터넷/통신</option>
-                    <option value="insurance">보험/금융</option>
-                    <option value="education">교육</option>
-                    <option value="beauty">뷰티/건강</option>
-                    <option value="shopping">쇼핑</option>
-                    <option value="realestate">부동산</option>
-                    <option value="automobile">자동차</option>
-                    <option value="travel">여행/숙박</option>
-                    <option value="pet">반려동물</option>
-                    <option value="food">식품</option>
-                    <option value="electronics">가전/IT</option>
-                    <option value="etc">기타</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>홈페이지 URL</Label>
-                <Input
-                  value={homepageUrl}
-                  onChange={(e) => setHomepageUrl(e.target.value)}
-                  placeholder="https://www.example.com"
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>추천 랜딩 URL</Label>
-                <Input
-                  value={landingUrl}
-                  onChange={(e) => setLandingUrl(e.target.value)}
-                  placeholder="https://www.example.com/landing"
-                />
-                <p className="text-xs text-slate-500">
-                  파트너의 추천 링크가 이 URL로 생성됩니다. 비워두면 기본 문의 페이지가 사용됩니다.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>프로그램 설명</Label>
-                <Textarea
-                  value={programDescription}
-                  onChange={(e) => setProgramDescription(e.target.value)}
-                  placeholder="프로그램에 대한 간단한 소개. 마켓플레이스 카드와 상세 페이지에 노출됩니다."
-                  rows={3}
-                />
-              </div>
-
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                수수료 단가는 <a href="/advertiser/campaigns" className="text-indigo-600 font-medium underline underline-offset-2">캠페인 설정</a>에서 관리합니다.
-              </div>
-
-              {/* 파트너 가이드 섹션 */}
-              <div className="border-t pt-6 mt-2">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <h3 className="font-semibold text-base mb-0.5">파트너 가이드</h3>
-                    <p className="text-sm text-slate-500">
-                      파트너 상세 페이지에 표시되는 활동 안내입니다. 숫자(1. 2. 3.)로 시작하면 단계별로, 하이픈(- )으로 시작하면 목록으로 보여집니다.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {/* 활동 가이드 */}
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
-                      <div>
-                        <p className="text-sm font-semibold text-blue-800">📋 활동 가이드</p>
-                        <p className="text-xs text-blue-600 mt-0.5">파트너가 어떻게 수익을 낼 수 있는지 단계별로 안내해주세요</p>
+              ) : (
+                <div className="space-y-3">
+                  {programs.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-slate-900 truncate">{p.name}</span>
+                          {p.is_public ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                              <Eye className="w-3 h-3" />
+                              공개
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                              <EyeOff className="w-3 h-3" />
+                              비공개
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            파트너 {p.partner_count}명
+                          </span>
+                          <span>유효 ₩{(p.default_lead_commission || 0).toLocaleString()}</span>
+                          <span>계약 ₩{(p.default_contract_commission || 0).toLocaleString()}</span>
+                          {p.category && <span className="capitalize">{p.category}</span>}
+                        </div>
                       </div>
-                      {!activityGuide && (
-                        <button
-                          type="button"
-                          onClick={() => setActivityGuide('1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통해 상담 신청이 들어오면 유효 DB로 인정됩니다.\n3. 실제 계약이 체결되면 계약 커미션이 추가로 지급됩니다.')}
-                          className="shrink-0 text-xs text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded-md px-2.5 py-1.5 transition-colors"
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditSheet(p)}
                         >
-                          템플릿 불러오기
-                        </button>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <Textarea
-                        value={activityGuide}
-                        onChange={(e) => setActivityGuide(e.target.value)}
-                        placeholder={'1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통한 상담 신청이 유효 DB로 인정됩니다.\n3. 실제 계약 체결 시 계약 커미션이 추가 지급됩니다.'}
-                        rows={5}
-                        className="bg-white text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 콘텐츠 소스 */}
-                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-indigo-100">
-                      <div>
-                        <p className="text-sm font-semibold text-indigo-800">🗂️ 콘텐츠 소스</p>
-                        <p className="text-xs text-indigo-600 mt-0.5">파트너가 활동에 쓸 수 있는 이미지, 영상, 문서 링크를 제공해주세요</p>
+                          <Pencil className="w-3.5 h-3.5 mr-1" />
+                          편집
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 hover:text-red-600 hover:border-red-300"
+                          onClick={() => confirmDeleteProgram(p.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
-                      {!contentSources && (
-                        <button
-                          type="button"
-                          onClick={() => setContentSources('- 공식 브로슈어: https://\n- 제품 이미지 모음: https://\n- 홍보 영상 링크: https://')}
-                          className="shrink-0 text-xs text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 rounded-md px-2.5 py-1.5 transition-colors"
-                        >
-                          템플릿 불러오기
-                        </button>
-                      )}
                     </div>
-                    <div className="p-3">
-                      <Textarea
-                        value={contentSources}
-                        onChange={(e) => setContentSources(e.target.value)}
-                        placeholder={'- 공식 브로슈어: https://...\n- 제품 이미지 모음: https://...\n- 홍보 영상 소스 제공'}
-                        rows={4}
-                        className="bg-white text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 금지 활동 */}
-                  <div className="rounded-lg border border-red-100 bg-red-50/40 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-red-100">
-                      <div>
-                        <p className="text-sm font-semibold text-red-800">🚫 금지 활동</p>
-                        <p className="text-xs text-red-600 mt-0.5">파트너십 해지 사유가 될 수 있는 행위를 명시해주세요</p>
-                      </div>
-                      {!prohibitedActivities && (
-                        <button
-                          type="button"
-                          onClick={() => setProhibitedActivities('- 허위/과장 광고 금지\n- 스팸 문자·메일 발송 금지\n- 타사 비방 금지\n- 개인정보 무단 수집 금지')}
-                          className="shrink-0 text-xs text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-md px-2.5 py-1.5 transition-colors"
-                        >
-                          템플릿 불러오기
-                        </button>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <Textarea
-                        value={prohibitedActivities}
-                        onChange={(e) => setProhibitedActivities(e.target.value)}
-                        placeholder={'- 허위/과장 광고 금지\n- 스팸 문자/메일 발송 금지\n- 타사 비방 금지'}
-                        rows={4}
-                        className="bg-white text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 유의 사항 */}
-                  <div className="rounded-lg border border-amber-100 bg-amber-50/40 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-amber-100">
-                      <div>
-                        <p className="text-sm font-semibold text-amber-800">⚠️ 유의 사항</p>
-                        <p className="text-xs text-amber-600 mt-0.5">정산 기준, 중복 처리 등 파트너가 꼭 알아야 할 사항</p>
-                      </div>
-                      {!precautions && (
-                        <button
-                          type="button"
-                          onClick={() => setPrecautions('- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.\n- 허위 DB 발생 시 해당 건은 차감 처리됩니다.')}
-                          className="shrink-0 text-xs text-amber-600 border border-amber-200 bg-white hover:bg-amber-50 rounded-md px-2.5 py-1.5 transition-colors"
-                        >
-                          템플릿 불러오기
-                        </button>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <Textarea
-                        value={precautions}
-                        onChange={(e) => setPrecautions(e.target.value)}
-                        placeholder={'- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.'}
-                        rows={4}
-                        className="bg-white text-sm"
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
-
-              <Button onClick={handleProgramUpdate} disabled={saving}>
-                {saving ? '저장 중...' : '프로그램 설정 저장'}
-              </Button>
+              )}
             </CardContent>
           </Card>
+
+          {/* 프로그램 편집 Sheet */}
+          <Sheet open={programSheetOpen} onOpenChange={setProgramSheetOpen}>
+            <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+              <SheetHeader className="mb-6">
+                <SheetTitle>
+                  {programSheetMode === 'create' ? '새 프로그램 추가' : '프로그램 편집'}
+                </SheetTitle>
+                <SheetDescription>
+                  프로그램 정보를 입력하세요. 공개 설정 시 파트너 마켓플레이스에 노출됩니다.
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="space-y-5 pb-8">
+                {/* 공개 여부 */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">마켓플레이스 공개</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      공개 시 모든 파트너가 이 프로그램을 찾고 신청할 수 있습니다
+                    </p>
+                  </div>
+                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                </div>
+
+                {/* 기본 정보 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>프로그램 이름 <span className="text-red-500">*</span></Label>
+                    <Input
+                      value={programName}
+                      onChange={(e) => setProgramName(e.target.value)}
+                      placeholder="예: B2B 어필리에이트"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>업종 카테고리</Label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="">선택 안함</option>
+                      <option value="security">보안/CCTV</option>
+                      <option value="telecom">인터넷/통신</option>
+                      <option value="insurance">보험/금융</option>
+                      <option value="education">교육</option>
+                      <option value="beauty">뷰티/건강</option>
+                      <option value="shopping">쇼핑</option>
+                      <option value="realestate">부동산</option>
+                      <option value="automobile">자동차</option>
+                      <option value="travel">여행/숙박</option>
+                      <option value="pet">반려동물</option>
+                      <option value="food">식품</option>
+                      <option value="electronics">가전/IT</option>
+                      <option value="etc">기타</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>프로그램 설명</Label>
+                  <Textarea
+                    value={programDescription}
+                    onChange={(e) => setProgramDescription(e.target.value)}
+                    placeholder="프로그램에 대한 간단한 소개. 마켓플레이스 카드와 상세 페이지에 노출됩니다."
+                    rows={3}
+                  />
+                </div>
+
+                {/* 수수료 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>유효 DB 단가 (원)</Label>
+                    <Input
+                      type="number"
+                      value={defaultLeadCommission}
+                      onChange={(e) => setDefaultLeadCommission(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>계약 단가 (원)</Label>
+                    <Input
+                      type="number"
+                      value={defaultContractCommission}
+                      onChange={(e) => setDefaultContractCommission(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                {/* URL */}
+                <div className="space-y-1.5">
+                  <Label>홈페이지 URL</Label>
+                  <Input
+                    value={homepageUrl}
+                    onChange={(e) => setHomepageUrl(e.target.value)}
+                    placeholder="https://www.example.com"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>추천 랜딩 URL</Label>
+                  <Input
+                    value={landingUrl}
+                    onChange={(e) => setLandingUrl(e.target.value)}
+                    placeholder="https://www.example.com/landing"
+                  />
+                  <p className="text-xs text-slate-500">
+                    파트너 추천 링크가 이 URL로 생성됩니다. 비워두면 기본 문의 페이지가 사용됩니다.
+                  </p>
+                </div>
+
+                {/* 파트너 가이드 */}
+                <div className="border-t pt-5">
+                  <h3 className="font-semibold text-sm mb-1">파트너 가이드</h3>
+                  <p className="text-xs text-slate-500 mb-4">
+                    파트너 상세 페이지에 표시되는 활동 안내입니다.
+                  </p>
+                  <div className="space-y-3">
+                    {/* 활동 가이드 */}
+                    <div className="rounded-lg border border-blue-100 bg-blue-50/40 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-blue-100">
+                        <p className="text-xs font-semibold text-blue-800">활동 가이드</p>
+                        {!activityGuide && (
+                          <button
+                            type="button"
+                            onClick={() => setActivityGuide('1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통해 상담 신청이 들어오면 유효 DB로 인정됩니다.\n3. 실제 계약이 체결되면 계약 커미션이 추가로 지급됩니다.')}
+                            className="text-xs text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded px-2 py-1"
+                          >
+                            템플릿
+                          </button>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <Textarea value={activityGuide} onChange={(e) => setActivityGuide(e.target.value)} rows={4} className="bg-white text-sm" />
+                      </div>
+                    </div>
+                    {/* 콘텐츠 소스 */}
+                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-indigo-100">
+                        <p className="text-xs font-semibold text-indigo-800">콘텐츠 소스</p>
+                        {!contentSources && (
+                          <button type="button" onClick={() => setContentSources('- 공식 브로슈어: https://\n- 제품 이미지 모음: https://\n- 홍보 영상 링크: https://')} className="text-xs text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 rounded px-2 py-1">템플릿</button>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <Textarea value={contentSources} onChange={(e) => setContentSources(e.target.value)} rows={3} className="bg-white text-sm" />
+                      </div>
+                    </div>
+                    {/* 금지 활동 */}
+                    <div className="rounded-lg border border-red-100 bg-red-50/40 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-red-100">
+                        <p className="text-xs font-semibold text-red-800">금지 활동</p>
+                        {!prohibitedActivities && (
+                          <button type="button" onClick={() => setProhibitedActivities('- 허위/과장 광고 금지\n- 스팸 문자·메일 발송 금지\n- 타사 비방 금지\n- 개인정보 무단 수집 금지')} className="text-xs text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded px-2 py-1">템플릿</button>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <Textarea value={prohibitedActivities} onChange={(e) => setProhibitedActivities(e.target.value)} rows={3} className="bg-white text-sm" />
+                      </div>
+                    </div>
+                    {/* 유의 사항 */}
+                    <div className="rounded-lg border border-amber-100 bg-amber-50/40 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-amber-100">
+                        <p className="text-xs font-semibold text-amber-800">유의 사항</p>
+                        {!precautions && (
+                          <button type="button" onClick={() => setPrecautions('- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.\n- 허위 DB 발생 시 해당 건은 차감 처리됩니다.')} className="text-xs text-amber-600 border border-amber-200 bg-white hover:bg-amber-50 rounded px-2 py-1">템플릿</button>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <Textarea value={precautions} onChange={(e) => setPrecautions(e.target.value)} rows={3} className="bg-white text-sm" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 저장 버튼 */}
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleProgramSheetSave} disabled={programSaving} className="flex-1">
+                    {programSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />저장 중...</> : programSheetMode === 'create' ? '프로그램 추가' : '변경사항 저장'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setProgramSheetOpen(false)}>취소</Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* 삭제 확인 다이얼로그 */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>프로그램 삭제</DialogTitle>
+                <DialogDescription>
+                  이 프로그램을 삭제하면 마켓플레이스에서 더 이상 표시되지 않습니다.
+                  기존에 참가 중인 파트너의 데이터는 유지됩니다.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>취소</Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleProgramDelete}
+                  disabled={programDeleting}
+                >
+                  {programDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />삭제 중...</> : '삭제'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* 미디어 관리 */}
           <Card>

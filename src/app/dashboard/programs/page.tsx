@@ -12,7 +12,8 @@ import { useProgram } from '@/app/dashboard/ProgramContext'
 import { trackReferralLinkCopy } from '@/lib/gtm'
 
 interface ProgramItem {
-  id: string
+  id: string                   // program UUID (programs 테이블) or campaign UUID
+  advertiser_id?: string       // programs 테이블 기반일 때 advertiser UUID
   company_name: string
   program_name: string | null
   program_description: string | null
@@ -86,14 +87,18 @@ export default function ProgramsPage() {
     fetchPrograms()
   }, [])
 
-  const handleApply = async (e: React.MouseEvent, advertiserId: string) => {
+  const handleApply = async (e: React.MouseEvent, programId: string, isAffiliateCampaign?: boolean) => {
     e.stopPropagation()
-    setApplying(advertiserId)
+    setApplying(programId)
     try {
+      // affiliate campaign은 advertiser_id(=campaign id)로 전달, 일반 program은 program_id로 전달
+      const body = isAffiliateCampaign
+        ? { advertiser_id: programId }
+        : { program_id: programId }
       const res = await fetch('/api/partner/programs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ advertiser_id: advertiserId }),
+        body: JSON.stringify(body),
       })
 
       if (res.ok) {
@@ -113,6 +118,8 @@ export default function ProgramsPage() {
     }
     setApplying(null)
   }
+
+  // copiedId is now program-based (program UUID or campaign UUID)
 
   const buildReferralLink = (refCode: string, landingUrl: string | null, advertiserId: string) => {
     if (landingUrl) {
@@ -135,14 +142,21 @@ export default function ProgramsPage() {
     return `${origin}/api/r/${shortCode}`
   }
 
-  const handleCopyLink = async (e: React.MouseEvent, refCode: string, advertiserId: string, landingUrl: string | null, isAffiliate?: boolean) => {
+  const handleCopyLink = async (
+    e: React.MouseEvent,
+    refCode: string,
+    programId: string,
+    advertiserId: string | undefined,
+    landingUrl: string | null,
+    isAffiliate?: boolean
+  ) => {
     e.stopPropagation()
     const link = isAffiliate
       ? buildAffiliateCopyLink(refCode)
-      : buildReferralLink(refCode, landingUrl, advertiserId)
+      : buildReferralLink(refCode, landingUrl, advertiserId || programId)
     await navigator.clipboard.writeText(link)
-    trackReferralLinkCopy({ advertiser_id: advertiserId, referral_code: refCode });
-    setCopiedId(advertiserId)
+    trackReferralLinkCopy({ advertiser_id: advertiserId || programId, referral_code: refCode });
+    setCopiedId(programId)
     toast.success('링크가 복사되었습니다')
     setTimeout(() => setCopiedId(null), 2000)
   }
@@ -333,7 +347,7 @@ export default function ProgramsPage() {
                     <Button
                       className="w-full bg-indigo-600 hover:bg-indigo-700"
                       size="sm"
-                      onClick={(e) => handleApply(e, program.id)}
+                      onClick={(e) => handleApply(e, program.id, program.is_affiliate_campaign)}
                       disabled={applying === program.id}
                     >
                       {applying === program.id ? '신청 중...' : '참가 신청'}
@@ -343,7 +357,7 @@ export default function ProgramsPage() {
                     <Button
                       className="w-full bg-green-600 hover:bg-green-700"
                       size="sm"
-                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id, program.landing_url, program.is_affiliate_campaign)}
+                      onClick={(e) => handleCopyLink(e, program.enrollment!.referral_code, program.id, program.advertiser_id, program.landing_url, program.is_affiliate_campaign)}
                     >
                       {copiedId === program.id ? (
                         <><Check className="w-3.5 h-3.5 mr-1.5" />복사 완료</>

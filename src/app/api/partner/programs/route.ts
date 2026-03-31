@@ -34,26 +34,61 @@ export async function GET() {
 
     const admin = createAdminClient()
 
-    // 1. 공개 광고주 프로그램 목록
-    const { data: advertisers, error: advError } = await admin
-      .from('advertisers')
-      .select('id, company_name, program_name, program_description, logo_url, primary_color, default_lead_commission, default_contract_commission, category, homepage_url, landing_url')
+    // 1. 공개 프로그램 목록 — programs 테이블 우선, advertisers JOIN
+    const { data: programRows, error: progError } = await admin
+      .from('programs')
+      .select(`
+        id,
+        name,
+        description,
+        category,
+        homepage_url,
+        landing_url,
+        default_lead_commission,
+        default_contract_commission,
+        advertiser_id,
+        advertisers!inner(
+          id,
+          company_name,
+          logo_url,
+          primary_color,
+          status
+        )
+      `)
       .eq('is_public', true)
-      .eq('status', 'active')
+      .eq('is_active', true)
+      .eq('advertisers.status', 'active')
       .order('created_at', { ascending: false })
-    if (advError) console.error('[partner/programs] advertisers query error:', advError.message)
+    if (progError) console.error('[partner/programs] programs query error:', progError.message)
 
-    // 2. 파트너의 참가 현황
+    // 2. 파트너의 참가 현황 (program_id 기준 + advertiser_id fallback)
     const { data: enrollments } = await supabase
       .from('partner_programs')
       .select('*')
       .eq('partner_id', partner.id)
 
-    const advertiserPrograms = (advertisers || []).map(adv => ({
-      ...adv,
-      is_affiliate_campaign: false,
-      enrollment: enrollments?.find(e => e.advertiser_id === adv.id) || null,
-    }))
+    const advertiserPrograms = (programRows || []).map((prog: any) => {
+      const adv = prog.advertisers as any;
+      return {
+        id: prog.id,
+        company_name: adv?.company_name ?? '',
+        program_name: prog.name,
+        program_description: prog.description,
+        logo_url: adv?.logo_url ?? null,
+        primary_color: adv?.primary_color ?? null,
+        default_lead_commission: prog.default_lead_commission,
+        default_contract_commission: prog.default_contract_commission,
+        category: prog.category,
+        homepage_url: prog.homepage_url,
+        landing_url: prog.landing_url,
+        advertiser_id: prog.advertiser_id,
+        is_affiliate_campaign: false,
+        // program_id 기준 enrollment 먼저, 없으면 advertiser_id 기준 fallback
+        enrollment: enrollments?.find(e => e.program_id === prog.id)
+          || enrollments?.find(e => e.advertiser_id === prog.advertiser_id && !e.program_id)
+          || null,
+      };
+    });
 
     // 3. 활성 어필리에이트 캠페인 (Referio 자체 모집 프로그램)
     const { data: campaigns } = await admin
@@ -133,19 +168,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '파트너를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    const { advertiser_id } = await request.json()
+    const body = await request.json()
+    // program_id 우선, 없으면 advertiser_id fallback (하위 호환)
+    const program_id: string | undefined = body.program_id;
+    const advertiser_id: string | undefined = body.advertiser_id;
 
-    if (!advertiser_id) {
+    if (!program_id && !advertiser_id) {
       return NextResponse.json({ error: '프로그램 ID가 필요합니다' }, { status: 400 })
     }
 
     const admin = createAdminClient()
 
+    // program_id가 주어진 경우 해당 program의 advertiser_id를 resolve
+    let resolvedAdvertiserId = advertiser_id;
+    let resolvedProgramId = program_id;
+
+    if (program_id) {
+      const { data: prog } = await admin
+        .from('programs')
+        .select('id, advertiser_id')
+        .eq('id', program_id)
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .maybeSingle()
+
+      if (!prog) {
+        return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+      }
+      resolvedAdvertiserId = prog.advertiser_id;
+      resolvedProgramId = prog.id;
+    }
+
     // ── 어필리에이트 캠페인 참가 신청 분기 ──
+    // advertiser_id가 referio_campaigns.id인 경우 캠페인 신청으로 처리
+    const campaignLookupId = program_id ? resolvedProgramId : advertiser_id;
     const { data: campaign } = await admin
       .from('referio_campaigns')
       .select('*')
-      .eq('id', advertiser_id)
+      .eq('id', campaignLookupId)
       .eq('is_active', true)
       .maybeSingle()
 
@@ -212,24 +272,72 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 일반 광고주 프로그램 참가 신청 ──
-    const { data: advertiser } = await admin
-      .from('advertisers')
-      .select('id, default_lead_commission, default_contract_commission, auto_approve_partners')
-      .eq('id', advertiser_id)
-      .eq('is_public', true)
-      .eq('status', 'active')
-      .maybeSingle()
+    // program_id 기반 신청 (resolvedProgramId가 있는 경우) — 없으면 advertiser_id fallback
+    let programCommission = { lead: 0, contract: 0 };
+    let autoApprove = true;
+    let advCompanyName = '';
 
-    if (!advertiser) {
-      return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+    if (resolvedProgramId) {
+      // programs 테이블에서 커미션 + advertiser 정보 조회
+      const { data: prog } = await admin
+        .from('programs')
+        .select(`
+          id,
+          default_lead_commission,
+          default_contract_commission,
+          advertisers!inner(id, company_name, auto_approve_partners, status)
+        `)
+        .eq('id', resolvedProgramId)
+        .eq('is_active', true)
+        .eq('is_public', true)
+        .maybeSingle()
+
+      if (!prog) {
+        return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+      }
+
+      const advInfo = (prog.advertisers as any);
+      if (advInfo?.status !== 'active') {
+        return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+      }
+
+      programCommission.lead = prog.default_lead_commission || 0;
+      programCommission.contract = prog.default_contract_commission || 0;
+      autoApprove = advInfo.auto_approve_partners !== false;
+      advCompanyName = advInfo.company_name || '';
+    } else {
+      // advertiser_id 기반 fallback (기존 하위 호환)
+      const { data: advertiser } = await admin
+        .from('advertisers')
+        .select('id, default_lead_commission, default_contract_commission, auto_approve_partners, company_name')
+        .eq('id', resolvedAdvertiserId)
+        .eq('is_public', true)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (!advertiser) {
+        return NextResponse.json({ error: '프로그램을 찾을 수 없습니다' }, { status: 404 })
+      }
+
+      programCommission.lead = advertiser.default_lead_commission || 0;
+      programCommission.contract = advertiser.default_contract_commission || 0;
+      autoApprove = advertiser.auto_approve_partners !== false;
+      advCompanyName = advertiser.company_name || '';
     }
 
-    const { data: existing } = await supabase
+    // 중복 신청 방지 — program_id 기준 먼저, fallback advertiser_id
+    let existingQuery = supabase
       .from('partner_programs')
       .select('id, status')
-      .eq('partner_id', partner.id)
-      .eq('advertiser_id', advertiser_id)
-      .maybeSingle()
+      .eq('partner_id', partner.id);
+
+    if (resolvedProgramId) {
+      existingQuery = existingQuery.eq('program_id', resolvedProgramId);
+    } else {
+      existingQuery = existingQuery.eq('advertiser_id', resolvedAdvertiserId as string);
+    }
+
+    const { data: existing } = await existingQuery.maybeSingle();
 
     if (existing) {
       return NextResponse.json(
@@ -238,20 +346,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const autoApprove = advertiser.auto_approve_partners !== false
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
+    const insertPayload: Record<string, unknown> = {
+      partner_id: partner.id,
+      advertiser_id: resolvedAdvertiserId,
+      referral_code: referralCode,
+      status: autoApprove ? 'approved' : 'pending',
+      lead_commission: programCommission.lead,
+      contract_commission: programCommission.contract,
+      ...(autoApprove ? { approved_at: new Date().toISOString() } : {}),
+    };
+
+    if (resolvedProgramId) {
+      insertPayload.program_id = resolvedProgramId;
+    }
 
     const { data: enrollment, error: insertError } = await supabase
       .from('partner_programs')
-      .insert({
-        partner_id: partner.id,
-        advertiser_id,
-        referral_code: referralCode,
-        status: autoApprove ? 'approved' : 'pending',
-        lead_commission: advertiser.default_lead_commission || 0,
-        contract_commission: advertiser.default_contract_commission || 0,
-        ...(autoApprove ? { approved_at: new Date().toISOString() } : {}),
-      })
+      .insert(insertPayload)
       .select()
       .single()
 
@@ -260,17 +373,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '참가 신청에 실패했습니다' }, { status: 500 })
     }
 
-    // 광고주 회사명 조회 후 Slack 알림 (비동기)
-    const { data: advInfo } = await admin
-      .from('advertisers')
-      .select('company_name')
-      .eq('id', advertiser_id)
-      .maybeSingle()
-
+    // Slack 알림 (비동기)
     notifyPartnerApply({
       partnerName: partner.name || '파트너',
       partnerEmail: partner.email || '',
-      companyName: advInfo?.company_name || '',
+      companyName: advCompanyName,
       autoApproved: autoApprove,
     }).catch(() => {})
 
