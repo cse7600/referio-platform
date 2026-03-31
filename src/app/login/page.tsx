@@ -171,7 +171,7 @@ export default function LoginPage() {
                     }
                     const supabase = createClient()
                     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-                      redirectTo: `${window.location.origin}/reset-password`,
+                      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
                     })
                     if (resetError) {
                       setError('메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.')

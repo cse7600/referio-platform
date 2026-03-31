@@ -19,7 +19,6 @@ function ResetPasswordForm() {
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    const code = searchParams.get('code')
     const error = searchParams.get('error')
 
     if (error) {
@@ -27,21 +26,9 @@ function ResetPasswordForm() {
       return
     }
 
-    const init = async () => {
+    // 코드 교환은 /auth/callback 서버에서 완료됨. 세션만 확인
+    const checkSession = async () => {
       const supabase = createClient()
-
-      // PKCE flow: code is appended by Supabase to our redirectTo URL
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-        if (exchangeError) {
-          setStatus('error')
-          return
-        }
-        setStatus('ready')
-        return
-      }
-
-      // No code: check if already has valid session (e.g., page refresh)
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setStatus('ready')
@@ -50,7 +37,7 @@ function ResetPasswordForm() {
       }
     }
 
-    init()
+    checkSession()
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
