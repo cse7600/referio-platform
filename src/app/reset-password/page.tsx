@@ -7,60 +7,51 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Lock, CheckCircle, AlertCircle, Loader2, Mail } from 'lucide-react'
+import { Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const linkError = searchParams.get('error')
-
   const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>('loading')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resendEmail, setResendEmail] = useState('')
-  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [cooldown, setCooldown] = useState(0)
-
-  // Cooldown timer: decrement every second, cleanup on unmount
-  useEffect(() => {
-    if (cooldown <= 0) return
-    const timer = setInterval(() => {
-      setCooldown((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0 }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [cooldown])
 
   useEffect(() => {
-    // 링크 에러가 전달된 경우 (auth/callback에서 교환 실패)
-    if (linkError === 'link_expired') {
+    const code = searchParams.get('code')
+    const error = searchParams.get('error')
+
+    if (error) {
       setStatus('error')
-      setErrorMsg('링크가 만료되었거나 이미 사용된 링크입니다. 다시 요청해주세요.')
       return
     }
 
-    // 코드 교환은 /auth/callback 서버에서 완료됨. 세션 존재 여부만 확인
-    const initialize = async () => {
-      try {
-        const supabase = createClient()
-        const { data: { user }, error } = await supabase.auth.getUser()
-        if (error || !user) {
+    const init = async () => {
+      const supabase = createClient()
+
+      // PKCE flow: code is appended by Supabase to our redirectTo URL
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeError) {
           setStatus('error')
-          setErrorMsg('링크가 만료되었거나 이미 사용된 링크입니다. 다시 요청해주세요.')
-        } else {
-          setStatus('ready')
+          return
         }
-      } catch {
+        setStatus('ready')
+        return
+      }
+
+      // No code: check if already has valid session (e.g., page refresh)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setStatus('ready')
+      } else {
         setStatus('error')
-        setErrorMsg('인증 처리 중 오류가 발생했습니다.')
       }
     }
-    initialize()
-  }, [linkError])
+
+    init()
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +74,6 @@ function ResetPasswordForm() {
       setErrorMsg('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
       setSubmitting(false)
     } else {
-      // Sign out to clear the password-reset session before redirecting
       await supabase.auth.signOut()
       setStatus('success')
     }
@@ -124,71 +114,31 @@ function ResetPasswordForm() {
             </div>
             <CardTitle className="text-2xl">비밀번호 재설정</CardTitle>
             <CardDescription>
-              {status === 'loading' && '인증 확인 중입니다...'}
+              {status === 'loading' && '인증 확인 중...'}
               {status === 'ready' && '새 비밀번호를 입력해주세요'}
               {status === 'success' && '비밀번호가 변경되었습니다'}
-              {status === 'error' && '링크를 확인해주세요'}
+              {status === 'error' && '링크가 만료되었습니다'}
             </CardDescription>
           </CardHeader>
           <CardContent>
 
-            {/* 로딩 */}
             {status === 'loading' && (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               </div>
             )}
 
-            {/* 오류 */}
             {status === 'error' && (
               <div className="space-y-4">
                 <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-700 text-sm">{errorMsg}</p>
+                  <p className="text-red-700 text-sm">
+                    링크가 만료되었거나 이미 사용된 링크입니다.<br />
+                    로그인 페이지에서 다시 요청해주세요.
+                  </p>
                 </div>
-                {resendStatus === 'sent' && cooldown > 0 ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <p className="text-green-700 text-sm">재설정 메일을 발송했습니다. 이메일을 확인해주세요.</p>
-                    </div>
-                    <p className="text-xs text-gray-400 text-center">{cooldown}초 후 다시 요청할 수 있습니다</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500">이메일을 입력하면 새 재설정 링크를 받을 수 있습니다.</p>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <Input
-                        type="email"
-                        placeholder="가입 이메일 주소 입력"
-                        value={resendEmail}
-                        onChange={(e) => setResendEmail(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <Button
-                      className="w-full bg-indigo-600 hover:bg-indigo-700"
-                      disabled={resendStatus === 'sending' || !resendEmail || cooldown > 0}
-                      onClick={async () => {
-                        setResendStatus('sending')
-                        const supabase = createClient()
-                        await supabase.auth.resetPasswordForEmail(resendEmail, {
-                          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-                        })
-                        setResendStatus('sent')
-                        setCooldown(60)
-                      }}
-                    >
-                      {resendStatus === 'sending' ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />발송 중...</>
-                      ) : cooldown > 0 ? `재발급 대기 (${cooldown}초)` : '재설정 링크 재발급'}
-                    </Button>
-                  </div>
-                )}
                 <Button
-                  className="w-full"
-                  variant="outline"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
                   onClick={() => router.push('/login')}
                 >
                   로그인 페이지로 돌아가기
@@ -196,13 +146,13 @@ function ResetPasswordForm() {
               </div>
             )}
 
-            {/* 성공 */}
             {status === 'success' && (
               <div className="space-y-4">
                 <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
                   <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <p className="text-green-700 text-sm">
-                    비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.
+                    비밀번호가 성공적으로 변경되었습니다.<br />
+                    새 비밀번호로 로그인해주세요.
                   </p>
                 </div>
                 <Button
@@ -214,7 +164,6 @@ function ResetPasswordForm() {
               </div>
             )}
 
-            {/* 비밀번호 입력 폼 */}
             {status === 'ready' && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -260,10 +209,7 @@ function ResetPasswordForm() {
                   disabled={submitting}
                 >
                   {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      변경 중...
-                    </>
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />변경 중...</>
                   ) : '비밀번호 변경'}
                 </Button>
               </form>

@@ -5,21 +5,12 @@ import { sendWelcomeEmail } from '@/lib/email'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next')
   const isSignup = searchParams.get('signup') === 'true'
   const nameParam = searchParams.get('name')
 
   if (code) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    // 비밀번호 재설정 플로우: 코드 교환 성공 시 바로 리다이렉트 (신규 유저 처리 불필요)
-    if (next === '/reset-password') {
-      if (error) {
-        return NextResponse.redirect(`${origin}/reset-password?error=link_expired`)
-      }
-      return NextResponse.redirect(`${origin}/reset-password`)
-    }
 
     if (!error && data.user) {
       // user metadata에서 이름 가져오기 (URL 파라미터보다 우선)
