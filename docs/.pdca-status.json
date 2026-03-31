@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-30T09:26:28.246Z",
+  "lastUpdated": "2026-03-31T03:30:14.557Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -70,7 +70,8 @@
     "export",
     "impersonate",
     "preview-email",
-    "[programId]"
+    "[programId]",
+    "send-test-email"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -213,7 +214,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-03-30T08:14:54.491Z"
+        "lastUpdated": "2026-03-31T03:30:14.557Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/settlements/page.tsx"
     },
@@ -978,6 +979,19 @@
         "lastUpdated": "2026-03-30T09:26:19.076Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/programs/[programId]/route.ts"
+    },
+    "send-test-email": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T03:29:40.734Z",
+        "lastUpdated": "2026-03-31T03:29:40.734Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/settlements/send-test-email/route.ts"
     }
   },
   "pipeline": {
@@ -988,7 +1002,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-30T09:26:28.246Z"
+    "lastActivity": "2026-03-31T03:30:14.557Z"
   },
   "history": [
     {
@@ -6124,6 +6138,30 @@
     {
       "timestamp": "2026-03-30T09:26:28.245Z",
       "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T03:29:40.734Z",
+      "feature": "send-test-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T03:29:50.335Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T03:30:00.815Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T03:30:14.557Z",
+      "feature": "settlements",
       "phase": "do",
       "action": "updated"
     }
