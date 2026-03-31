@@ -26,6 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+- Phase 15 added: CRM 이메일 구조 완성 — 파트너 거절 이메일 추가, 전체 수신거부 링크 삽입, 1일 발송 쿨다운 규칙 설계
+
 - Phase 12: 채널별 링크 UI — 파트너 프로그램 상세 페이지에서 채널별 링크 표시
 - Phase 12: tracking_link_url 있는 파트너는 해당 URL이 추천 URL로 우선 표시
 - Phase 13: 키퍼메이트 96명 비밀번호 설정 이메일 발송 (scripts/migrate-keepermate-auth.js 존재)

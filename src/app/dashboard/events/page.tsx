@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useProgram } from '../ProgramContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -92,6 +93,7 @@ function getDaysLeft(endDate: string | null): number | null {
 
 export default function EventsPage() {
   const { selectedProgram, loading: programLoading } = useProgram()
+  const router = useRouter()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [participating, setParticipating] = useState<string | null>(null)
@@ -230,8 +232,11 @@ export default function EventsPage() {
                 className="rounded-xl border border-slate-200 overflow-hidden shadow-sm transition-all"
                 style={{ backgroundColor: bgColor }}
               >
-                {/* Banner row */}
-                <div className="flex items-stretch min-h-[128px]">
+                {/* Banner row — click to open detail page */}
+                <div
+                  className="flex items-stretch min-h-[128px] cursor-pointer"
+                  onClick={() => router.push(`/dashboard/events/${event.id}`)}
+                >
                   {/* Left: text content */}
                   <div className="flex-1 px-5 py-4 flex flex-col justify-between">
                     <div>
@@ -285,11 +290,12 @@ export default function EventsPage() {
                         <Button
                           size="sm"
                           className={config.btnColor}
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation()
                             event.promotion_type === 'post_verification'
                               ? openPostModal(event.id)
                               : handleParticipate(event.id)
-                          }
+                          }}
                           disabled={participating === event.id}
                         >
                           {participating === event.id ? '처리 중...' : '신청하기'}
@@ -318,7 +324,10 @@ export default function EventsPage() {
                 {event.description && (
                   <>
                     <button
-                      onClick={() => setExpanded(isExpanded ? null : event.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setExpanded(isExpanded ? null : event.id)
+                      }}
                       className="w-full flex items-center gap-1 px-5 py-2 text-xs text-slate-500 hover:text-slate-800 border-t border-black/5 transition-colors bg-black/[0.02]"
                     >
                       {isExpanded ? (

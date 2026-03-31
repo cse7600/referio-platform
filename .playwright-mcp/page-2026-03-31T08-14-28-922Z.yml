@@ -1,0 +1,81 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - link "R Referio" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e10]: R
+          - generic [ref=e11]: Referio
+        - generic [ref=e72]:
+          - paragraph [ref=e73]: 프로그램
+          - combobox [ref=e74]:
+            - generic: Referio
+            - img
+        - navigation [ref=e13]:
+          - link "홈" [ref=e156] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e157]
+            - text: 홈
+          - link "프로그램" [ref=e160] [cursor=pointer]:
+            - /url: /dashboard/programs
+            - img [ref=e161]
+            - text: 프로그램
+          - link "이벤트" [ref=e164] [cursor=pointer]:
+            - /url: /dashboard/events
+            - img [ref=e165]
+            - text: 이벤트
+          - link "고객" [ref=e169] [cursor=pointer]:
+            - /url: /dashboard/customers
+            - img [ref=e170]
+            - text: 고객
+          - link "지급" [ref=e175] [cursor=pointer]:
+            - /url: /dashboard/settlements
+            - img [ref=e176]
+            - text: 지급
+          - link "활동 지원" [ref=e179] [cursor=pointer]:
+            - /url: /dashboard/activity
+            - img [ref=e180]
+            - text: 활동 지원
+          - link "문의" [ref=e183] [cursor=pointer]:
+            - /url: /dashboard/support
+            - img [ref=e184]
+            - text: 문의
+          - link "활동정보" [ref=e186] [cursor=pointer]:
+            - /url: /dashboard/profile
+            - img [ref=e187]
+            - text: 활동정보
+        - button "최 최영민" [ref=e109] [cursor=pointer]:
+          - generic [ref=e50]:
+            - generic [ref=e52]: 최
+            - generic [ref=e53]: 최영민
+          - img
+    - main [ref=e54]:
+      - generic [ref=e190]:
+        - button "이벤트 목록" [ref=e191]:
+          - img [ref=e192]
+          - text: 이벤트 목록
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - generic [ref=e197]:
+              - generic [ref=e199]: 게시물 인증
+              - heading "블로그 포스팅 인증 이벤트" [level=1] [ref=e200]
+              - paragraph [ref=e201]: 네이버페이 5000원 상품권
+            - generic [ref=e202]:
+              - generic [ref=e203]:
+                - img [ref=e204]
+                - generic [ref=e206]: 2026년 3월 31일 ~ 2026년 4월 14일
+                - generic [ref=e207]: D-14
+              - button "신청하기" [ref=e208] [cursor=pointer]
+          - generic [ref=e211]: 📸
+        - generic [ref=e212]:
+          - heading "이벤트 내용" [level=2] [ref=e213]
+          - paragraph [ref=e216]: 블로그에 제품 리뷰를 작성하고 인증해주세요!
+        - button "신청하기" [ref=e218] [cursor=pointer]
+    - button "문의하기" [ref=e59]:
+      - img [ref=e60]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e67] [cursor=pointer]:
+    - img [ref=e68]
+  - alert [ref=e71]

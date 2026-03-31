@@ -1,0 +1,119 @@
+- generic:
+  - link:
+    - /url: https://puzl.co.kr
+    - text: Powered by 퍼즐코퍼레이션
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /dashboard
+              - generic:
+                - generic: R
+              - generic: Referio
+          - generic:
+            - generic:
+              - paragraph: 프로그램
+              - combobox:
+                - generic: Referio
+                - img
+          - navigation:
+            - link:
+              - /url: /dashboard
+              - img
+              - text: 홈
+            - link:
+              - /url: /dashboard/programs
+              - img
+              - text: 프로그램
+            - link:
+              - /url: /dashboard/events
+              - img
+              - text: 이벤트
+            - link:
+              - /url: /dashboard/customers
+              - img
+              - text: 고객
+            - link:
+              - /url: /dashboard/settlements
+              - img
+              - text: 지급
+            - link:
+              - /url: /dashboard/activity
+              - img
+              - text: 활동 지원
+            - link:
+              - /url: /dashboard/support
+              - img
+              - text: 문의
+            - link:
+              - /url: /dashboard/profile
+              - img
+              - text: 활동정보
+          - generic:
+            - button:
+              - generic:
+                - generic:
+                  - generic: 최
+                - generic: 최영민
+              - img
+      - main:
+        - generic:
+          - generic:
+            - button:
+              - img
+              - text: 이벤트 목록
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 게시물 인증
+                    - heading [level=1]: 블로그 포스팅 인증 이벤트
+                    - paragraph: 네이버페이 5000원 상품권
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: 2026년 3월 31일 ~ 2026년 4월 14일
+                      - generic: D-14
+                    - button: 신청하기
+                - generic:
+                  - generic:
+                    - generic: 📸
+            - generic:
+              - heading [level=2]: 이벤트 내용
+              - generic:
+                - generic:
+                  - paragraph: 블로그에 제품 리뷰를 작성하고 인증해주세요!
+            - generic:
+              - button: 신청하기
+      - button:
+        - img
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e67] [cursor=pointer]:
+    - img [ref=e68]
+  - alert
+  - dialog "게시물 인증 제출" [ref=e220]:
+    - generic [ref=e221]:
+      - heading "게시물 인증 제출" [level=2] [ref=e222]
+      - paragraph [ref=e223]: 작성하신 게시물 URL을 입력해주세요. 검토 후 리워드가 지급됩니다.
+    - generic [ref=e224]:
+      - generic [ref=e225]:
+        - generic [ref=e226]:
+          - text: 게시물 URL
+          - generic [ref=e227]: "*"
+        - textbox "게시물 URL *" [active] [ref=e228]:
+          - /placeholder: https://blog.naver.com/...
+      - generic [ref=e229]:
+        - generic [ref=e230]:
+          - text: 추가 메모
+          - generic [ref=e231]: (선택)
+        - textbox "추가 메모 (선택)" [ref=e232]:
+          - /placeholder: 게시물 관련 추가 설명을 입력하세요
+      - generic [ref=e233]:
+        - button "취소" [ref=e234] [cursor=pointer]
+        - button "제출하기" [ref=e235] [cursor=pointer]
+    - button "Close" [ref=e236]:
+      - img
+      - generic [ref=e237]: Close

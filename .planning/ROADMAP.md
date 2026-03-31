@@ -56,5 +56,15 @@
 1. git push 완료
 2. Vercel 빌드 성공
 
+### Phase 15: CRM 이메일 구조 완성 — 파트너 거절 이메일 추가, 전체 수신거부 링크 삽입, 1일 발송 쿨다운 규칙 설계
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 14
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 15 to break down)
+
 ---
 *Created: 2026-03-31*

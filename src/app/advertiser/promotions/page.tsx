@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import type { JSONContent } from '@tiptap/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Plus, X, Pencil, Users, Eye, EyeOff, Camera, Link, ExternalLink, Gift, Trophy, Zap, Image } from 'lucide-react'
+
+const TiptapEditor = dynamic(() => import('@/components/editor/TiptapEditor'), { ssr: false })
 
 interface Promotion {
   id: string
@@ -426,7 +429,7 @@ export default function PromotionsPage() {
                           </a>
                         )}
                         {promo.description && (
-                          <span className="text-slate-400 line-clamp-1 max-w-xs">{promo.description}</span>
+                          <span className="text-slate-400 text-xs">상세 내용 있음</span>
                         )}
                       </div>
                       <div className="flex gap-2 shrink-0 flex-wrap justify-end">
@@ -648,11 +651,13 @@ function EventFormFields({
       {/* Description */}
       <div className="space-y-2 md:col-span-2">
         <Label>상세 내용</Label>
-        <Textarea
-          value={form.description}
-          onChange={(e) => setField('description', e.target.value)}
-          placeholder="이벤트 상세 내용을 입력하세요. 참가 조건, 지급 기준 등을 명확히 작성해주세요."
-          rows={6}
+        <TiptapEditor
+          content={(() => {
+            if (!form.description) return null;
+            try { return JSON.parse(form.description) as JSONContent; } catch { return null; }
+          })()}
+          onChange={(json) => setField('description', JSON.stringify(json))}
+          placeholder="이벤트 상세 내용을 입력하세요. 이미지 삽입, 텍스트 서식 등을 활용하세요."
         />
       </div>
 

@@ -1,0 +1,206 @@
+- generic [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e18]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: 🏢
+        - generic [ref=e22]:
+          - generic [ref=e23]: 주식회사 퍼즐코퍼레이션
+          - generic [ref=e24]: 광고주 대시보드
+      - navigation [ref=e25]:
+        - button "📊 대시보드" [ref=e26]:
+          - generic [ref=e27]: 📊
+          - generic [ref=e28]: 대시보드
+        - button "👥 파트너 관리" [ref=e29]:
+          - generic [ref=e30]: 👥
+          - generic [ref=e31]: 파트너 관리
+        - button "📋 고객 관리" [ref=e32]:
+          - generic [ref=e33]: 📋
+          - generic [ref=e34]: 고객 관리
+        - button "💰 정산 관리" [ref=e35]:
+          - generic [ref=e36]: 💰
+          - generic [ref=e37]: 정산 관리
+        - button "📢 캠페인 설정" [ref=e38]:
+          - generic [ref=e39]: 📢
+          - generic [ref=e40]: 캠페인 설정
+        - button "🎉 이벤트" [ref=e41]:
+          - generic [ref=e42]: 🎉
+          - generic [ref=e43]: 이벤트
+        - button "📢 파트너 활동 지원" [ref=e44]:
+          - generic [ref=e45]: 📢
+          - generic [ref=e46]: 파트너 활동 지원
+        - button "💬 파트너 메시지" [ref=e47]:
+          - generic [ref=e48]: 💬
+          - generic [ref=e49]: 파트너 메시지
+        - button "📩 문의/피드백" [ref=e50]:
+          - generic [ref=e51]: 📩
+          - generic [ref=e52]: 문의/피드백
+        - button "📄 리포트" [ref=e53]:
+          - generic [ref=e54]: 📄
+          - generic [ref=e55]: 리포트
+        - button "⚙️ 설정" [ref=e56]:
+          - generic [ref=e57]: ⚙️
+          - generic [ref=e58]: 설정
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: 로그인
+          - generic [ref=e62]: puzlcorp
+        - button "로그아웃" [ref=e63] [cursor=pointer]
+    - generic [ref=e64]:
+      - banner [ref=e65]:
+        - button "☰" [ref=e66]
+        - generic [ref=e68]: 주식회사 퍼즐코퍼레이션
+      - main [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - heading "이벤트 관리" [level=1] [ref=e73]
+              - paragraph [ref=e74]: 파트너에게 공지할 이벤트/프로모션을 관리합니다
+            - button "이벤트 생성" [ref=e75] [cursor=pointer]:
+              - img
+              - text: 이벤트 생성
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - generic [ref=e131]: 새 이벤트 생성
+                - generic [ref=e132]: 파트너 대시보드에 표시될 이벤트를 만드세요
+              - button [ref=e133] [cursor=pointer]:
+                - img
+            - generic [ref=e134]:
+              - generic [ref=e135]:
+                - generic [ref=e136]:
+                  - generic [ref=e137]: 이벤트 제목 *
+                  - textbox "3월 추천 왕 선발 이벤트" [ref=e138]: 첫 활동 인증 이벤트 🎉
+                - generic [ref=e139]:
+                  - generic [ref=e140]: 이벤트 유형
+                  - combobox [ref=e141]:
+                    - option "이벤트"
+                    - option "보너스"
+                    - option "랭킹"
+                    - option "게시물 인증" [selected]
+                - generic [ref=e142]:
+                  - generic [ref=e143]: 리워드 설명
+                  - textbox "스타벅스 아메리카노 쿠폰" [ref=e144]: 스타벅스 e카드 1만원권 ☕
+                - generic [ref=e145]:
+                  - generic [ref=e146]: 시작일
+                  - textbox [ref=e147]: 2026-04-01
+                - generic [ref=e148]:
+                  - generic [ref=e149]: 종료일
+                  - textbox [ref=e150]: 2026-04-30
+                - generic [ref=e151]:
+                  - generic [ref=e152]: 상세 내용
+                  - generic [ref=e153]:
+                    - generic [ref=e154]:
+                      - button "Bold" [ref=e155]:
+                        - img [ref=e156]
+                      - button "Italic" [ref=e158]:
+                        - img [ref=e159]
+                      - button "Heading 1" [ref=e162]:
+                        - img [ref=e163]
+                      - button "Heading 2" [ref=e165]:
+                        - img [ref=e166]
+                      - button "Bullet List" [ref=e169]:
+                        - img [ref=e170]
+                      - button "Ordered List" [ref=e171]:
+                        - img [ref=e172]
+                      - button "Image" [ref=e176]:
+                        - img [ref=e177]
+                    - paragraph [ref=e183]
+                - generic [ref=e223]:
+                  - paragraph [ref=e224]: 게시물 인증 이벤트 안내
+                  - paragraph [ref=e225]: 파트너가 블로그/SNS 게시물 링크와 메모를 입력하여 참여합니다. 파트너 대시보드에 제출 양식이 자동으로 표시됩니다.
+                - generic [ref=e184]:
+                  - paragraph [ref=e185]:
+                    - img [ref=e186]
+                    - text: 배너 설정 (선택 사항)
+                  - generic [ref=e190]:
+                    - generic [ref=e191]:
+                      - generic [ref=e192]: 배너 이미지 URL
+                      - textbox "https://example.com/banner.png" [ref=e193]
+                      - paragraph [ref=e194]: 이미지가 없으면 이벤트 유형 이모지가 표시됩니다
+                    - generic [ref=e195]:
+                      - generic [ref=e196]: 배너 배경색
+                      - generic [ref=e197]:
+                        - textbox [ref=e198] [cursor=pointer]: "#e8f4fd"
+                        - textbox "#EEF2FF" [ref=e199]: "#E8F4FD"
+                    - generic [ref=e200]:
+                      - generic [ref=e201]:
+                        - img [ref=e202]
+                        - text: 이벤트 링크 URL
+                      - textbox "https://... (더 알아보기 링크)" [ref=e206]
+                - generic [ref=e207]:
+                  - paragraph [ref=e208]: 미리보기 — 파트너에게 이렇게 보입니다
+                  - generic [ref=e209]:
+                    - generic [ref=e210]:
+                      - generic [ref=e212]:
+                        - img [ref=e226]
+                        - text: 게시물 인증
+                      - paragraph [ref=e215]: 첫 활동 인증 이벤트 🎉
+                      - paragraph [ref=e229]: "리워드: 스타벅스 e카드 1만원권 ☕"
+                    - generic [ref=e216]: 📸
+                - generic [ref=e217]:
+                  - switch [checked] [ref=e218]
+                  - generic [ref=e219]: 파트너에게 공개
+              - generic [ref=e220]:
+                - button "이벤트 생성" [ref=e221] [cursor=pointer]
+                - button "취소" [ref=e222] [cursor=pointer]
+          - generic [ref=e76]:
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]:
+                  - generic [ref=e81]:
+                    - generic [ref=e82]:
+                      - img
+                      - text: 게시물 인증
+                    - generic [ref=e83]: 진행 중
+                  - heading "블로그 포스팅 인증 이벤트" [level=3] [ref=e84]
+                  - paragraph [ref=e85]: "리워드: 네이버페이 5000원 상품권"
+                - generic [ref=e86]: 📸
+              - generic [ref=e87]:
+                - generic [ref=e88]:
+                  - generic [ref=e89]: 2026-03-31 ~ 2026-04-14
+                  - generic [ref=e90]:
+                    - img [ref=e91]
+                    - text: 참여자 없음
+                  - generic [ref=e96]: 상세 내용 있음
+                - generic [ref=e97]:
+                  - button "공개" [ref=e98] [cursor=pointer]:
+                    - img
+                    - text: 공개
+                  - button "수정" [ref=e99] [cursor=pointer]:
+                    - img
+                    - text: 수정
+                  - button "종료" [ref=e100] [cursor=pointer]
+            - generic [ref=e102]:
+              - generic [ref=e103]:
+                - generic [ref=e104]:
+                  - generic [ref=e105]:
+                    - generic [ref=e106]:
+                      - img
+                      - text: 이벤트
+                    - generic [ref=e107]: 진행 중
+                  - heading "테스트 이벤트 - 신규 배너 UI" [level=3] [ref=e108]
+                  - paragraph [ref=e109]: "리워드: 스타벅스 아메리카노 쿠폰"
+                - generic [ref=e110]: 🎉
+              - generic [ref=e111]:
+                - generic [ref=e112]:
+                  - generic [ref=e113]: 2026-03-31 ~ 2026-04-14
+                  - generic [ref=e114]:
+                    - img [ref=e115]
+                    - text: 참여자 없음
+                  - generic [ref=e120]: 상세 내용 있음
+                - generic [ref=e121]:
+                  - button "공개" [ref=e122] [cursor=pointer]:
+                    - img
+                    - text: 공개
+                  - button "수정" [ref=e123] [cursor=pointer]:
+                    - img
+                    - text: 수정
+                  - button "종료" [ref=e124] [cursor=pointer]
+    - button "문의하기" [ref=e125]:
+      - img [ref=e126]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e13] [cursor=pointer]:
+    - img [ref=e14]
+  - alert [ref=e17]

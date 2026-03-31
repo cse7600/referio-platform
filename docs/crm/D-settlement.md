@@ -94,6 +94,12 @@
 **Referio 팀**
 
 ---
+**[푸터]**
+Referio | [개인정보처리방침](https://referio.kr/privacy)  
+본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.  
+주식회사 퍼즐 | 서울특별시 | noreply@updates.puzl.co.kr
+
+---
 
 ### CTA 버튼 텍스트
 
@@ -203,6 +209,12 @@
 빠르게 등록하실수록 더 빨리 받으실 수 있습니다.
 
 **Referio 팀**
+
+---
+**[푸터]**
+Referio | [개인정보처리방침](https://referio.kr/privacy)  
+본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.  
+주식회사 퍼즐 | 서울특별시 | noreply@updates.puzl.co.kr
 
 ---
 
@@ -320,6 +332,12 @@
 
 이번 정산도 수고 많으셨습니다,
 **Referio 팀**
+
+---
+**[푸터]**
+Referio | [개인정보처리방침](https://referio.kr/privacy)  
+본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.  
+주식회사 퍼즐 | 서울특별시 | noreply@updates.puzl.co.kr
 
 ---
 

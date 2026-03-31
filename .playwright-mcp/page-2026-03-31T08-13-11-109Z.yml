@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e5]:
+    - generic [ref=e6]: ⏳
+    - paragraph [ref=e7]: 로딩 중...
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e13] [cursor=pointer]:
+    - img [ref=e14]
+  - alert [ref=e17]
