@@ -1086,189 +1086,231 @@ console.log('Referio 응답:', JSON.stringify(result));`
             </CardContent>
           </Card>
 
-          {/* 프로그램 편집 Sheet */}
+          {/* 프로그램 편집 Sheet — 리디자인 */}
           <Sheet open={programSheetOpen} onOpenChange={setProgramSheetOpen}>
-            <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
-              <SheetHeader className="mb-6">
-                <SheetTitle>
-                  {programSheetMode === 'create' ? '새 프로그램 추가' : '프로그램 편집'}
-                </SheetTitle>
-                <SheetDescription>
-                  프로그램 정보를 입력하세요. 공개 설정 시 파트너 마켓플레이스에 노출됩니다.
-                </SheetDescription>
+            <SheetContent side="right" className="flex flex-col w-full sm:max-w-2xl p-0 gap-0">
+              {/* 스티키 헤더 */}
+              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <SheetTitle className="text-lg">
+                      {programSheetMode === 'create' ? '새 프로그램 추가' : '프로그램 편집'}
+                    </SheetTitle>
+                    <SheetDescription className="mt-0.5">
+                      {programSheetMode === 'create'
+                        ? '새 어필리에이트 프로그램을 설정하세요'
+                        : programName || '프로그램 정보를 수정합니다'}
+                    </SheetDescription>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 shrink-0">
+                    <span className="text-xs text-slate-500">마켓플레이스</span>
+                    <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                    <span className={`text-xs font-semibold ${isPublic ? 'text-green-600' : 'text-slate-400'}`}>
+                      {isPublic ? '공개' : '비공개'}
+                    </span>
+                  </div>
+                </div>
               </SheetHeader>
 
-              <div className="space-y-5 pb-8">
-                {/* 공개 여부 */}
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-sm">마켓플레이스 공개</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      공개 시 모든 파트너가 이 프로그램을 찾고 신청할 수 있습니다
-                    </p>
-                  </div>
-                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-                </div>
+              {/* 탭 + 스크롤 영역 */}
+              <Tabs defaultValue="basic" className="flex flex-col flex-1 min-h-0">
+                <TabsList className="shrink-0 w-full rounded-none border-b justify-start h-11 bg-transparent px-6 gap-1">
+                  <TabsTrigger
+                    value="basic"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:shadow-none px-4 h-full"
+                  >
+                    기본 정보
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="guide"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent data-[state=active]:text-indigo-600 data-[state=active]:shadow-none px-4 h-full"
+                  >
+                    파트너 가이드
+                  </TabsTrigger>
+                </TabsList>
 
-                {/* 기본 정보 */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label>프로그램 이름 <span className="text-red-500">*</span></Label>
-                    <Input
-                      value={programName}
-                      onChange={(e) => setProgramName(e.target.value)}
-                      placeholder="예: B2B 어필리에이트"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>업종 카테고리</Label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <option value="">선택 안함</option>
-                      <option value="security">보안/CCTV</option>
-                      <option value="telecom">인터넷/통신</option>
-                      <option value="insurance">보험/금융</option>
-                      <option value="education">교육</option>
-                      <option value="beauty">뷰티/건강</option>
-                      <option value="shopping">쇼핑</option>
-                      <option value="realestate">부동산</option>
-                      <option value="automobile">자동차</option>
-                      <option value="travel">여행/숙박</option>
-                      <option value="pet">반려동물</option>
-                      <option value="food">식품</option>
-                      <option value="electronics">가전/IT</option>
-                      <option value="etc">기타</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>프로그램 설명</Label>
-                  <Textarea
-                    value={programDescription}
-                    onChange={(e) => setProgramDescription(e.target.value)}
-                    placeholder="프로그램에 대한 간단한 소개. 마켓플레이스 카드와 상세 페이지에 노출됩니다."
-                    rows={3}
-                  />
-                </div>
-
-                {/* 수수료 */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label>유효 DB 단가 (원)</Label>
-                    <Input
-                      type="number"
-                      value={defaultLeadCommission}
-                      onChange={(e) => setDefaultLeadCommission(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>계약 단가 (원)</Label>
-                    <Input
-                      type="number"
-                      value={defaultContractCommission}
-                      onChange={(e) => setDefaultContractCommission(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                {/* URL */}
-                <div className="space-y-1.5">
-                  <Label>홈페이지 URL</Label>
-                  <Input
-                    value={homepageUrl}
-                    onChange={(e) => setHomepageUrl(e.target.value)}
-                    placeholder="https://www.example.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>추천 랜딩 URL</Label>
-                  <Input
-                    value={landingUrl}
-                    onChange={(e) => setLandingUrl(e.target.value)}
-                    placeholder="https://www.example.com/landing"
-                  />
-                  <p className="text-xs text-slate-500">
-                    파트너 추천 링크가 이 URL로 생성됩니다. 비워두면 기본 문의 페이지가 사용됩니다.
-                  </p>
-                </div>
-
-                {/* 파트너 가이드 */}
-                <div className="border-t pt-5">
-                  <h3 className="font-semibold text-sm mb-1">파트너 가이드</h3>
-                  <p className="text-xs text-slate-500 mb-4">
-                    파트너 상세 페이지에 표시되는 활동 안내입니다.
-                  </p>
-                  <div className="space-y-3">
-                    {/* 활동 가이드 */}
-                    <div className="rounded-lg border border-blue-100 bg-blue-50/40 overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-blue-100">
-                        <p className="text-xs font-semibold text-blue-800">활동 가이드</p>
-                        {!activityGuide && (
-                          <button
-                            type="button"
-                            onClick={() => setActivityGuide('1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통해 상담 신청이 들어오면 유효 DB로 인정됩니다.\n3. 실제 계약이 체결되면 계약 커미션이 추가로 지급됩니다.')}
-                            className="text-xs text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded px-2 py-1"
-                          >
-                            템플릿
-                          </button>
-                        )}
+                {/* 탭 1: 기본 정보 */}
+                <TabsContent value="basic" className="flex-1 overflow-y-auto px-6 py-5 mt-0 space-y-6">
+                  {/* 프로그램 기본 정보 */}
+                  <div className="space-y-4">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">기본 정보</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label>프로그램 이름 <span className="text-red-500">*</span></Label>
+                        <Input
+                          value={programName}
+                          onChange={(e) => setProgramName(e.target.value)}
+                          placeholder="예: B2B 어필리에이트"
+                        />
                       </div>
-                      <div className="p-2.5">
-                        <Textarea value={activityGuide} onChange={(e) => setActivityGuide(e.target.value)} rows={4} className="bg-white text-sm" />
+                      <div className="space-y-1.5">
+                        <Label>업종 카테고리</Label>
+                        <Select value={category || '_none'} onValueChange={(v) => setCategory(v === '_none' ? '' : v)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="선택 안함" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="_none">선택 안함</SelectItem>
+                            <SelectItem value="security">보안/CCTV</SelectItem>
+                            <SelectItem value="telecom">인터넷/통신</SelectItem>
+                            <SelectItem value="insurance">보험/금융</SelectItem>
+                            <SelectItem value="education">교육</SelectItem>
+                            <SelectItem value="beauty">뷰티/건강</SelectItem>
+                            <SelectItem value="shopping">쇼핑</SelectItem>
+                            <SelectItem value="realestate">부동산</SelectItem>
+                            <SelectItem value="automobile">자동차</SelectItem>
+                            <SelectItem value="travel">여행/숙박</SelectItem>
+                            <SelectItem value="pet">반려동물</SelectItem>
+                            <SelectItem value="food">식품</SelectItem>
+                            <SelectItem value="electronics">가전/IT</SelectItem>
+                            <SelectItem value="etc">기타</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    {/* 콘텐츠 소스 */}
-                    <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-indigo-100">
-                        <p className="text-xs font-semibold text-indigo-800">콘텐츠 소스</p>
-                        {!contentSources && (
-                          <button type="button" onClick={() => setContentSources('- 공식 브로슈어: https://\n- 제품 이미지 모음: https://\n- 홍보 영상 링크: https://')} className="text-xs text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 rounded px-2 py-1">템플릿</button>
-                        )}
-                      </div>
-                      <div className="p-2.5">
-                        <Textarea value={contentSources} onChange={(e) => setContentSources(e.target.value)} rows={3} className="bg-white text-sm" />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label>프로그램 설명</Label>
+                      <Textarea
+                        value={programDescription}
+                        onChange={(e) => setProgramDescription(e.target.value)}
+                        placeholder="프로그램에 대한 간단한 소개. 마켓플레이스 카드와 상세 페이지에 노출됩니다."
+                        rows={3}
+                      />
                     </div>
-                    {/* 금지 활동 */}
-                    <div className="rounded-lg border border-red-100 bg-red-50/40 overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-red-100">
-                        <p className="text-xs font-semibold text-red-800">금지 활동</p>
-                        {!prohibitedActivities && (
-                          <button type="button" onClick={() => setProhibitedActivities('- 허위/과장 광고 금지\n- 스팸 문자·메일 발송 금지\n- 타사 비방 금지\n- 개인정보 무단 수집 금지')} className="text-xs text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded px-2 py-1">템플릿</button>
-                        )}
+                  </div>
+
+                  {/* 수수료 설정 */}
+                  <div className="space-y-4 pt-2 border-t">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider pt-2">수수료 설정</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label>유효 DB 단가</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₩</span>
+                          <Input
+                            type="number"
+                            className="pl-7"
+                            value={defaultLeadCommission}
+                            onChange={(e) => setDefaultLeadCommission(e.target.value)}
+                            placeholder="0"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-400">유효 DB 인정 시 파트너 지급</p>
                       </div>
-                      <div className="p-2.5">
-                        <Textarea value={prohibitedActivities} onChange={(e) => setProhibitedActivities(e.target.value)} rows={3} className="bg-white text-sm" />
-                      </div>
-                    </div>
-                    {/* 유의 사항 */}
-                    <div className="rounded-lg border border-amber-100 bg-amber-50/40 overflow-hidden">
-                      <div className="flex items-center justify-between px-3 py-2.5 border-b border-amber-100">
-                        <p className="text-xs font-semibold text-amber-800">유의 사항</p>
-                        {!precautions && (
-                          <button type="button" onClick={() => setPrecautions('- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.\n- 허위 DB 발생 시 해당 건은 차감 처리됩니다.')} className="text-xs text-amber-600 border border-amber-200 bg-white hover:bg-amber-50 rounded px-2 py-1">템플릿</button>
-                        )}
-                      </div>
-                      <div className="p-2.5">
-                        <Textarea value={precautions} onChange={(e) => setPrecautions(e.target.value)} rows={3} className="bg-white text-sm" />
+                      <div className="space-y-1.5">
+                        <Label>계약 단가</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₩</span>
+                          <Input
+                            type="number"
+                            className="pl-7"
+                            value={defaultContractCommission}
+                            onChange={(e) => setDefaultContractCommission(e.target.value)}
+                            placeholder="0"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-400">계약 완료 시 파트너 지급</p>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* 저장 버튼 */}
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleProgramSheetSave} disabled={programSaving} className="flex-1">
-                    {programSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />저장 중...</> : programSheetMode === 'create' ? '프로그램 추가' : '변경사항 저장'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setProgramSheetOpen(false)}>취소</Button>
-                </div>
+                  {/* 링크 설정 */}
+                  <div className="space-y-4 pt-2 border-t">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider pt-2">링크</p>
+                    <div className="space-y-1.5">
+                      <Label>홈페이지 URL</Label>
+                      <Input
+                        value={homepageUrl}
+                        onChange={(e) => setHomepageUrl(e.target.value)}
+                        placeholder="https://www.example.com"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>추천 랜딩 URL</Label>
+                      <Input
+                        value={landingUrl}
+                        onChange={(e) => setLandingUrl(e.target.value)}
+                        placeholder="https://www.example.com/landing"
+                      />
+                      <p className="text-xs text-slate-500">
+                        파트너 추천 링크가 이 URL로 생성됩니다. 비워두면 기본 문의 페이지가 사용됩니다.
+                      </p>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* 탭 2: 파트너 가이드 */}
+                <TabsContent value="guide" className="flex-1 overflow-y-auto px-6 py-5 mt-0 space-y-3">
+                  <p className="text-xs text-slate-500 mb-1">파트너 상세 페이지에 표시되는 활동 안내입니다.</p>
+                  {/* 활동 가이드 */}
+                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-blue-100">
+                      <p className="text-xs font-semibold text-blue-800">활동 가이드</p>
+                      {!activityGuide && (
+                        <button
+                          type="button"
+                          onClick={() => setActivityGuide('1. 블로그, SNS 등에 제품/서비스를 소개해주세요.\n2. 추천 링크를 통해 상담 신청이 들어오면 유효 DB로 인정됩니다.\n3. 실제 계약이 체결되면 계약 커미션이 추가로 지급됩니다.')}
+                          className="text-xs text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded px-2 py-1"
+                        >
+                          템플릿
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <Textarea value={activityGuide} onChange={(e) => setActivityGuide(e.target.value)} rows={4} className="bg-white text-sm" />
+                    </div>
+                  </div>
+                  {/* 콘텐츠 소스 */}
+                  <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-indigo-100">
+                      <p className="text-xs font-semibold text-indigo-800">콘텐츠 소스</p>
+                      {!contentSources && (
+                        <button type="button" onClick={() => setContentSources('- 공식 브로슈어: https://\n- 제품 이미지 모음: https://\n- 홍보 영상 링크: https://')} className="text-xs text-indigo-600 border border-indigo-200 bg-white hover:bg-indigo-50 rounded px-2 py-1">템플릿</button>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <Textarea value={contentSources} onChange={(e) => setContentSources(e.target.value)} rows={3} className="bg-white text-sm" />
+                    </div>
+                  </div>
+                  {/* 금지 활동 */}
+                  <div className="rounded-lg border border-red-100 bg-red-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-red-100">
+                      <p className="text-xs font-semibold text-red-800">금지 활동</p>
+                      {!prohibitedActivities && (
+                        <button type="button" onClick={() => setProhibitedActivities('- 허위/과장 광고 금지\n- 스팸 문자·메일 발송 금지\n- 타사 비방 금지\n- 개인정보 무단 수집 금지')} className="text-xs text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded px-2 py-1">템플릿</button>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <Textarea value={prohibitedActivities} onChange={(e) => setProhibitedActivities(e.target.value)} rows={3} className="bg-white text-sm" />
+                    </div>
+                  </div>
+                  {/* 유의 사항 */}
+                  <div className="rounded-lg border border-amber-100 bg-amber-50/40 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-amber-100">
+                      <p className="text-xs font-semibold text-amber-800">유의 사항</p>
+                      {!precautions && (
+                        <button type="button" onClick={() => setPrecautions('- 중복 DB는 최초 접수 건만 인정됩니다.\n- 정산은 매월 말 마감, 익월 15일 지급됩니다.\n- 허위 DB 발생 시 해당 건은 차감 처리됩니다.')} className="text-xs text-amber-600 border border-amber-200 bg-white hover:bg-amber-50 rounded px-2 py-1">템플릿</button>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <Textarea value={precautions} onChange={(e) => setPrecautions(e.target.value)} rows={3} className="bg-white text-sm" />
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {/* 스티키 푸터 */}
+              <div className="shrink-0 border-t bg-white px-6 py-4 flex gap-3">
+                <Button
+                  onClick={handleProgramSheetSave}
+                  disabled={programSaving}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {programSaving
+                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />저장 중...</>
+                    : programSheetMode === 'create' ? '프로그램 추가' : '변경사항 저장'}
+                </Button>
+                <Button variant="outline" onClick={() => setProgramSheetOpen(false)}>취소</Button>
               </div>
             </SheetContent>
           </Sheet>
