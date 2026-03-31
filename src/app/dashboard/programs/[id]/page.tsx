@@ -535,7 +535,7 @@ export default function ProgramDetailPage() {
               </div>
 
               {/* 채널별 링크 */}
-              <div className="pt-2 border-t border-green-200">
+              <div className="hidden pt-2 border-t border-green-200">
                 <p className="text-xs font-medium text-green-700 mb-2">채널별 링크</p>
                 <p className="text-[11px] text-green-600 mb-3">
                   홍보 채널에 맞는 링크를 사용하면 어떤 경로에서 고객이 왔는지 추적할 수 있어요
@@ -703,9 +703,9 @@ export default function ProgramDetailPage() {
 
       {/* 하단 고정 CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t z-50">
-        <div className="px-6 py-3 flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">
+        <div className="px-6 py-3 flex items-center justify-center gap-6">
+          <div className="text-center">
+            <p className="text-sm font-medium">
               {program.program_name || program.company_name}
             </p>
             <p className="text-xs text-gray-500">
