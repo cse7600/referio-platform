@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T08:52:21.898Z",
+  "lastUpdated": "2026-03-31T09:22:14.725Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -78,7 +78,9 @@
     "participations",
     "nudge-inactive-partners",
     "nudge-no-activity",
-    "monthly-performance-report"
+    "monthly-performance-report",
+    "withdraw",
+    "violation"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -234,9 +236,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-03-30T07:20:11.567Z"
+        "lastUpdated": "2026-03-31T09:08:48.798Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/partners/page.tsx"
     },
     "advertiser": {
       "phase": "do",
@@ -351,7 +353,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-31T08:49:46.993Z"
+        "lastUpdated": "2026-03-31T09:06:34.905Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
@@ -463,9 +465,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-03-31T08:34:51.895Z"
+        "lastUpdated": "2026-03-31T09:22:14.725Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-test-crm-emails.js"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-bulk-email-keepermate.js"
     },
     "stats": {
       "phase": "do",
@@ -918,7 +920,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T05:41:38.864Z",
-        "lastUpdated": "2026-03-30T05:42:16.908Z"
+        "lastUpdated": "2026-03-31T09:06:37.509Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/profile/page.tsx"
     },
@@ -983,7 +985,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T08:55:54.430Z",
-        "lastUpdated": "2026-03-30T09:26:19.076Z"
+        "lastUpdated": "2026-03-31T09:05:04.375Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/programs/[programId]/route.ts"
     },
@@ -1090,6 +1092,32 @@
         "lastUpdated": "2026-03-31T08:52:21.898Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/monthly-performance-report/route.ts"
+    },
+    "withdraw": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T09:05:46.254Z",
+        "lastUpdated": "2026-03-31T09:05:46.254Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/withdraw/route.ts"
+    },
+    "violation": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T09:08:04.606Z",
+        "lastUpdated": "2026-03-31T09:08:04.606Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/partners/[id]/violation/route.ts"
     }
   },
   "pipeline": {
@@ -1100,7 +1128,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T08:52:21.898Z"
+    "lastActivity": "2026-03-31T09:22:14.725Z"
   },
   "history": [
     {
@@ -6686,6 +6714,126 @@
     {
       "timestamp": "2026-03-31T08:52:21.898Z",
       "feature": "monthly-performance-report",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:03:39.446Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:04:21.593Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:04:28.006Z",
+      "feature": "[programId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:04:36.092Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:05:04.375Z",
+      "feature": "[programId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:05:20.631Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:05:46.254Z",
+      "feature": "withdraw",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:05:58.855Z",
+      "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:06:05.299Z",
+      "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:06:20.700Z",
+      "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:06:34.905Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:06:37.509Z",
+      "feature": "profile",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:04.606Z",
+      "feature": "violation",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:14.987Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:21.419Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:28.777Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:36.840Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:08:48.798Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:21:01.919Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T09:22:14.725Z",
+      "feature": "scripts",
       "phase": "do",
       "action": "updated"
     }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +24,7 @@ import {
   Clock,
   X,
   ArrowRight,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProgram } from '@/app/dashboard/ProgramContext'
@@ -55,9 +57,14 @@ const GUIDES = [
 ]
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [partner, setPartner] = useState<Partner | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // Withdrawal state
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [copiedProgramId, setCopiedProgramId] = useState<string | null>(null)
   const [editMode, setEditMode] = useState(false)
@@ -229,6 +236,28 @@ export default function ProfilePage() {
     setCopiedProgramId(programId)
     toast.success('추천 링크가 복사되었습니다')
     setTimeout(() => setCopiedProgramId(null), 2000)
+  }
+
+  const handleWithdraw = async () => {
+    setWithdrawing(true)
+    try {
+      const res = await fetch('/api/partner/withdraw', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? '탈퇴 처리 중 오류가 발생했습니다')
+        return
+      }
+      toast.success('탈퇴 처리가 완료됐습니다')
+      // Sign out and redirect to login
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/login')
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setWithdrawing(false)
+      setShowWithdrawConfirm(false)
+    }
   }
 
   if (loading) {
@@ -755,6 +784,57 @@ export default function ProfilePage() {
               </a>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 계정 탈퇴 */}
+      <Card className="border-red-100">
+        <CardHeader>
+          <CardTitle className="text-lg text-red-700 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            계정 탈퇴
+          </CardTitle>
+          <CardDescription>
+            탈퇴하면 모든 파트너 활동이 종료되며, 이 작업은 되돌릴 수 없습니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!showWithdrawConfirm ? (
+            <Button
+              variant="outline"
+              className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+              onClick={() => setShowWithdrawConfirm(true)}
+            >
+              계정 탈퇴 신청
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-red-800 mb-2">탈퇴 전 꼭 확인해주세요</p>
+                <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                  <li>모든 파트너 활동(추천 링크, 프로그램 참가)이 즉시 종료됩니다</li>
+                  <li>미완료 정산이 있는 경우, 탈퇴 후에도 정상 입금됩니다</li>
+                  <li>계정 복구는 불가능하며 재가입 시 이전 이력은 복원되지 않습니다</li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="destructive"
+                  onClick={handleWithdraw}
+                  disabled={withdrawing}
+                >
+                  {withdrawing ? '처리 중...' : '탈퇴 확인 — 계속 진행합니다'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowWithdrawConfirm(false)}
+                  disabled={withdrawing}
+                >
+                  취소
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

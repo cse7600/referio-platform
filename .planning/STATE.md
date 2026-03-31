@@ -2,10 +2,10 @@
 
 ## Current Position
 
-Phase: 12 (채널 링크 UI)
+Phase: 16 (CRM Phase 3 완료)
 Plan: Ready to plan
-Status: Phase 11 완료
-Last activity: 2026-03-31 — Phase 11 완료. 이벤트 탭 버그 2건 수정, 빌드 성공, UAT 9/9 PASS
+Status: CRM Phase 3 완료 (Email 5/13/14 구현)
+Last activity: 2026-03-31 — CRM Phase 3 완료. Email 5(신규프로그램), 13(위반경고+Admin UI), 14(탈퇴처리) 구현. 빌드 성공.
 
 ## Project Reference
 

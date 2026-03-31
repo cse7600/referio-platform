@@ -43,8 +43,18 @@ import {
   Target,
   Trophy,
   Megaphone,
+  ShieldAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import type { Partner } from '@/types/database'
 
 interface PartnerWithStats extends Partner {
@@ -131,6 +141,13 @@ export default function AdminPartnersPage() {
   const [sortBy, setSortBy] = useState<string>('rank')
   const [mounted, setMounted] = useState(false)
 
+  // Violation warning modal state
+  const [violationModalOpen, setViolationModalOpen] = useState(false)
+  const [violationTargetId, setViolationTargetId] = useState<string | null>(null)
+  const [violationTargetName, setViolationTargetName] = useState<string>('')
+  const [violationDescription, setViolationDescription] = useState('')
+  const [violationSubmitting, setViolationSubmitting] = useState(false)
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -189,6 +206,36 @@ export default function AdminPartnersPage() {
 
     toast.success(newStatus === 'approved' ? '파트너가 승인되었습니다' : '파트너가 반려되었습니다')
     fetchPartners()
+  }
+
+  const openViolationModal = (partnerId: string, partnerName: string) => {
+    setViolationTargetId(partnerId)
+    setViolationTargetName(partnerName)
+    setViolationDescription('')
+    setViolationModalOpen(true)
+  }
+
+  const handleViolationSubmit = async () => {
+    if (!violationTargetId || violationDescription.trim().length === 0) return
+    setViolationSubmitting(true)
+    try {
+      const res = await fetch(`/api/admin/partners/${violationTargetId}/violation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ violationDescription: violationDescription.trim() }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error ?? '위반 경고 발송에 실패했습니다')
+        return
+      }
+      toast.success('위반 경고 이메일 발송 완료')
+      setViolationModalOpen(false)
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다')
+    } finally {
+      setViolationSubmitting(false)
+    }
   }
 
   const handleTierChange = async (partnerId: string, newTier: string) => {
@@ -593,6 +640,14 @@ export default function AdminPartnersPage() {
                                     </DropdownMenuItem>
                                   </>
                                 )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => openViolationModal(partner.id, partner.name ?? '')}
+                                  className="text-red-600"
+                                >
+                                  <ShieldAlert className="w-4 h-4 mr-2" />
+                                  위반 경고 발송
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -606,6 +661,55 @@ export default function AdminPartnersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* 위반 경고 모달 */}
+      <Dialog open={violationModalOpen} onOpenChange={setViolationModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="w-5 h-5" />
+              위반 경고 발송
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold">{violationTargetName}</span>님에게 가이드라인 위반 경고 이메일을 발송합니다.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="violation-desc" className="text-sm font-medium">
+                위반 내용 <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="violation-desc"
+                placeholder="예: 2026년 03월 20일 오후 2시에 셀프 리퍼럴 3건이 탐지됐습니다. 동일 기기에서 본인 추천 코드가 3회 사용됨이 확인됐습니다."
+                value={violationDescription}
+                onChange={(e) => setViolationDescription(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-gray-400">
+                구체적인 위반 행위를 사실에 입각하여 작성하세요. 이 내용이 이메일 본문에 포함됩니다.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setViolationModalOpen(false)}
+              disabled={violationSubmitting}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleViolationSubmit}
+              disabled={violationSubmitting || violationDescription.trim().length === 0}
+            >
+              {violationSubmitting ? '발송 중...' : '위반 경고 발송'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

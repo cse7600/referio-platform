@@ -1,6 +1,9 @@
 // Resend 이메일 라이브러리
 // 환경변수: RESEND_API_KEY, FROM_EMAIL (기본값: noreply@updates.puzl.co.kr)
 
+import { canSendEmail, logEmailSent } from '@/lib/email-throttle';
+import { createAdminClient } from '@/lib/supabase/admin';
+
 const RESEND_API_URL = 'https://api.resend.com/emails'
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@updates.puzl.co.kr'
 const FROM_NAME = 'Referio'
@@ -831,4 +834,434 @@ export async function sendFirstRevenueEmail(options: {
     subject: `[Referio] ${partnerName}님, 첫 번째 커미션 ₩${commissionAmount.toLocaleString()}이 확정됐습니다 🎉`,
     html,
   });
+}
+
+// CRM 이메일 5: 신규 프로그램 안내 (광고주가 프로그램 is_active=true 전환 시)
+// partnerIds: 발송 대상 파트너 ID 목록 (이미 필터링된 상태로 전달)
+export async function sendNewProgramEmail(options: {
+  programId: string;
+  programName: string;
+  advertiserName: string;
+  commissionValid: number;
+  commissionContract: number;
+  shortDescription: string;
+  conditionSummary?: string;
+  partnerIds: string[];
+}): Promise<{ sent: number; skipped: number }> {
+  const {
+    programId,
+    programName,
+    advertiserName,
+    commissionValid,
+    commissionContract,
+    shortDescription,
+    conditionSummary,
+    partnerIds,
+  } = options;
+
+  const applyLink = `https://referio.kr/dashboard/marketplace/${programId}`;
+
+  // Fetch partner emails + names from DB
+  const admin = createAdminClient();
+  const { data: partners, error } = await admin
+    .from('partners')
+    .select('id, name, email')
+    .in('id', partnerIds)
+    .not('auth_user_id', 'is', null);
+
+  if (error || !partners || partners.length === 0) {
+    console.error('[sendNewProgramEmail] 파트너 조회 실패:', error);
+    return { sent: 0, skipped: 0 };
+  }
+
+  let sent = 0;
+  let skipped = 0;
+
+  for (const partner of partners) {
+    if (!partner.email) {
+      skipped++;
+      continue;
+    }
+
+    // Throttle check
+    const throttle = await canSendEmail(partner.id, 'activity_new_program', false);
+    if (!throttle.canSend) {
+      await logEmailSent({
+        partnerId: partner.id,
+        emailType: 'activity_new_program',
+        isMandatory: false,
+        programId,
+        status: 'deferred',
+        deferredReason: throttle.reason,
+      });
+      skipped++;
+      continue;
+    }
+
+    const commissionRows = [
+      commissionValid > 0 ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">유효 리드 커미션</td>
+            <td style="padding:4px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">₩${commissionValid.toLocaleString()}</td>
+          </tr>` : '',
+      commissionContract > 0 ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">계약 완료 커미션</td>
+            <td style="padding:4px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">₩${commissionContract.toLocaleString()}</td>
+          </tr>` : '',
+    ].join('');
+
+    const conditionRow = conditionSummary ? `
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">파트너 조건</td>
+            <td style="padding:4px 0;color:#374151;font-size:13px;">${conditionSummary}</td>
+          </tr>` : '';
+
+    const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">신규 파트너 프로그램 오픈</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partner.name || '파트너'}님, 새로운 파트너 프로그램이 열렸습니다. 빨리 알려드리고 싶었어요.
+      </p>
+
+      <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:20px 24px;margin-bottom:20px;">
+        <p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${advertiserName}</p>
+        <p style="margin:0 0 12px;font-size:20px;font-weight:700;color:#111827;">${programName}</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#374151;line-height:1.6;">${shortDescription}</p>
+        <div style="background:#fff;border-radius:8px;padding:14px 16px;">
+          <table style="width:100%;border-collapse:collapse;">
+            ${commissionRows}
+            ${conditionRow}
+          </table>
+        </div>
+      </div>
+
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#166534;">왜 지금 신청해야 할까요?</p>
+        <ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:2;">
+          <li>초기 파트너에게 광고주 지원이 집중됩니다</li>
+          <li>경쟁이 적은 지금 내 콘텐츠가 더 잘 보입니다</li>
+          <li>먼저 시작한 파트너일수록 실적 이력이 쌓입니다</li>
+        </ul>
+      </div>
+
+      <a href="${applyLink}"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        ${programName} 신청하기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const ok = await sendEmail({
+      to: partner.email,
+      subject: `[Referio] 신규 파트너 프로그램 오픈 — ${programName} 먼저 시작한 파트너가 유리합니다`,
+      html,
+    });
+
+    await logEmailSent({
+      partnerId: partner.id,
+      emailType: 'activity_new_program',
+      isMandatory: false,
+      programId,
+      status: ok ? 'sent' : 'failed',
+    });
+
+    if (ok) sent++;
+    else skipped++;
+  }
+
+  console.info(`[sendNewProgramEmail] programId=${programId} sent=${sent} skipped=${skipped}`);
+  return { sent, skipped };
+}
+
+// CRM 이메일 14: 탈퇴 처리 완료 (파트너 탈퇴 신청 완료 직후 즉시 발송)
+export async function sendAccountDeletedEmail(options: {
+  partnerId: string;
+  partnerEmail: string;
+  partnerName: string;
+  pendingSettlementAmount?: number; // 미완료 정산 합산 금액 (없으면 0 또는 undefined)
+  paymentDueDate?: string; // 예: '2026년 04월 30일'
+}): Promise<boolean> {
+  const { partnerId, partnerEmail, partnerName, pendingSettlementAmount, paymentDueDate } = options;
+
+  const hasPendingSettlement = (pendingSettlementAmount ?? 0) > 0;
+
+  // Subject: 미완료 정산 유무에 따라 분기
+  const subject = hasPendingSettlement
+    ? `[Referio] 탈퇴 처리 완료 — 미완료 정산 ${pendingSettlementAmount!.toLocaleString()}원 처리 안내 포함`
+    : `[Referio] ${partnerName}님, 탈퇴 처리가 완료됐습니다`;
+
+  // Conditional: 미완료 정산 안내 섹션 (정산 있을 때만 표시)
+  const pendingSettlementSection = hasPendingSettlement ? `
+      <!-- 미완료 정산 안내 -->
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#713f12;">미완료 정산 안내</p>
+        <p style="margin:0 0 12px;font-size:13px;color:#78350f;line-height:1.6;">
+          탈퇴 처리 후에도 확정된 정산은 정상적으로 지급됩니다.
+        </p>
+        <div style="background:#fff;border-radius:8px;padding:14px 16px;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="padding:4px 0;color:#6b7280;font-size:13px;width:130px;">미완료 정산 금액</td>
+              <td style="padding:4px 0;color:#92400e;font-size:14px;font-weight:700;">₩${pendingSettlementAmount!.toLocaleString()}</td>
+            </tr>
+            ${paymentDueDate ? `
+            <tr>
+              <td style="padding:4px 0;color:#6b7280;font-size:13px;">입금 예정일</td>
+              <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:600;">${paymentDueDate}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="padding:4px 0;color:#6b7280;font-size:13px;">입금 계좌</td>
+              <td style="padding:4px 0;color:#374151;font-size:13px;">탈퇴 전 등록된 계좌</td>
+            </tr>
+          </table>
+        </div>
+        <p style="margin:12px 0 0;font-size:12px;color:#78350f;">
+          입금은 탈퇴 이후에도 등록된 계좌로 자동 처리됩니다. 별도 조치는 필요하지 않습니다.<br/>
+          입금 완료 시 이메일로 별도 안내드립니다. 문의: support@referio.kr
+        </p>
+      </div>` : '';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">탈퇴 처리가 완료됐습니다</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님, 탈퇴 신청이 정상적으로 처리됐습니다.<br/>
+        Referio에서 활동해주신 시간에 감사드립니다.
+      </p>
+
+      <!-- 탈퇴 처리 내역 -->
+      <div style="background:#f8fafc;border-radius:8px;padding:16px 20px;margin-bottom:20px;border:1px solid #e5e7eb;">
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#111827;">탈퇴 처리 내역</p>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;width:100px;">계정 상태</td>
+            <td style="padding:4px 0;color:#374151;font-size:13px;">탈퇴 완료</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">처리 일시</td>
+            <td style="padding:4px 0;color:#374151;font-size:13px;">본 이메일 수신 시점</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;color:#6b7280;font-size:13px;">개인정보</td>
+            <td style="padding:4px 0;color:#374151;font-size:13px;">관련 법령에 따라 보관 후 파기됩니다</td>
+          </tr>
+        </table>
+      </div>
+
+      ${pendingSettlementSection}
+
+      <!-- 탈퇴 사유 설문 -->
+      <div style="background:#eef2ff;border-radius:8px;padding:16px 20px;margin-bottom:24px;border:1px solid #c7d2fe;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#4338ca;">마지막으로 한 가지만 여쭤볼게요</p>
+        <p style="margin:0 0 12px;font-size:13px;color:#374151;line-height:1.6;">
+          탈퇴하신 이유를 알려주시면 서비스 개선에 참고하겠습니다. (선택 사항)
+        </p>
+        <a href="https://referio.kr/exit-survey"
+           style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">
+          탈퇴 사유 선택하기 (1분 소요)
+        </a>
+      </div>
+
+      <!-- 재가입 안내 -->
+      <div style="border-top:1px solid #e5e7eb;padding-top:16px;">
+        <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">언제든 다시 오실 수 있습니다</p>
+        <a href="https://referio.puzl.co.kr/signup"
+           style="font-size:13px;color:#4f46e5;text-decoration:none;">
+          재가입하기 →
+        </a>
+      </div>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.<br/>
+        주식회사 퍼즐 | 서울특별시 |
+        <a href="https://referio.kr/privacy" style="color:#6b7280;">개인정보처리방침</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const ok = await sendEmail({ to: partnerEmail, subject, html });
+
+  await logEmailSent({
+    partnerId,
+    emailType: 'account_deleted',
+    isMandatory: true,
+    status: ok ? 'sent' : 'failed',
+  });
+
+  return ok;
+}
+
+// CRM 이메일 13: 가이드라인 위반 경고 (Admin 확정 후 즉시 발송)
+export async function sendViolationWarningEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  partnerId: string;
+  programName?: string;
+  programId?: string;
+  violationDescription: string;
+  occurredAt: Date;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, partnerId, programName, programId, violationDescription, occurredAt } = options;
+
+  // Format occurred_at in KST
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstDate = new Date(occurredAt.getTime() + kstOffset);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const occurredAtKst = `${kstDate.getUTCFullYear()}년 ${pad(kstDate.getUTCMonth() + 1)}월 ${pad(kstDate.getUTCDate())}일 ${pad(kstDate.getUTCHours())}:${pad(kstDate.getUTCMinutes())}`;
+
+  // Objection deadline = send date + 7 days (KST)
+  const deadlineDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + kstOffset);
+  const objectionDeadline = `${deadlineDate.getUTCFullYear()}년 ${pad(deadlineDate.getUTCMonth() + 1)}월 ${pad(deadlineDate.getUTCDate())}일`;
+
+  const programRow = programName
+    ? `<tr>
+          <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:13px;color:#6b7280;width:110px;">위반 프로그램</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:13px;color:#111827;">${programName}</td>
+        </tr>`
+    : '';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">가이드라인 위반이 확인됐습니다</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님, Referio 운영팀에서 ${partnerName}님의 활동을 검토한 결과,<br/>
+        아래 내용의 가이드라인 위반이 확인되어 공식적으로 안내드립니다.
+      </p>
+
+      <!-- 위반 확인 내역 -->
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+        <div style="padding:12px 16px;background:#fee2e2;border-bottom:1px solid #fecaca;">
+          <p style="margin:0;font-size:13px;font-weight:700;color:#991b1b;">위반 확인 내역</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          ${programRow}
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:13px;color:#6b7280;width:110px;">위반 일시</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #fecaca;font-size:13px;color:#111827;">${occurredAtKst}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;font-size:13px;color:#6b7280;vertical-align:top;padding-top:12px;">위반 항목</td>
+            <td style="padding:8px 12px;font-size:13px;color:#111827;line-height:1.6;">${violationDescription}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:4px 0;margin-bottom:20px;">
+        <p style="margin:0;padding:8px 16px;font-size:12px;color:#713f12;">
+          위 내용은 시스템 기록 및 운영팀 검토를 통해 확인된 사실에 기반합니다.
+        </p>
+      </div>
+
+      <!-- 1차 경고 조치 내용 -->
+      <div style="background:#f8fafc;border-radius:8px;padding:18px 20px;margin-bottom:20px;">
+        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#111827;">이번 조치 내용 — 1차 경고</p>
+        <p style="margin:0 0 8px;font-size:13px;color:#374151;">
+          이번 위반은 <strong>1차 경고</strong>로 처리되며, 현재 계정 및 파트너 활동은 유지됩니다.
+        </p>
+        <ul style="margin:8px 0 0;padding-left:18px;color:#374151;font-size:13px;line-height:2.0;">
+          <li>해당 위반 행위는 즉시 중단되어야 합니다.</li>
+          <li>동일하거나 유사한 위반이 재발할 경우, <strong>계정 활동이 정지될 수 있습니다.</strong></li>
+          <li>정지 처리 시 진행 중인 추천 건의 정산은 약관에 따라 처리됩니다.</li>
+        </ul>
+      </div>
+
+      <!-- 가이드라인 위반이란? -->
+      <div style="background:#f8fafc;border-radius:8px;padding:18px 20px;margin-bottom:20px;">
+        <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#111827;">가이드라인 위반이란?</p>
+        <ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:2.0;">
+          <li>허위 정보 또는 과장된 내용을 이용한 추천 유도</li>
+          <li>본인 또는 지인의 계정을 이용한 자가 추천(셀프 리퍼럴)</li>
+          <li>타인의 동의 없이 추천 코드를 무단 등록</li>
+          <li>광고주가 명시적으로 금지한 채널을 통한 홍보</li>
+          <li>봇, 자동화 프로그램 등을 이용한 클릭·리드 조작</li>
+        </ul>
+        <p style="margin:10px 0 0;font-size:13px;color:#6b7280;">
+          전체 가이드라인은 파트너 대시보드 내 '가이드라인' 메뉴에서 확인하실 수 있습니다.
+        </p>
+      </div>
+
+      <!-- 이의제기 안내 -->
+      <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:18px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#4338ca;">이의가 있으신가요?</p>
+        <p style="margin:0 0 10px;font-size:13px;color:#374151;line-height:1.7;">
+          위반 내용이 사실과 다르거나 이의를 제기하고자 하시는 경우,
+          <strong>${objectionDeadline}까지</strong> 아래 방법으로 접수해주세요.<br/>
+          접수된 이의는 영업일 기준 5일 이내 검토 후 결과를 이메일로 안내드립니다.
+        </p>
+        <a href="https://referio.kr/dashboard/support"
+           style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:8px;">
+          이의제기 접수하기
+        </a>
+        <p style="margin:8px 0 0;font-size:12px;color:#6b7280;">
+          또는 이메일: <a href="mailto:support@referio.kr" style="color:#4f46e5;">support@referio.kr</a>
+        </p>
+      </div>
+
+      <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+        본 이메일은 공식 경고 기록으로 보관됩니다. 앞으로도 건강한 파트너 활동을 기대합니다.
+      </p>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        Referio | <a href="https://referio.kr/privacy" style="color:#9ca3af;">개인정보처리방침</a><br/>
+        본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.<br/>
+        주식회사 퍼즐 | 서울특별시 | noreply@updates.puzl.co.kr
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const ok = await sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ${partnerName}님 계정에 가이드라인 위반이 확인됐습니다 — 조치 안내`,
+    html,
+  });
+
+  await logEmailSent({
+    partnerId,
+    emailType: 'violation_warning',
+    isMandatory: true,
+    programId: programId ?? undefined,
+    status: ok ? 'sent' : 'failed',
+  });
+
+  return ok;
 }

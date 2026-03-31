@@ -129,22 +129,20 @@ async function main() {
   console.log(DRY_RUN ? '=== [DRY-RUN] 발송 대상 확인 ===' : '=== 한화비전 키퍼메이트 파트너 일괄 이메일 발송 시작 ===');
   console.log();
 
-  // 미로그인 파트너 auth_user_id 목록 조회 (Management API SQL)
-  const sqlRes = await fetch(
-    `https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_REF}/database/query`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${SUPABASE_MANAGEMENT_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `SELECT p.auth_user_id FROM auth.users u JOIN partners p ON p.auth_user_id = u.id JOIN partner_programs pp ON pp.partner_id = p.id WHERE pp.advertiser_id = '${KEEPERMATE_ADVERTISER_ID}' AND u.last_sign_in_at IS NULL`,
-      }),
+  // 미로그인 파트너 auth_user_id 목록 조회 (admin.auth.admin.listUsers)
+  const neverLoggedInIds = new Set();
+  let page = 1;
+  const perPage = 1000;
+  while (true) {
+    const { data: usersPage, error: usersErr } = await admin.auth.admin.listUsers({ page, perPage });
+    if (usersErr) { console.error('auth.users 조회 실패:', usersErr.message); break; }
+    for (const u of (usersPage?.users || [])) {
+      if (!u.last_sign_in_at) neverLoggedInIds.add(u.id);
     }
-  );
-  const neverLoggedIn = await sqlRes.json();
-  const neverLoggedInIds = new Set(neverLoggedIn.map((r) => r.auth_user_id));
+    if ((usersPage?.users || []).length < perPage) break;
+    page++;
+  }
+  console.log(`미로그인 Auth 계정 수: ${neverLoggedInIds.size}명`);
 
   // 발송 대상 조회
   const { data: programs, error } = await admin

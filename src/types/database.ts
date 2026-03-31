@@ -1,4 +1,4 @@
-export type PartnerStatus = 'pending' | 'approved' | 'rejected'
+export type PartnerStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
 export type PartnerTier = 'authorized' | 'silver' | 'gold' | 'platinum'
 export type ContractStatus = 'pending' | 'call_1' | 'call_2' | 'call_3' | 'completed' | 'invalid' | 'duplicate'
 export type SettlementStatus = 'pending' | 'completed' | 'rejected'
