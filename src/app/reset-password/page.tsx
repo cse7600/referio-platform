@@ -12,7 +12,7 @@ import { Lock, CheckCircle, AlertCircle, Loader2, Mail } from 'lucide-react'
 function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const code = searchParams.get('code')
+  const linkError = searchParams.get('error')
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>('loading')
   const [password, setPassword] = useState('')
@@ -36,17 +36,19 @@ function ResetPasswordForm() {
   }, [cooldown])
 
   useEffect(() => {
-    const initialize = async () => {
-      if (!code) {
-        setStatus('error')
-        setErrorMsg('유효하지 않은 링크입니다. 비밀번호 재설정 메일에서 다시 클릭해주세요.')
-        return
-      }
+    // 링크 에러가 전달된 경우 (auth/callback에서 교환 실패)
+    if (linkError === 'link_expired') {
+      setStatus('error')
+      setErrorMsg('링크가 만료되었거나 이미 사용된 링크입니다. 다시 요청해주세요.')
+      return
+    }
 
+    // 코드 교환은 /auth/callback 서버에서 완료됨. 세션 존재 여부만 확인
+    const initialize = async () => {
       try {
         const supabase = createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error) {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error || !user) {
           setStatus('error')
           setErrorMsg('링크가 만료되었거나 이미 사용된 링크입니다. 다시 요청해주세요.')
         } else {
@@ -58,7 +60,7 @@ function ResetPasswordForm() {
       }
     }
     initialize()
-  }, [code])
+  }, [linkError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -172,7 +174,7 @@ function ResetPasswordForm() {
                         setResendStatus('sending')
                         const supabase = createClient()
                         await supabase.auth.resetPasswordForEmail(resendEmail, {
-                          redirectTo: `${window.location.origin}/reset-password`,
+                          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
                         })
                         setResendStatus('sent')
                         setCooldown(60)
