@@ -5,7 +5,9 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useCallback, useEffect, useRef } from 'react'
+import { marked } from 'marked'
 import type { JSONContent } from '@tiptap/react'
+import type { Editor } from '@tiptap/react'
 import {
   Bold,
   Italic,
@@ -20,6 +22,30 @@ interface TiptapEditorProps {
   content?: JSONContent | null
   onChange?: (content: JSONContent) => void
   placeholder?: string
+}
+
+// Detect if plain text contains Markdown formatting patterns
+function hasMarkdownPatterns(text: string): boolean {
+  const patterns = [
+    /^#{1,6}\s+/m,           // # Heading
+    /\*\*[^*]+\*\*/,         // **bold**
+    /\*[^*]+\*/,             // *italic*
+    /^[-*+]\s+/m,            // - list item
+    /^\d+\.\s+/m,            // 1. ordered list
+    /^>\s+/m,                // > blockquote
+    /`[^`]+`/,               // `inline code`
+    /^```/m,                 // ```code block
+    /\[([^\]]+)\]\([^)]+\)/, // [link](url)
+  ]
+  // Need at least 2 pattern matches to confidently identify as Markdown
+  let matchCount = 0
+  for (const pattern of patterns) {
+    if (pattern.test(text)) {
+      matchCount++
+      if (matchCount >= 2) return true
+    }
+  }
+  return false
 }
 
 function ToolbarButton({
@@ -55,6 +81,7 @@ export default function TiptapEditor({
   placeholder = '내용을 입력하세요...',
 }: TiptapEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const editorRef = useRef<Editor | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -97,27 +124,56 @@ export default function TiptapEditor({
         }
         return false
       },
-      handlePaste: (view, event) => {
-        const items = event.clipboardData?.items
-        if (!items) return false
+      handlePaste: (_view, event) => {
+        const clipboardData = event.clipboardData
+        if (!clipboardData) return false
 
-        for (const item of Array.from(items)) {
-          if (item.type.startsWith('image/')) {
-            event.preventDefault()
-            const file = item.getAsFile()
-            if (file) {
-              uploadImage(file).then((url) => {
-                if (url) {
-                  const { schema } = view.state
-                  const node = schema.nodes.image.create({ src: url })
-                  const tr = view.state.tr.replaceSelectionWith(node)
-                  view.dispatch(tr)
-                }
-              })
+        // 1. Handle image paste
+        const items = clipboardData.items
+        if (items) {
+          for (const item of Array.from(items)) {
+            if (item.type.startsWith('image/')) {
+              event.preventDefault()
+              const file = item.getAsFile()
+              if (file) {
+                uploadImage(file).then((url) => {
+                  if (url && editorRef.current) {
+                    editorRef.current.chain().focus().setImage({ src: url }).run()
+                  }
+                })
+              }
+              return true
             }
-            return true
           }
         }
+
+        // 2. If HTML exists (Google Docs, Word, etc.), let Tiptap handle natively
+        //    Tiptap's built-in HTML parsing already converts bold, italic, headings, lists etc.
+        const html = clipboardData.getData('text/html')
+        if (html && html.trim().length > 0) {
+          return false
+        }
+
+        // 3. Plain text only — detect Markdown patterns and convert to rich text
+        const plainText = clipboardData.getData('text/plain')
+        if (plainText && hasMarkdownPatterns(plainText)) {
+          event.preventDefault()
+          try {
+            const convertedHtml = marked.parse(plainText, {
+              async: false,
+              breaks: true,
+            }) as string
+            if (editorRef.current && convertedHtml) {
+              editorRef.current.chain().focus().insertContent(convertedHtml).run()
+            }
+            return true
+          } catch {
+            // On conversion failure, fall through to default paste
+            return false
+          }
+        }
+
+        // 4. Default: let Tiptap handle plain text normally
         return false
       },
     },
@@ -125,6 +181,11 @@ export default function TiptapEditor({
       onChange?.(ed.getJSON())
     },
   })
+
+  // Keep editorRef in sync
+  useEffect(() => {
+    editorRef.current = editor
+  }, [editor])
 
   // Sync external content changes
   useEffect(() => {
