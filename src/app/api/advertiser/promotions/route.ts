@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
       title, description, promotion_type, reward_description,
       start_date, end_date, condition_type, condition_value,
       status, is_visible_to_partners,
+      banner_image_url, banner_bg_color, event_link_url,
     } = body
 
     if (!title || !promotion_type) {
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
         condition_value: condition_value || {},
         status: status || 'active',
         is_visible_to_partners: is_visible_to_partners !== false,
+        banner_image_url: banner_image_url || null,
+        banner_bg_color: banner_bg_color || null,
+        event_link_url: event_link_url || null,
       })
       .select()
       .single()
@@ -108,11 +112,33 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const {
+      id,
+      title, description, promotion_type, reward_description,
+      start_date, end_date, condition_type, condition_value,
+      status, is_visible_to_partners,
+      banner_image_url, banner_bg_color, event_link_url,
+    } = body
 
     if (!id) {
       return NextResponse.json({ error: 'id가 필요합니다' }, { status: 400 })
     }
+
+    // Build update object with only defined fields
+    const updateData: Record<string, unknown> = {}
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description
+    if (promotion_type !== undefined) updateData.promotion_type = promotion_type
+    if (reward_description !== undefined) updateData.reward_description = reward_description
+    if (start_date !== undefined) updateData.start_date = start_date
+    if (end_date !== undefined) updateData.end_date = end_date
+    if (condition_type !== undefined) updateData.condition_type = condition_type
+    if (condition_value !== undefined) updateData.condition_value = condition_value
+    if (status !== undefined) updateData.status = status
+    if (is_visible_to_partners !== undefined) updateData.is_visible_to_partners = is_visible_to_partners
+    if (banner_image_url !== undefined) updateData.banner_image_url = banner_image_url
+    if (banner_bg_color !== undefined) updateData.banner_bg_color = banner_bg_color
+    if (event_link_url !== undefined) updateData.event_link_url = event_link_url
 
     const supabase = await createClient()
     const { error } = await supabase

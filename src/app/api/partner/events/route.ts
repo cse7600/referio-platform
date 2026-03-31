@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('partner_promotions')
-      .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, created_at')
+      .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, banner_image_url, banner_bg_color, event_link_url, created_at')
       .eq('status', 'active')
       .eq('is_visible_to_partners', true)
       .order('created_at', { ascending: false })

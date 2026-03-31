@@ -70,6 +70,7 @@ interface ProgramDetail {
   is_affiliate_campaign?: boolean
   affiliate_campaign_type?: string
   reward_trigger?: string
+  tracking_link_url?: string | null
   enrollment: {
     id: string
     status: string
@@ -173,6 +174,11 @@ export default function ProgramDetailPage() {
   const buildReferralLink = () => {
     if (!program?.enrollment?.referral_code) return ''
     const refCode = program.enrollment.referral_code
+
+    // tracking_link_url이 있으면 우선 사용 (에어브릿지 등 외부 트래킹 URL)
+    if (program.tracking_link_url) {
+      return program.tracking_link_url
+    }
 
     // Affiliate campaign uses /api/r/{shortCode} redirect
     if (program.is_affiliate_campaign) {
@@ -528,6 +534,61 @@ export default function ProgramDetailPage() {
                 </Button>
               </div>
 
+              {/* 채널별 링크 */}
+              <div className="pt-2 border-t border-green-200">
+                <p className="text-xs font-medium text-green-700 mb-2">채널별 링크</p>
+                <p className="text-[11px] text-green-600 mb-3">
+                  홍보 채널에 맞는 링크를 사용하면 어떤 경로에서 고객이 왔는지 추적할 수 있어요
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    { id: 'blog', label: '블로그' },
+                    { id: 'youtube', label: '유튜브' },
+                    { id: 'instagram', label: '인스타그램' },
+                    { id: 'offline', label: '지인/오프라인' },
+                    { id: 'community', label: '카페/커뮤니티' },
+                  ].map(({ id, label }) => (
+                    <div key={id} className="flex items-center gap-2">
+                      <span className="text-[11px] text-green-700 w-24 shrink-0">{label}</span>
+                      <code className="flex-1 text-[11px] text-green-800 bg-green-100 px-2 py-1 rounded truncate">
+                        {buildChannelLink(id)}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="shrink-0 h-6 w-6 p-0 text-green-700 hover:text-green-900 hover:bg-green-100"
+                        onClick={() => handleCopyChannelLink(id)}
+                      >
+                        {copiedChannel === id ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 직접 입력 */}
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="직접 입력 (예: kakao)"
+                    value={customChannel}
+                    onChange={(e) => setCustomChannel(e.target.value)}
+                    className="flex-1 text-[11px] px-2 py-1 border border-green-300 rounded bg-white text-green-800 placeholder-green-400 focus:outline-none focus:ring-1 focus:ring-green-400"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="shrink-0 h-6 px-2 text-[11px] text-green-700 hover:bg-green-100"
+                    onClick={() => customChannel.trim() && handleCopyChannelLink(customChannel.trim())}
+                    disabled={!customChannel.trim()}
+                  >
+                    {copiedChannel === customChannel.trim() && customChannel.trim() ? (
+                      <><Check className="w-3 h-3 mr-1" />복사됨</>
+                    ) : (
+                      <><Copy className="w-3 h-3 mr-1" />복사</>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
 

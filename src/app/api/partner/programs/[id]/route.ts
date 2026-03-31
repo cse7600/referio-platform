@@ -125,14 +125,14 @@ export async function GET(
       // 참가 상태 확인 (program_id 기준 먼저, fallback advertiser_id)
       const { data: enrollmentByProgram } = await supabase
         .from('partner_programs')
-        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at')
+        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at, tracking_link_url')
         .eq('partner_id', partner.id)
         .eq('program_id', prog.id)
         .maybeSingle()
 
       const { data: enrollmentByAdv } = !enrollmentByProgram ? await supabase
         .from('partner_programs')
-        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at')
+        .select('id, status, referral_code, lead_commission, contract_commission, applied_at, approved_at, tracking_link_url')
         .eq('partner_id', partner.id)
         .eq('advertiser_id', prog.advertiser_id)
         .is('program_id', null)
@@ -181,6 +181,9 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(20)
 
+      const enrollmentData = enrollment as (typeof enrollment & { tracking_link_url?: string | null }) | null;
+      const { tracking_link_url: trackingLinkUrl, ...enrollmentWithoutTracking } = enrollmentData || {};
+
       return NextResponse.json({
         program: {
           id: prog.id,
@@ -199,7 +202,8 @@ export async function GET(
           prohibited_activities: prog.prohibited_activities,
           precautions: prog.precautions,
           advertiser_id: prog.advertiser_id,
-          enrollment,
+          tracking_link_url: trackingLinkUrl ?? null,
+          enrollment: enrollment ? enrollmentWithoutTracking : null,
           media: media || [],
           announcements: announcementsWithRead,
           boardPosts: boardPosts || [],

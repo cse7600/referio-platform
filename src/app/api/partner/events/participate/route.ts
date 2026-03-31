@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { promotion_id, note } = body
+    const { promotion_id, note, post_url, post_note } = body
 
     if (!promotion_id) {
       return NextResponse.json({ error: 'promotion_id가 필요합니다' }, { status: 400 })
@@ -29,12 +29,17 @@ export async function POST(request: NextRequest) {
     // Verify event is active and visible
     const { data: promotion } = await supabase
       .from('partner_promotions')
-      .select('id, status, is_visible_to_partners')
+      .select('id, status, is_visible_to_partners, promotion_type')
       .eq('id', promotion_id)
       .single()
 
     if (!promotion || promotion.status !== 'active' || !promotion.is_visible_to_partners) {
       return NextResponse.json({ error: '참여할 수 없는 이벤트입니다' }, { status: 400 })
+    }
+
+    // post_verification type requires post_url
+    if (promotion.promotion_type === 'post_verification' && !post_url) {
+      return NextResponse.json({ error: '게시물 인증 이벤트는 post_url이 필요합니다' }, { status: 400 })
     }
 
     const { error } = await supabase
@@ -43,6 +48,9 @@ export async function POST(request: NextRequest) {
         promotion_id,
         partner_id: partner.id,
         note: note || null,
+        post_url: post_url || null,
+        post_note: post_note || null,
+        submitted_at: new Date().toISOString(),
       })
 
     if (error) {
