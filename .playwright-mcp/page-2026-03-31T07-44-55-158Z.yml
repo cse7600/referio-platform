@@ -1,0 +1,54 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - link "R Referio" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e10]: R
+          - generic [ref=e11]: Referio
+        - navigation [ref=e13]:
+          - link "홈" [ref=e14] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e15]
+            - text: 홈
+          - link "프로그램" [ref=e18] [cursor=pointer]:
+            - /url: /dashboard/programs
+            - img [ref=e19]
+            - text: 프로그램
+          - link "이벤트" [ref=e22] [cursor=pointer]:
+            - /url: /dashboard/events
+            - img [ref=e23]
+            - text: 이벤트
+          - link "고객" [ref=e27] [cursor=pointer]:
+            - /url: /dashboard/customers
+            - img [ref=e28]
+            - text: 고객
+          - link "지급" [ref=e33] [cursor=pointer]:
+            - /url: /dashboard/settlements
+            - img [ref=e34]
+            - text: 지급
+          - link "활동 지원" [ref=e37] [cursor=pointer]:
+            - /url: /dashboard/activity
+            - img [ref=e38]
+            - text: 활동 지원
+          - link "문의" [ref=e41] [cursor=pointer]:
+            - /url: /dashboard/support
+            - img [ref=e42]
+            - text: 문의
+          - link "활동정보" [ref=e44] [cursor=pointer]:
+            - /url: /dashboard/profile
+            - img [ref=e45]
+            - text: 활동정보
+        - button "? 로딩중..." [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]:
+            - generic [ref=e52]: "?"
+            - generic [ref=e53]: 로딩중...
+          - img
+    - main [ref=e54]:
+      - generic [ref=e57]: 로딩 중...
+    - button "문의하기" [ref=e58]:
+      - img [ref=e59]
+  - region "Notifications alt+T"
+  - alert [ref=e61]

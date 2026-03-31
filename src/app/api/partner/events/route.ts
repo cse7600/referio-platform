@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const { data: partner } = await supabase
       .from('partners')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('auth_user_id', user.id)
       .single()
 
     if (!partner) {

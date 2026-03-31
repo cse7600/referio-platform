@@ -47,7 +47,23 @@ export async function GET(
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
     }
 
-    return NextResponse.json({ participations: data || [] })
+    const participations = (data || []).map(p => {
+      // Supabase join returns array or object depending on relation cardinality
+      const raw = p.partners as unknown
+      const partner = Array.isArray(raw)
+        ? (raw as { name: string; email: string }[])[0]
+        : (raw as { name: string; email: string } | null)
+      return {
+        id: p.id,
+        partner_name: partner?.name || '',
+        partner_email: partner?.email || '',
+        submission_url: p.post_url || null,
+        note: p.post_note || null,
+        created_at: p.created_at,
+      }
+    })
+
+    return NextResponse.json({ participations })
   } catch (error) {
     console.error('Promotion participations GET error:', error)
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })

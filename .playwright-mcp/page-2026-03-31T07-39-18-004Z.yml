@@ -1,0 +1,61 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: 🏢
+        - generic [ref=e9]:
+          - generic [ref=e10]: 주식회사 퍼즐코퍼레이션
+          - generic [ref=e11]: 광고주 대시보드
+      - navigation [ref=e12]:
+        - button "📊 대시보드" [ref=e13]:
+          - generic [ref=e14]: 📊
+          - generic [ref=e15]: 대시보드
+        - button "👥 파트너 관리" [ref=e16]:
+          - generic [ref=e17]: 👥
+          - generic [ref=e18]: 파트너 관리
+        - button "📋 고객 관리" [ref=e19]:
+          - generic [ref=e20]: 📋
+          - generic [ref=e21]: 고객 관리
+        - button "💰 정산 관리" [ref=e22]:
+          - generic [ref=e23]: 💰
+          - generic [ref=e24]: 정산 관리
+        - button "📢 캠페인 설정" [ref=e25]:
+          - generic [ref=e26]: 📢
+          - generic [ref=e27]: 캠페인 설정
+        - button "🎉 이벤트" [ref=e28]:
+          - generic [ref=e29]: 🎉
+          - generic [ref=e30]: 이벤트
+        - button "📢 파트너 활동 지원" [ref=e31]:
+          - generic [ref=e32]: 📢
+          - generic [ref=e33]: 파트너 활동 지원
+        - button "💬 파트너 메시지" [ref=e34]:
+          - generic [ref=e35]: 💬
+          - generic [ref=e36]: 파트너 메시지
+        - button "📩 문의/피드백" [ref=e37]:
+          - generic [ref=e38]: 📩
+          - generic [ref=e39]: 문의/피드백
+        - button "📄 리포트" [ref=e40]:
+          - generic [ref=e41]: 📄
+          - generic [ref=e42]: 리포트
+        - button "⚙️ 설정" [ref=e43]:
+          - generic [ref=e44]: ⚙️
+          - generic [ref=e45]: 설정
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]: 로그인
+          - generic [ref=e49]: puzlcorp
+        - button "로그아웃" [ref=e50] [cursor=pointer]
+    - generic [ref=e51]:
+      - banner [ref=e52]:
+        - button "☰" [ref=e53]
+        - generic [ref=e55]: 주식회사 퍼즐코퍼레이션
+      - main [ref=e56]:
+        - heading "이벤트 관리" [level=1] [ref=e58]
+    - button "문의하기" [ref=e63]:
+      - img [ref=e64]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e71] [cursor=pointer]:
+    - img [ref=e72]
+  - alert [ref=e75]

@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T06:14:15.452Z",
+  "lastUpdated": "2026-03-31T07:47:41.675Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -837,9 +837,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-03-31T05:22:03.436Z"
+        "lastUpdated": "2026-03-31T07:47:33.953Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/route.ts"
     },
     "support": {
       "phase": "do",
@@ -1019,7 +1019,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:48:50.759Z",
-        "lastUpdated": "2026-03-31T05:21:21.022Z"
+        "lastUpdated": "2026-03-31T07:47:41.675Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/participate/route.ts"
     },
@@ -1045,7 +1045,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T05:25:57.718Z",
-        "lastUpdated": "2026-03-31T05:25:57.718Z"
+        "lastUpdated": "2026-03-31T07:28:30.215Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/participations/route.ts"
     }
@@ -1058,7 +1058,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T06:14:15.452Z"
+    "lastActivity": "2026-03-31T07:47:41.675Z"
   },
   "history": [
     {
@@ -6434,6 +6434,30 @@
     {
       "timestamp": "2026-03-31T06:14:15.452Z",
       "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T07:27:16.158Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T07:28:30.215Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T07:47:33.953Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T07:47:41.675Z",
+      "feature": "participate",
       "phase": "do",
       "action": "updated"
     }

@@ -1,0 +1,43 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - heading "404" [level=1] [ref=e4]
+    - heading "This page could not be found." [level=2] [ref=e6]
+  - generic [ref=e7]:
+    - button "피드백 열기" [ref=e8] [cursor=pointer]: 피드백
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - heading "피드백 보내기" [level=3] [ref=e11]
+        - button "닫기" [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: 유형
+          - generic [ref=e18]:
+            - button "결과 품질" [ref=e19] [cursor=pointer]
+            - button "사용성" [ref=e20] [cursor=pointer]
+            - button "버그" [ref=e21] [cursor=pointer]
+            - button "제안" [ref=e22] [cursor=pointer]
+        - generic [ref=e23]:
+          - generic [ref=e24]: 별점
+          - generic [ref=e25]:
+            - button "1점" [ref=e26] [cursor=pointer]: ★
+            - button "2점" [ref=e27] [cursor=pointer]: ★
+            - button "3점" [ref=e28] [cursor=pointer]: ★
+            - button "4점" [ref=e29] [cursor=pointer]: ★
+            - button "5점" [ref=e30] [cursor=pointer]: ★
+        - generic [ref=e31]:
+          - generic [ref=e32]: 내용 *
+          - textbox "어떤 점이 불편하거나 개선되길 원하시나요?" [ref=e33]
+          - paragraph [ref=e34]:
+            - img [ref=e35]
+            - text: 스크린샷을
+            - generic [ref=e37]: Ctrl+V
+            - text: "(Mac:"
+            - generic [ref=e38]: ⌘V
+            - text: )로 붙여넣기 가능
+        - generic [ref=e39]:
+          - generic [ref=e40]: 이메일 (선택사항)
+          - textbox "reply@example.com" [ref=e41]
+        - button "피드백 보내기" [disabled] [ref=e42]
+  - button "Open Next.js Dev Tools" [ref=e48] [cursor=pointer]:
+    - img [ref=e49]

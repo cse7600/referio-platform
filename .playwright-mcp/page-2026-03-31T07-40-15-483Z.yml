@@ -1,0 +1,156 @@
+- generic [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: 🏢
+        - generic [ref=e9]:
+          - generic [ref=e10]: 주식회사 퍼즐코퍼레이션
+          - generic [ref=e11]: 광고주 대시보드
+      - navigation [ref=e12]:
+        - button "📊 대시보드" [ref=e13]:
+          - generic [ref=e14]: 📊
+          - generic [ref=e15]: 대시보드
+        - button "👥 파트너 관리" [ref=e16]:
+          - generic [ref=e17]: 👥
+          - generic [ref=e18]: 파트너 관리
+        - button "📋 고객 관리" [ref=e19]:
+          - generic [ref=e20]: 📋
+          - generic [ref=e21]: 고객 관리
+        - button "💰 정산 관리" [ref=e22]:
+          - generic [ref=e23]: 💰
+          - generic [ref=e24]: 정산 관리
+        - button "📢 캠페인 설정" [ref=e25]:
+          - generic [ref=e26]: 📢
+          - generic [ref=e27]: 캠페인 설정
+        - button "🎉 이벤트" [ref=e28]:
+          - generic [ref=e29]: 🎉
+          - generic [ref=e30]: 이벤트
+        - button "📢 파트너 활동 지원" [ref=e31]:
+          - generic [ref=e32]: 📢
+          - generic [ref=e33]: 파트너 활동 지원
+        - button "💬 파트너 메시지" [ref=e34]:
+          - generic [ref=e35]: 💬
+          - generic [ref=e36]: 파트너 메시지
+        - button "📩 문의/피드백" [ref=e37]:
+          - generic [ref=e38]: 📩
+          - generic [ref=e39]: 문의/피드백
+        - button "📄 리포트" [ref=e40]:
+          - generic [ref=e41]: 📄
+          - generic [ref=e42]: 리포트
+        - button "⚙️ 설정" [ref=e43]:
+          - generic [ref=e44]: ⚙️
+          - generic [ref=e45]: 설정
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]: 로그인
+          - generic [ref=e49]: puzlcorp
+        - button "로그아웃" [ref=e50] [cursor=pointer]
+    - generic [ref=e51]:
+      - banner [ref=e52]:
+        - button "☰" [ref=e53]
+        - generic [ref=e55]: 주식회사 퍼즐코퍼레이션
+      - main [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - heading "이벤트 관리" [level=1] [ref=e78]
+              - paragraph [ref=e79]: 파트너에게 공지할 이벤트/프로모션을 관리합니다
+            - button "이벤트 생성" [ref=e80] [cursor=pointer]:
+              - img
+              - text: 이벤트 생성
+          - generic [ref=e81]:
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - generic [ref=e317]:
+                  - generic [ref=e318]:
+                    - generic [ref=e319]:
+                      - img
+                      - text: 이벤트
+                    - generic [ref=e320]: 진행 중
+                    - generic [ref=e344]: 비공개
+                  - heading "UAT 테스트 이벤트 (수정됨)" [level=3] [ref=e321]
+                  - paragraph [ref=e322]: "리워드: 커피 쿠폰"
+                - generic [ref=e323]: 🎉
+              - generic [ref=e324]:
+                - generic [ref=e325]:
+                  - generic [ref=e326]:
+                    - img [ref=e327]
+                    - text: 참여자 없음
+                  - generic [ref=e332]: UAT 테스트용 이벤트입니다.
+                - generic [ref=e333]:
+                  - button "비공개" [active] [ref=e345] [cursor=pointer]:
+                    - img
+                    - text: 비공개
+                  - button "수정" [ref=e335] [cursor=pointer]:
+                    - img
+                    - text: 수정
+                  - button "종료" [ref=e336] [cursor=pointer]
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - generic [ref=e85]:
+                  - generic [ref=e86]:
+                    - generic [ref=e87]:
+                      - img
+                      - text: 게시물 인증
+                    - generic [ref=e88]: 진행 중
+                  - heading "블로그 포스팅 인증 이벤트" [level=3] [ref=e89]
+                  - paragraph [ref=e90]: "리워드: 네이버페이 5000원 상품권"
+                - generic [ref=e91]: 📸
+              - generic [ref=e92]:
+                - generic [ref=e93]:
+                  - generic [ref=e94]: 2026-03-31 ~ 2026-04-14
+                  - generic [ref=e95]:
+                    - img [ref=e96]
+                    - text: 참여자 없음
+                  - generic [ref=e101]: 블로그에 제품 리뷰를 작성하고 인증해주세요!
+                - generic [ref=e102]:
+                  - button "공개" [ref=e103] [cursor=pointer]:
+                    - img
+                    - text: 공개
+                  - button "수정" [ref=e104] [cursor=pointer]:
+                    - img
+                    - text: 수정
+                  - button "종료" [ref=e105] [cursor=pointer]
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - generic [ref=e109]:
+                  - generic [ref=e110]:
+                    - generic [ref=e111]:
+                      - img
+                      - text: 이벤트
+                    - generic [ref=e112]: 진행 중
+                  - heading "테스트 이벤트 - 신규 배너 UI" [level=3] [ref=e113]
+                  - paragraph [ref=e114]: "리워드: 스타벅스 아메리카노 쿠폰"
+                - generic [ref=e115]: 🎉
+              - generic [ref=e116]:
+                - generic [ref=e117]:
+                  - generic [ref=e118]: 2026-03-31 ~ 2026-04-14
+                  - generic [ref=e119]:
+                    - img [ref=e120]
+                    - text: 참여자 없음
+                  - generic [ref=e125]: 테스트 이벤트입니다. 신청해주세요!
+                - generic [ref=e126]:
+                  - button "공개" [ref=e127] [cursor=pointer]:
+                    - img
+                    - text: 공개
+                  - button "수정" [ref=e128] [cursor=pointer]:
+                    - img
+                    - text: 수정
+                  - button "종료" [ref=e129] [cursor=pointer]
+    - button "문의하기" [ref=e63]:
+      - img [ref=e64]
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e346]:
+        - img [ref=e348]
+        - generic [ref=e352]: 비공개로 변경되었습니다
+  - button "Open Next.js Dev Tools" [ref=e211] [cursor=pointer]:
+    - generic [ref=e214]:
+      - text: Compiling
+      - generic [ref=e215]:
+        - generic [ref=e216]: .
+        - generic [ref=e217]: .
+        - generic [ref=e218]: .
+  - alert [ref=e75]
