@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
+import { sendFirstRevenueEmail } from '@/lib/email'
 
 export async function PATCH(
   request: NextRequest,
@@ -202,6 +203,48 @@ export async function PATCH(
         if (settError && !settError.message.includes('duplicate') && !settError.message.includes('unique')) {
           console.error('Contract settlement create error:', settError)
         }
+
+          // Email 8: 첫 수익 확정 축하 (파트너의 첫 번째 settlement일 때만)
+          if (referral.partner_id) {
+            try {
+              const { count: settlCount } = await supabase
+                .from('settlements')
+                .select('id', { count: 'exact', head: true })
+                .eq('partner_id', referral.partner_id)
+
+              if (settlCount === 1) {
+                const { data: partner } = await supabase
+                  .from('partners')
+                  .select('email, name')
+                  .eq('id', referral.partner_id)
+                  .single()
+
+                const { data: prog } = await supabase
+                  .from('partner_programs')
+                  .select('lead_commission, contract_commission, advertisers!inner(company_name, program_name)')
+                  .eq('partner_id', referral.partner_id)
+                  .eq('advertiser_id', referral.advertiser_id)
+                  .single()
+
+                if (partner?.email && prog) {
+                  const adv = Array.isArray(prog.advertisers) ? prog.advertisers[0] : prog.advertisers as { company_name: string; program_name: string | null }
+                  const commissionAmount = (prog.contract_commission || 0) > 0
+                    ? prog.contract_commission!
+                    : (prog.lead_commission || 0)
+
+                  sendFirstRevenueEmail({
+                    partnerEmail: partner.email,
+                    partnerName: partner.name || '파트너',
+                    programName: adv?.program_name || '',
+                    advertiserCompanyName: adv?.company_name || '',
+                    commissionAmount,
+                  }).catch(() => {})
+                }
+              }
+            } catch (e) {
+              console.error('[Email8] First revenue email error:', e)
+            }
+          }
       }
     }
 

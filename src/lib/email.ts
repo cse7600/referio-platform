@@ -690,3 +690,145 @@ export async function sendProgramRejectedEmail(options: {
     html,
   });
 }
+
+// CRM 이메일 7: 첫 고객 유입 축하 (프로그램별 최초 1회)
+export async function sendFirstLeadEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  programName: string;
+  advertiserCompanyName: string;
+  referralUrl?: string;
+  leadReceivedAt?: string; // 예: '2026-04-01 14:32'
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, programName, advertiserCompanyName, referralUrl, leadReceivedAt } = options;
+  const displayName = programName || advertiserCompanyName;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">첫 번째 고객이 문을 두드렸습니다 🎯</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님의 추천 링크로 <strong>${displayName}</strong>에 첫 번째 고객이 유입됐습니다.<br/>
+        ${leadReceivedAt ? `유입 시각: ${leadReceivedAt}` : ''}
+      </p>
+
+      <div style="background:#eef2ff;border-radius:8px;padding:20px;margin-bottom:20px;border:1px solid #c7d2fe;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#4338ca;">처음은 언제나 특별합니다 ✨</p>
+        <p style="margin:0;font-size:13px;color:#374151;line-height:1.7;">
+          이 첫 발걸음이 쌓이면 — 한 명이 열 명이 되고, 열 명이 수익이 됩니다.<br/>
+          유입된 고객이 계약으로 이어지면 커미션이 자동으로 확정됩니다.
+        </p>
+      </div>
+
+      <div style="background:#f8fafc;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#111827;">전환율을 높이는 파트너들의 방법</p>
+        <ul style="margin:0;padding-left:18px;color:#374151;font-size:13px;line-height:2;">
+          <li>링크를 한 곳에만 두지 않기 — 블로그, 카톡, SNS에 나눠서 노출</li>
+          <li>직접 추천 멘트 붙이기 — "제가 써봤는데 좋았어요"가 클릭률 3배</li>
+          <li>꾸준히 노출하기 — 오늘 클릭 → 2주 뒤 계약이 되는 경우가 많습니다</li>
+        </ul>
+      </div>
+
+      ${referralUrl ? `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 4px;font-size:12px;color:#166534;font-weight:600;">내 추천 링크</p>
+        <p style="margin:0;font-size:13px;color:#15803d;word-break:break-all;">${referralUrl}</p>
+      </div>` : ''}
+
+      <a href="https://referio.puzl.co.kr/dashboard/customers"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        유입 현황 대시보드 보기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ${partnerName}님, 첫 번째 고객이 ${displayName}에 문의했습니다 🎯`,
+    html,
+  });
+}
+
+// CRM 이메일 8: 첫 수익 확정 축하 (파트너 최초 settlement 생성 시)
+export async function sendFirstRevenueEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  programName: string;
+  advertiserCompanyName: string;
+  commissionAmount: number;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, programName, advertiserCompanyName, commissionAmount } = options;
+  const displayName = programName || advertiserCompanyName;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="background:#4f46e5;padding:28px 32px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#111827;">첫 번째 수익이 확정됐습니다 🎉</h2>
+      <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">
+        ${partnerName}님, <strong>${displayName}</strong>에서 첫 번째 커미션이 확정됐습니다!
+      </p>
+
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:24px;margin-bottom:20px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:13px;color:#166534;">확정 커미션</p>
+        <p style="margin:0;font-size:36px;font-weight:700;color:#15803d;">₩${commissionAmount.toLocaleString()}</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#6b7280;">정산 정보 등록 후 정산 일정에 맞춰 입금됩니다</p>
+      </div>
+
+      <div style="background:#eef2ff;border-radius:8px;padding:16px 20px;margin-bottom:24px;border:1px solid #c7d2fe;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#4338ca;">이제 진짜 시작입니다</p>
+        <p style="margin:0;font-size:13px;color:#374151;line-height:1.7;">
+          첫 수익을 만들어낸 파트너는 계속 수익을 만들어냅니다.<br/>
+          지금처럼만 계속하면 됩니다. 다음 커미션도 곧 만들어보세요!
+        </p>
+      </div>
+
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:14px 20px;margin-bottom:24px;">
+        <p style="margin:0;font-size:13px;color:#713f12;">
+          💡 정산을 받으려면 <strong>계좌 및 정산 정보를 먼저 등록</strong>해주세요.
+          아직 등록하지 않으셨다면 지금 바로 등록하세요.
+        </p>
+      </div>
+
+      <a href="https://referio.puzl.co.kr/dashboard/settlements"
+         style="display:inline-block;padding:12px 24px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">
+        수익 내역 확인하기
+      </a>
+    </div>
+    <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+      <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({
+    to: partnerEmail,
+    subject: `[Referio] ${partnerName}님, 첫 번째 커미션 ₩${commissionAmount.toLocaleString()}이 확정됐습니다 🎉`,
+    html,
+  });
+}

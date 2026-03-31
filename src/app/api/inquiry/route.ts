@@ -107,6 +107,50 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
+    // Email 7: 첫 고객 유입 축하 (파트너 있을 때만, 해당 파트너의 첫 리드일 때만)
+    if (partnerId) {
+      try {
+        const { count: leadCount } = await supabase
+          .from('referrals')
+          .select('id', { count: 'exact', head: true })
+          .eq('partner_id', partnerId)
+
+        if (leadCount === 1) {
+          // First ever lead for this partner
+          const { data: partner } = await supabase
+            .from('partners')
+            .select('email, name')
+            .eq('id', partnerId)
+            .single()
+
+          const { data: prog } = await supabase
+            .from('partner_programs')
+            .select('referral_code, advertiser_id, advertisers!inner(company_name, program_name, homepage_url)')
+            .eq('partner_id', partnerId)
+            .eq('advertiser_id', advertiser.id)
+            .single()
+
+          if (partner?.email && prog) {
+            const adv = Array.isArray(prog.advertisers) ? prog.advertisers[0] : prog.advertisers as { company_name: string; program_name: string | null; homepage_url: string | null }
+            const refUrl = adv?.homepage_url
+              ? `${adv.homepage_url}${adv.homepage_url.includes('?') ? '&' : '?'}ref=${prog.referral_code}`
+              : undefined
+
+            sendFirstLeadEmail({
+              partnerEmail: partner.email,
+              partnerName: partner.name || '파트너',
+              programName: adv?.program_name || '',
+              advertiserCompanyName: adv?.company_name || '',
+              referralUrl: refUrl,
+              leadReceivedAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+            }).catch(() => {})
+          }
+        }
+      } catch (e) {
+        console.error('[Email7] First lead email error:', e)
+      }
+    }
+
     // Slack 알림 (비동기)
     notifyNewInquiry({
       leadName: name,

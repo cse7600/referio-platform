@@ -1,25 +1,14 @@
 {
   "version": "1.0",
-  "enabled": true,
+  "enabled": false,
   "teamName": "",
   "feature": "inquiry",
   "pdcaPhase": "do",
   "orchestrationPattern": "leader",
   "ctoAgent": "opus",
   "startedAt": "2026-03-31T08:48:44.325Z",
-  "lastUpdated": "2026-03-31T08:48:44.326Z",
-  "teammates": [
-    {
-      "name": "a15d21a8b3a88b0de",
-      "role": "general-purpose",
-      "model": "sonnet",
-      "status": "spawning",
-      "currentTask": null,
-      "taskId": null,
-      "startedAt": "2026-03-31T08:48:44.326Z",
-      "lastActivityAt": "2026-03-31T08:48:44.326Z"
-    }
-  ],
+  "lastUpdated": "2026-03-31T08:52:31.837Z",
+  "teammates": [],
   "progress": {
     "totalTasks": 0,
     "completedTasks": 0,

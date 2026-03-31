@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T08:48:53.511Z",
+  "lastUpdated": "2026-03-31T08:52:21.898Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -75,7 +75,10 @@
     "callback",
     "participate",
     "promotions",
-    "participations"
+    "participations",
+    "nudge-inactive-partners",
+    "nudge-no-activity",
+    "monthly-performance-report"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -89,7 +92,7 @@
       "phaseNumber": 3,
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/inquiry/route.ts",
       "timestamps": {
-        "lastUpdated": "2026-03-31T08:48:53.511Z"
+        "lastUpdated": "2026-03-31T08:49:04.435Z"
       }
     },
     "security": {
@@ -348,7 +351,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-31T08:24:13.245Z"
+        "lastUpdated": "2026-03-31T08:49:46.993Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
@@ -361,9 +364,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-31T08:23:51.240Z"
+        "lastUpdated": "2026-03-31T08:49:19.631Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/referrals/[id]/route.ts"
     },
     "schema": {
       "phase": "do",
@@ -1048,6 +1051,45 @@
         "lastUpdated": "2026-03-31T07:28:30.215Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/participations/route.ts"
+    },
+    "nudge-inactive-partners": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T08:50:49.566Z",
+        "lastUpdated": "2026-03-31T08:50:49.566Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/nudge-inactive-partners/route.ts"
+    },
+    "nudge-no-activity": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T08:51:32.892Z",
+        "lastUpdated": "2026-03-31T08:51:32.892Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/nudge-no-activity/route.ts"
+    },
+    "monthly-performance-report": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-31T08:52:21.898Z",
+        "lastUpdated": "2026-03-31T08:52:21.898Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/monthly-performance-report/route.ts"
     }
   },
   "pipeline": {
@@ -1058,7 +1100,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T08:48:53.511Z"
+    "lastActivity": "2026-03-31T08:52:21.898Z"
   },
   "history": [
     {
@@ -6602,6 +6644,48 @@
     {
       "timestamp": "2026-03-31T08:48:53.511Z",
       "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:49:04.435Z",
+      "feature": "inquiry",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:49:10.120Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:49:19.631Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:49:46.993Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:50:49.566Z",
+      "feature": "nudge-inactive-partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:51:32.892Z",
+      "feature": "nudge-no-activity",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T08:52:21.898Z",
+      "feature": "monthly-performance-report",
       "phase": "do",
       "action": "updated"
     }
