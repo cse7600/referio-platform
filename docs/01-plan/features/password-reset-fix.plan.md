@@ -136,6 +136,7 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 | 2026-03-31 | production | 근본 원인 수정: PKCE 이중 교환 버그 제거 + Supabase site_url 오설정 수정 + Resend SMTP 연동 + 이메일 브랜딩 | 성공 |
 | 2026-03-31 | production | 완전 재작성: Supabase 순정 플로우 적용 — callback 서버 교환 + reset-password 세션 확인만 | 성공 |
 | 2026-03-31 | production | 버그픽스: createBrowserClient 자동 코드교환 ↔ 수동 exchangeCodeForSession 이중 교환 경쟁 상태 해결 | 성공 |
+| 2026-03-31 | production | 보안·안정성 개선: 스크립트 하드코딩 시크릿 제거, BrandedSignupForm Case 3 PKCE 폴백 세션 확인, 이메일 발송 에러 처리, reset-password 세션 만료 메시지 구분 | 성공 |
 
 ## Version History
 
@@ -146,3 +147,4 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 | 0.3 | 2026-03-31 | 근본 수정: PKCE 이중 교환 버그, Supabase site_url 오설정(feedhub→referio), Resend SMTP 연동, 이메일 브랜드 템플릿 | CTO Lead |
 | 0.4 | 2026-03-31 | 완전 재작성: Supabase 순정 플로우. 코드 교환 서버 전담(/auth/callback), reset-password는 세션 확인만. Supabase Management API로 site_url·SMTP·이메일 템플릿 직접 업데이트 | CTO Lead |
 | 0.5 | 2026-03-31 | 버그픽스: createBrowserClient 자동 코드교환과 수동 exchangeCodeForSession 이중 호출로 인한 "만료" 에러 수정. redirectTo를 /auth/callback?type=recovery로 변경 | CTO Lead |
+| 0.6 | 2026-03-31 | 보안·안정성 개선: 스크립트 시크릿 하드코딩 제거(process.env), BrandedSignupForm PKCE 폴백 세션 확인 추가, resend-setup-link 이메일 발송 결과 검증, reset-password 세션 만료 에러 구분 | CTO Lead |

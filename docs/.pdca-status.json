@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-31T05:32:17.446Z",
+  "lastUpdated": "2026-03-31T05:58:16.423Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -140,9 +140,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T02:00:39.130Z",
-        "lastUpdated": "2026-03-30T03:24:19.201Z"
+        "lastUpdated": "2026-03-31T05:58:08.607Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/inquiry/[advertiserId]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/[advertiserId]/BrandedSignupForm.tsx"
     },
     "campaigns": {
       "phase": "do",
@@ -270,7 +270,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T06:55:49.716Z",
-        "lastUpdated": "2026-03-31T05:30:45.114Z"
+        "lastUpdated": "2026-03-31T05:58:16.423Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/reset-password/page.tsx"
     },
@@ -460,9 +460,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-03-30T07:02:43.138Z"
+        "lastUpdated": "2026-03-31T05:57:46.524Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/sync-airtable-settlement.js"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-test-email.js"
     },
     "stats": {
       "phase": "do",
@@ -759,7 +759,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T00:41:45.973Z",
-        "lastUpdated": "2026-03-30T00:48:08.261Z"
+        "lastUpdated": "2026-03-31T05:57:55.481Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/public/resend-setup-link/route.ts"
     },
@@ -1058,7 +1058,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-31T05:32:17.446Z"
+    "lastActivity": "2026-03-31T05:58:16.423Z"
   },
   "history": [
     {
@@ -6398,6 +6398,36 @@
     {
       "timestamp": "2026-03-31T05:32:17.446Z",
       "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T05:57:37.132Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T05:57:46.524Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T05:57:55.481Z",
+      "feature": "resend-setup-link",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T05:58:08.607Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-31T05:58:16.423Z",
+      "feature": "reset-password",
       "phase": "do",
       "action": "updated"
     }
