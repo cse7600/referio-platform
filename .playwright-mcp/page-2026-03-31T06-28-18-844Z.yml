@@ -1,0 +1,84 @@
+- generic:
+  - link:
+    - /url: https://puzl.co.kr
+    - text: Powered by 퍼즐코퍼레이션
+  - generic:
+    - generic:
+      - complementary:
+        - generic:
+          - generic:
+            - link:
+              - /url: /dashboard
+              - generic:
+                - generic: R
+              - generic: Referio
+          - generic:
+            - generic:
+              - paragraph: 프로그램
+              - combobox [expanded]:
+                - generic: 한화비전 키퍼 메이트
+                - img
+          - navigation:
+            - link:
+              - /url: /dashboard
+              - img
+              - text: 홈
+            - link:
+              - /url: /dashboard/programs
+              - img
+              - text: 프로그램
+            - link:
+              - /url: /dashboard/events
+              - img
+              - text: 이벤트
+            - link:
+              - /url: /dashboard/customers
+              - img
+              - text: 고객
+            - link:
+              - /url: /dashboard/settlements
+              - img
+              - text: 지급
+            - link:
+              - /url: /dashboard/activity
+              - img
+              - text: 활동 지원
+            - link:
+              - /url: /dashboard/support
+              - img
+              - text: 문의
+            - link:
+              - /url: /dashboard/profile
+              - img
+              - text: 활동정보
+          - generic:
+            - button:
+              - generic:
+                - generic:
+                  - generic: 최
+                - generic: 최영민
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=1]: 이벤트
+              - paragraph: 한화비전의 진행 중인 이벤트
+            - generic:
+              - generic:
+                - generic: 🎪
+                - paragraph: 진행 중인 이벤트가 없습니다
+                - paragraph: 새로운 이벤트가 시작되면 알려드릴게요!
+      - button:
+        - img
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e67] [cursor=pointer]:
+    - img [ref=e68]
+  - alert
+  - listbox [ref=e118]:
+    - option "한화비전 키퍼 메이트" [active] [selected] [ref=e119]:
+      - generic [ref=e121]:
+        - img
+      - generic [ref=e122]: 한화비전 키퍼 메이트
+    - option "Referio" [ref=e123]:
+      - generic [ref=e125]: Referio

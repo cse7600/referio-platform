@@ -1,0 +1,68 @@
+- generic [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - link "R Referio" [ref=e8] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e10]: R
+          - generic [ref=e11]: Referio
+        - generic [ref=e72]:
+          - paragraph [ref=e73]: 프로그램
+          - combobox [active] [ref=e74]:
+            - generic: Referio
+            - img
+        - navigation [ref=e13]:
+          - link "홈" [ref=e126] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e127]
+            - text: 홈
+          - link "프로그램" [ref=e130] [cursor=pointer]:
+            - /url: /dashboard/programs
+            - img [ref=e131]
+            - text: 프로그램
+          - link "이벤트" [ref=e134] [cursor=pointer]:
+            - /url: /dashboard/events
+            - img [ref=e135]
+            - text: 이벤트
+          - link "고객" [ref=e139] [cursor=pointer]:
+            - /url: /dashboard/customers
+            - img [ref=e140]
+            - text: 고객
+          - link "지급" [ref=e145] [cursor=pointer]:
+            - /url: /dashboard/settlements
+            - img [ref=e146]
+            - text: 지급
+          - link "활동 지원" [ref=e149] [cursor=pointer]:
+            - /url: /dashboard/activity
+            - img [ref=e150]
+            - text: 활동 지원
+          - link "문의" [ref=e153] [cursor=pointer]:
+            - /url: /dashboard/support
+            - img [ref=e154]
+            - text: 문의
+          - link "활동정보" [ref=e156] [cursor=pointer]:
+            - /url: /dashboard/profile
+            - img [ref=e157]
+            - text: 활동정보
+        - button "최 최영민" [ref=e109] [cursor=pointer]:
+          - generic [ref=e50]:
+            - generic [ref=e52]: 최
+            - generic [ref=e53]: 최영민
+          - img
+    - main [ref=e54]:
+      - generic [ref=e56]:
+        - generic [ref=e160]:
+          - heading "이벤트" [level=1] [ref=e161]
+          - paragraph [ref=e162]: 주식회사 퍼즐코퍼레이션의 진행 중인 이벤트
+        - generic [ref=e164]:
+          - generic [ref=e165]: 🎪
+          - paragraph [ref=e166]: 진행 중인 이벤트가 없습니다
+          - paragraph [ref=e167]: 새로운 이벤트가 시작되면 알려드릴게요!
+    - button "문의하기" [ref=e59]:
+      - img [ref=e60]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e67] [cursor=pointer]:
+    - img [ref=e68]
+  - alert [ref=e71]

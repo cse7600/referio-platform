@@ -1,0 +1,103 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e4]:
+    - complementary [ref=e18]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: 🏢
+        - generic [ref=e22]:
+          - generic [ref=e23]: 주식회사 퍼즐코퍼레이션
+          - generic [ref=e24]: 광고주 대시보드
+      - navigation [ref=e25]:
+        - button "📊 대시보드" [ref=e26]:
+          - generic [ref=e27]: 📊
+          - generic [ref=e28]: 대시보드
+        - button "👥 파트너 관리" [ref=e29]:
+          - generic [ref=e30]: 👥
+          - generic [ref=e31]: 파트너 관리
+        - button "📋 고객 관리" [ref=e32]:
+          - generic [ref=e33]: 📋
+          - generic [ref=e34]: 고객 관리
+        - button "💰 정산 관리" [ref=e35]:
+          - generic [ref=e36]: 💰
+          - generic [ref=e37]: 정산 관리
+        - button "📢 캠페인 설정" [ref=e38]:
+          - generic [ref=e39]: 📢
+          - generic [ref=e40]: 캠페인 설정
+        - button "🎉 이벤트" [ref=e41]:
+          - generic [ref=e42]: 🎉
+          - generic [ref=e43]: 이벤트
+        - button "📢 파트너 활동 지원" [ref=e44]:
+          - generic [ref=e45]: 📢
+          - generic [ref=e46]: 파트너 활동 지원
+        - button "💬 파트너 메시지" [ref=e47]:
+          - generic [ref=e48]: 💬
+          - generic [ref=e49]: 파트너 메시지
+        - button "📩 문의/피드백" [ref=e50]:
+          - generic [ref=e51]: 📩
+          - generic [ref=e52]: 문의/피드백
+        - button "📄 리포트" [ref=e53]:
+          - generic [ref=e54]: 📄
+          - generic [ref=e55]: 리포트
+        - button "⚙️ 설정" [ref=e56]:
+          - generic [ref=e57]: ⚙️
+          - generic [ref=e58]: 설정
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: 로그인
+          - generic [ref=e62]: puzlcorp
+        - button "로그아웃" [ref=e63] [cursor=pointer]
+    - generic [ref=e64]:
+      - banner [ref=e65]:
+        - button "☰" [ref=e66]
+        - generic [ref=e68]: 주식회사 퍼즐코퍼레이션
+      - main [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - heading "이벤트 관리" [level=1] [ref=e73]
+              - paragraph [ref=e74]: 파트너에게 공지할 이벤트/프로모션을 관리합니다
+            - button "이벤트 생성" [ref=e75] [cursor=pointer]:
+              - img
+              - text: 이벤트 생성
+          - generic [ref=e167]:
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - generic [ref=e170]:
+                  - generic [ref=e171]:
+                    - img
+                    - text: 이벤트
+                  - generic [ref=e172]: 진행 중
+                - heading "테스트 이벤트 - 신규 배너 UI" [level=3] [ref=e173]
+                - paragraph [ref=e174]: "리워드: 스타벅스 아메리카노 쿠폰"
+              - generic [ref=e175]: 🎉
+            - generic [ref=e176]:
+              - generic [ref=e177]:
+                - generic [ref=e178]: 2026-03-31 ~ 2026-04-14
+                - generic [ref=e179]:
+                  - img [ref=e180]
+                  - text: 참여자 없음
+                - generic [ref=e185]: 테스트 이벤트입니다. 신청해주세요!
+              - generic [ref=e186]:
+                - button "공개" [ref=e187] [cursor=pointer]:
+                  - img
+                  - text: 공개
+                - button "수정" [ref=e188] [cursor=pointer]:
+                  - img
+                  - text: 수정
+                - button "종료" [ref=e189] [cursor=pointer]
+    - button "문의하기" [ref=e80]:
+      - img [ref=e81]
+  - region "Notifications alt+T":
+    - list:
+      - listitem [ref=e190]:
+        - img [ref=e192]
+        - generic [ref=e196]: 이벤트가 생성되었습니다
+  - button "Open Next.js Dev Tools" [ref=e156] [cursor=pointer]:
+    - generic [ref=e159]:
+      - text: Compiling
+      - generic [ref=e160]:
+        - generic [ref=e161]: .
+        - generic [ref=e162]: .
+        - generic [ref=e163]: .
+  - alert [ref=e17]

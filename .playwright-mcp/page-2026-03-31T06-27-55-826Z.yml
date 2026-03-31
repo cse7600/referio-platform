@@ -1,0 +1,177 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e52]:
+    - complementary [ref=e53]:
+      - generic [ref=e54]:
+        - link "R Referio" [ref=e56] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e58]: R
+          - generic [ref=e59]: Referio
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: 프로그램
+          - combobox [ref=e63]:
+            - generic: 한화비전 키퍼 메이트
+            - img
+        - navigation [ref=e64]:
+          - link "홈" [ref=e65] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e66]
+            - text: 홈
+          - link "프로그램" [ref=e69] [cursor=pointer]:
+            - /url: /dashboard/programs
+            - img [ref=e70]
+            - text: 프로그램
+          - link "이벤트" [ref=e73] [cursor=pointer]:
+            - /url: /dashboard/events
+            - img [ref=e74]
+            - text: 이벤트
+          - link "고객" [ref=e78] [cursor=pointer]:
+            - /url: /dashboard/customers
+            - img [ref=e79]
+            - text: 고객
+          - link "지급" [ref=e84] [cursor=pointer]:
+            - /url: /dashboard/settlements
+            - img [ref=e85]
+            - text: 지급
+          - link "활동 지원" [ref=e88] [cursor=pointer]:
+            - /url: /dashboard/activity
+            - img [ref=e89]
+            - text: 활동 지원
+          - link "문의" [ref=e92] [cursor=pointer]:
+            - /url: /dashboard/support
+            - img [ref=e93]
+            - text: 문의
+          - link "활동정보" [ref=e95] [cursor=pointer]:
+            - /url: /dashboard/profile
+            - img [ref=e96]
+            - text: 활동정보
+        - button "최 최영민" [ref=e100] [cursor=pointer]:
+          - generic [ref=e101]:
+            - generic [ref=e103]: 최
+            - generic [ref=e104]: 최영민
+          - img
+    - main [ref=e105]:
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - heading "최영민님, 환영합니다!" [level=1] [ref=e110]
+            - paragraph [ref=e111]: 오늘도 함께 성장해요
+          - generic [ref=e112]:
+            - img
+            - text: Authorized
+        - generic [ref=e113]:
+          - generic [ref=e115]: 전체 진행률
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - progressbar [ref=e118]
+              - generic [ref=e120]: 2/6 완료
+            - paragraph [ref=e121]: 33% 달성
+        - generic [ref=e122]:
+          - generic [ref=e124]: 내 추천 URL
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - generic [ref=e128]: 한화비전 키퍼 메이트
+                - code [ref=e129]: "코드: 89S42E"
+              - generic [ref=e130]:
+                - code [ref=e131]: https://keeper.ceo/security?ref=89S42E
+                - button [ref=e132] [cursor=pointer]:
+                  - img
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]: Referio
+                - code [ref=e136]: "코드: B002700C"
+              - generic [ref=e137]:
+                - code [ref=e138]: https://referio.puzl.co.kr/?ref=B002700C
+                - button [ref=e139] [cursor=pointer]:
+                  - img
+            - paragraph [ref=e140]: 링크를 공유하면 유입 고객이 자동으로 기록됩니다
+        - generic [ref=e141]:
+          - generic [ref=e143]: 마일스톤
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - heading "시작하기" [level=4] [ref=e147]
+              - generic [ref=e148]:
+                - generic [ref=e149]:
+                  - img [ref=e150]
+                  - generic [ref=e153]: 파트너 가입 완료
+                - generic [ref=e154]:
+                  - img [ref=e155]
+                  - generic [ref=e158]: 프로그램 승인 받기
+            - generic [ref=e159]:
+              - heading "활동하기" [level=4] [ref=e160]
+              - generic [ref=e161]:
+                - generic [ref=e162]:
+                  - img [ref=e163]
+                  - generic [ref=e165]: 첫 고객 유치하기
+                - generic [ref=e166]:
+                  - img [ref=e167]
+                  - generic [ref=e169]: 첫 유효 DB 달성
+            - generic [ref=e170]:
+              - heading "성장하기" [level=4] [ref=e171]
+              - generic [ref=e172]:
+                - generic [ref=e173]:
+                  - img [ref=e174]
+                  - generic [ref=e176]: 첫 계약 달성
+                - generic [ref=e177]:
+                  - img [ref=e178]
+                  - generic [ref=e180]: 첫 정산 받기
+        - generic [ref=e181]:
+          - generic [ref=e184]:
+            - img [ref=e186]
+            - generic [ref=e189]:
+              - paragraph [ref=e190]: 승인 상태
+              - paragraph [ref=e191]: 승인
+          - generic [ref=e194]:
+            - img [ref=e196]
+            - generic [ref=e201]:
+              - paragraph [ref=e202]: 유치 고객
+              - paragraph [ref=e203]: 0명
+          - generic [ref=e206]:
+            - img [ref=e208]
+            - generic [ref=e212]:
+              - paragraph [ref=e213]: 유효 DB
+              - paragraph [ref=e214]: 0건
+          - generic [ref=e217]:
+            - img [ref=e219]
+            - generic [ref=e222]:
+              - paragraph [ref=e223]: 누적 정산
+              - paragraph [ref=e224]: ₩0
+        - generic [ref=e227]:
+          - generic [ref=e228]: 🥇
+          - generic [ref=e229]:
+            - paragraph [ref=e230]:
+              - text: "이번 달 내 순위:"
+              - generic [ref=e231]: 1위
+              - generic [ref=e232]: / 전체 1명
+            - paragraph [ref=e233]: 유효 리드 수 기준
+        - generic [ref=e234]:
+          - generic [ref=e236]: 콘텐츠 작성 전 필독
+          - generic [ref=e238]:
+            - link "블로거를 위한 가이드" [ref=e239] [cursor=pointer]:
+              - /url: /dashboard/guides#blog
+              - generic [ref=e240]: 블로거를 위한 가이드
+              - img [ref=e241]
+            - link "인스타그래머를 위한 가이드" [ref=e245] [cursor=pointer]:
+              - /url: /dashboard/guides#instagram
+              - generic [ref=e246]: 인스타그래머를 위한 가이드
+              - img [ref=e247]
+            - link "유튜버를 위한 가이드" [ref=e251] [cursor=pointer]:
+              - /url: /dashboard/guides#youtube
+              - generic [ref=e252]: 유튜버를 위한 가이드
+              - img [ref=e253]
+            - link "지인 영업을 위한 가이드" [ref=e257] [cursor=pointer]:
+              - /url: /dashboard/guides#referral
+              - generic [ref=e258]: 지인 영업을 위한 가이드
+              - img [ref=e259]
+            - link "카톡방/카페 영업을 위한 가이드" [ref=e263] [cursor=pointer]:
+              - /url: /dashboard/guides#community
+              - generic [ref=e264]: 카톡방/카페 영업을 위한 가이드
+              - img [ref=e265]
+    - button "문의하기" [ref=e269]:
+      - img [ref=e270]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e47] [cursor=pointer]:
+    - img [ref=e48]
+  - alert [ref=e51]

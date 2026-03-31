@@ -12,7 +12,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = 'https://eqdnirtgmevhobmycxzn.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxZG5pcnRnbWV2aG9ibXljeHpuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDI1OTIwMSwiZXhwIjoyMDg1ODM1MjAxfQ.n9mhy92E3ePAXAvlat60wVKqd2H0BpdNmrmKindHlxU';
-const SUPABASE_MANAGEMENT_API_KEY = 'sbp_1340fa6745900f442022994429553f793589652c';
+const SUPABASE_MANAGEMENT_API_KEY = 'sbp_70571b31f1c7f1d9b7eee7a6f654bcf13dd86f6f';
 const SUPABASE_PROJECT_REF = 'eqdnirtgmevhobmycxzn';
 const RESEND_API_KEY = 're_eS5DK9gX_JWh6hjbLK2NdbLLcghtmFuot';
 const FROM_EMAIL = 'noreply@updates.puzl.co.kr';

@@ -1,0 +1,138 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e48]:
+        - generic [ref=e49]: 🏢
+        - generic [ref=e50]:
+          - generic [ref=e51]: 주식회사 퍼즐코퍼레이션
+          - generic [ref=e52]: 광고주 대시보드
+      - navigation [ref=e53]:
+        - button "📊 대시보드" [ref=e54]:
+          - generic [ref=e55]: 📊
+          - generic [ref=e56]: 대시보드
+        - button "👥 파트너 관리" [ref=e57]:
+          - generic [ref=e58]: 👥
+          - generic [ref=e59]: 파트너 관리
+        - button "📋 고객 관리" [ref=e60]:
+          - generic [ref=e61]: 📋
+          - generic [ref=e62]: 고객 관리
+        - button "💰 정산 관리" [ref=e63]:
+          - generic [ref=e64]: 💰
+          - generic [ref=e65]: 정산 관리
+        - button "📢 캠페인 설정" [ref=e66]:
+          - generic [ref=e67]: 📢
+          - generic [ref=e68]: 캠페인 설정
+        - button "🎉 이벤트" [ref=e69]:
+          - generic [ref=e70]: 🎉
+          - generic [ref=e71]: 이벤트
+        - button "📢 파트너 활동 지원" [ref=e72]:
+          - generic [ref=e73]: 📢
+          - generic [ref=e74]: 파트너 활동 지원
+        - button "💬 파트너 메시지" [ref=e75]:
+          - generic [ref=e76]: 💬
+          - generic [ref=e77]: 파트너 메시지
+        - button "📩 문의/피드백" [ref=e78]:
+          - generic [ref=e79]: 📩
+          - generic [ref=e80]: 문의/피드백
+        - button "📄 리포트" [ref=e81]:
+          - generic [ref=e82]: 📄
+          - generic [ref=e83]: 리포트
+        - button "⚙️ 설정" [ref=e84]:
+          - generic [ref=e85]: ⚙️
+          - generic [ref=e86]: 설정
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - generic [ref=e89]: 로그인
+          - generic [ref=e90]: puzlcorp
+        - button "로그아웃" [ref=e91] [cursor=pointer]
+    - generic [ref=e92]:
+      - banner [ref=e93]:
+        - button "☰" [ref=e94]
+        - generic [ref=e96]: 주식회사 퍼즐코퍼레이션
+      - main [ref=e97]:
+        - generic [ref=e98]:
+          - generic [ref=e99]:
+            - heading "대시보드" [level=1] [ref=e100]
+            - paragraph [ref=e101]: 파트너 프로그램 현황을 확인하세요
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - generic [ref=e105]: 🚀
+              - heading "3단계로 시작하기" [level=2] [ref=e106]
+            - generic [ref=e107]:
+              - link "1 캠페인 설정 수수료 금액과 프로그램 소개를 설정하세요 캠페인 설정하기 →" [ref=e108] [cursor=pointer]:
+                - /url: /advertiser/campaigns
+                - generic [ref=e109]:
+                  - generic [ref=e110]: "1"
+                  - paragraph [ref=e111]: 캠페인 설정
+                - paragraph [ref=e112]: 수수료 금액과 프로그램 소개를 설정하세요
+                - paragraph [ref=e113]: 캠페인 설정하기 →
+              - link "2 문의 폼 링크 확인 파트너가 공유할 문의 폼 링크를 확인하고 테스트하세요 설정 보기 →" [ref=e114] [cursor=pointer]:
+                - /url: /advertiser/settings
+                - generic [ref=e115]:
+                  - generic [ref=e116]: "2"
+                  - paragraph [ref=e117]: 문의 폼 링크 확인
+                - paragraph [ref=e118]: 파트너가 공유할 문의 폼 링크를 확인하고 테스트하세요
+                - paragraph [ref=e119]: 설정 보기 →
+              - link "3 파트너 모집 파트너 신청을 승인하고 활동을 시작하세요 파트너 관리 →" [ref=e120] [cursor=pointer]:
+                - /url: /advertiser/partners
+                - generic [ref=e121]:
+                  - generic [ref=e122]: "3"
+                  - paragraph [ref=e123]: 파트너 모집
+                - paragraph [ref=e124]: 파트너 신청을 승인하고 활동을 시작하세요
+                - paragraph [ref=e125]: 파트너 관리 →
+          - generic [ref=e126]:
+            - generic [ref=e128]:
+              - generic [ref=e129]:
+                - paragraph [ref=e130]: 전체 파트너
+                - paragraph [ref=e131]: "0"
+                - paragraph [ref=e132]: 활성 0명
+              - generic [ref=e133]: 👥
+            - generic [ref=e135]:
+              - generic [ref=e136]:
+                - paragraph [ref=e137]: 총 유입 고객
+                - paragraph [ref=e138]: "0"
+                - paragraph [ref=e139]: 유효 0건
+              - generic [ref=e140]: 📊
+            - generic [ref=e142]:
+              - generic [ref=e143]:
+                - paragraph [ref=e144]: 정산 건수
+                - paragraph [ref=e145]: "0"
+                - paragraph [ref=e146]: 대기 0건
+              - generic [ref=e147]: 📝
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - paragraph [ref=e151]: 이번 달 정산
+                - paragraph [ref=e152]: ₩0
+              - generic [ref=e153]: 💰
+          - generic [ref=e154]:
+            - heading "최근 활동" [level=2] [ref=e155]
+            - generic [ref=e156]:
+              - generic [ref=e157]: 📭
+              - paragraph [ref=e158]: 아직 활동 내역이 없습니다
+          - generic [ref=e159]:
+            - link "👥 파트너 관리 파트너를 승인하고 관리하세요" [ref=e160] [cursor=pointer]:
+              - /url: /advertiser/partners
+              - generic [ref=e161]:
+                - generic [ref=e162]: 👥
+                - heading "파트너 관리" [level=3] [ref=e163]
+                - paragraph [ref=e164]: 파트너를 승인하고 관리하세요
+            - link "📢 캠페인 설정 수수료와 정책을 설정하세요" [ref=e165] [cursor=pointer]:
+              - /url: /advertiser/campaigns
+              - generic [ref=e166]:
+                - generic [ref=e167]: 📢
+                - heading "캠페인 설정" [level=3] [ref=e168]
+                - paragraph [ref=e169]: 수수료와 정책을 설정하세요
+            - link "💰 정산 관리 정산 내역을 확인하세요" [ref=e170] [cursor=pointer]:
+              - /url: /advertiser/settlements
+              - generic [ref=e171]:
+                - generic [ref=e172]: 💰
+                - heading "정산 관리" [level=3] [ref=e173]
+                - paragraph [ref=e174]: 정산 내역을 확인하세요
+    - button "문의하기" [ref=e175]:
+      - img [ref=e176]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e40] [cursor=pointer]:
+    - img [ref=e41]
+  - alert [ref=e44]

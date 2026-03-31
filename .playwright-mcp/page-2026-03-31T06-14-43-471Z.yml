@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - link "Powered by 퍼즐코퍼레이션" [ref=e2] [cursor=pointer]:
+    - /url: https://puzl.co.kr
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - heading "광고주 로그인" [level=1] [ref=e12]
+      - paragraph [ref=e13]: 파트너 프로그램 관리 시스템
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - img [ref=e17]
+          - text: 로그인 ID
+        - textbox "로그인 ID" [ref=e21]:
+          - /placeholder: 가입 시 설정한 로그인 ID
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - img [ref=e24]
+          - text: 비밀번호
+        - textbox "비밀번호" [ref=e27]:
+          - /placeholder: ••••••••
+      - button "로그인" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - text: 광고주 계정이 없으신가요?
+        - button "무료로 시작하기" [ref=e31]
+      - generic [ref=e32]:
+        - text: 비밀번호를 잊으셨나요?
+        - link "referio@puzl.co.kr로 로그인 ID와 함께 문의하세요" [ref=e33] [cursor=pointer]:
+          - /url: "mailto:referio@puzl.co.kr?subject=광고주 비밀번호 초기화 요청&body=로그인 ID: "
+      - button "파트너 로그인으로 이동 →" [ref=e34]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e40] [cursor=pointer]:
+    - img [ref=e41]
+  - alert [ref=e44]
