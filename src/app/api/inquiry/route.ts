@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendAdvertiserNewLeadEmail } from '@/lib/email'
+import { sendAdvertiserNewLeadEmail, sendFirstLeadEmail } from '@/lib/email'
 import { notifyNewInquiry } from '@/lib/slack'
 
 // UUID 패턴 확인
