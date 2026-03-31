@@ -22,7 +22,7 @@ export type EmailType =
 
 export type ThrottleCheckResult = {
   canSend: boolean;
-  reason?: 'daily_limit_exceeded' | 'duplicate_within_24h' | 'lower_priority';
+  reason?: 'daily_limit_exceeded' | 'duplicate_within_24h' | 'lower_priority' | 'opted_out';
 };
 
 // Priority: lower number = higher priority. 0 = mandatory (no throttle).
@@ -62,6 +62,17 @@ export async function canSendEmail(
   if (isMandatory) return { canSend: true };
 
   const supabase = createAdminClient();
+
+  // Check if partner has opted out of marketing emails
+  const { data: partnerRow } = await supabase
+    .from('partners')
+    .select('email_opted_out')
+    .eq('id', partnerId)
+    .single();
+  if (partnerRow?.email_opted_out) {
+    return { canSend: false, reason: 'opted_out' };
+  }
+
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
@@ -94,6 +105,20 @@ export async function canSendEmail(
   }
 
   return { canSend: true };
+}
+
+/**
+ * Check if a partner has opted out of marketing emails.
+ * Used by email functions that don't go through the full throttle pipeline.
+ */
+export async function isEmailOptedOut(partnerId: string): Promise<boolean> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from('partners')
+    .select('email_opted_out')
+    .eq('id', partnerId)
+    .single();
+  return !!data?.email_opted_out;
 }
 
 /**

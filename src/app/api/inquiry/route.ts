@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
               advertiserCompanyName: adv?.company_name || '',
               referralUrl: refUrl,
               leadReceivedAt: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+              partnerId,
             }).catch(() => {})
           }
         }

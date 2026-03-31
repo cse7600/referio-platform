@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS violation_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   partner_id UUID NOT NULL REFERENCES partners(id) ON DELETE CASCADE,
-  program_id UUID REFERENCES programs(id),
+  program_id UUID REFERENCES partner_programs(id),
   description TEXT NOT NULL,
   occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   confirmed_by TEXT,

@@ -25,7 +25,10 @@ import {
   X,
   ArrowRight,
   AlertTriangle,
+  Bell,
+  BellOff,
 } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { useProgram } from '@/app/dashboard/ProgramContext'
 import type { Partner } from '@/types/database'
@@ -61,6 +64,10 @@ export default function ProfilePage() {
   const [partner, setPartner] = useState<Partner | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // 이메일 수신 설정
+  const [emailOptOut, setEmailOptOut] = useState(false)
+  const [savingEmailPref, setSavingEmailPref] = useState(false)
 
   // Withdrawal state
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
@@ -113,6 +120,8 @@ export default function ProfilePage() {
           setMainChannelLink(partnerData.main_channel_link || '')
           // SSN: only store whether it exists, discard the encrypted value
           setHasSSN(!!(partnerData as Record<string, unknown>).ssn_encrypted)
+          // Email opt-out preference
+          setEmailOptOut(!!(partnerData as Record<string, unknown>).email_opted_out)
           // 소셜 채널
           const pd = partnerData as typeof partnerData & {
             channel_type?: string
@@ -236,6 +245,27 @@ export default function ProfilePage() {
     setCopiedProgramId(programId)
     toast.success('추천 링크가 복사되었습니다')
     setTimeout(() => setCopiedProgramId(null), 2000)
+  }
+
+  const handleToggleEmailOptOut = async (value: boolean) => {
+    setSavingEmailPref(true)
+    try {
+      const res = await fetch('/api/partner/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_opted_out: value }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setEmailOptOut(value)
+        toast.success(value ? '마케팅 이메일 수신이 거부됐습니다' : '마케팅 이메일 수신이 활성화됐습니다')
+      } else {
+        toast.error(data.error || '저장에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setSavingEmailPref(false)
   }
 
   const handleWithdraw = async () => {
@@ -763,6 +793,43 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 이메일 수신 설정 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">이메일 수신 설정</CardTitle>
+          <CardDescription>마케팅 이메일 수신 여부를 설정합니다</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              {emailOptOut ? (
+                <BellOff className="w-5 h-5 text-gray-400" />
+              ) : (
+                <Bell className="w-5 h-5 text-indigo-500" />
+              )}
+              <div>
+                <p className="text-sm font-medium">
+                  {emailOptOut ? '마케팅 이메일 수신 거부 중' : '마케팅 이메일 수신 중'}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {emailOptOut
+                    ? '활동 안내, 새 프로그램 알림 등을 받지 않습니다'
+                    : '활동 안내, 새 프로그램 알림, 성과 리포트 등을 받습니다'}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={!emailOptOut}
+              onCheckedChange={(checked) => handleToggleEmailOptOut(!checked)}
+              disabled={savingEmailPref}
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-3 border-t pt-3">
+            정산 확정, 계약 관련 필수 통지 이메일은 수신 거부와 무관하게 발송됩니다.
+          </p>
         </CardContent>
       </Card>
 

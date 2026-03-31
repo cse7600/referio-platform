@@ -231,6 +231,7 @@ export async function POST(request: NextRequest) {
           leadName: name,
           advertiserCompanyName: advertiserData.company_name,
           programName: advertiserData.program_name || advertiserData.company_name,
+          partnerId,
         }).catch(console.error)
       }
     }

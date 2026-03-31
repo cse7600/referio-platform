@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ssn, bank_name, bank_account, account_holder, main_channel_link } = body;
+    const { ssn, bank_name, bank_account, account_holder, main_channel_link, email_opted_out } = body;
 
     // Build update payload — only include fields that were actually sent
     const updateData: Record<string, unknown> = {};
@@ -32,6 +32,7 @@ export async function PATCH(request: NextRequest) {
     if (bank_account !== undefined) updateData.bank_account = bank_account || null;
     if (account_holder !== undefined) updateData.account_holder = account_holder || null;
     if (main_channel_link !== undefined) updateData.main_channel_link = main_channel_link || null;
+    if (email_opted_out !== undefined) updateData.email_opted_out = Boolean(email_opted_out);
 
     // SSN: encrypt before storing, never store plaintext
     if (ssn) {
@@ -61,16 +62,17 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: '저장에 실패했습니다' }, { status: 500 });
     }
 
-    // Check if SSN exists after update
+    // Check updated fields
     const { data: updated } = await supabase
       .from('partners')
-      .select('ssn_encrypted')
+      .select('ssn_encrypted, email_opted_out')
       .eq('id', partner.id)
       .single();
 
     return NextResponse.json({
       success: true,
       has_ssn: !!updated?.ssn_encrypted,
+      email_opted_out: !!(updated as Record<string, unknown>)?.email_opted_out,
     });
   } catch (err) {
     console.error('Partner profile API error:', err);

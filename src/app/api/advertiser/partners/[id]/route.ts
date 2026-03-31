@@ -117,6 +117,7 @@ export async function PATCH(
               advertiserId: advertiser.advertiser_id,
               leadCommission: program.lead_commission,
               contractCommission: program.contract_commission,
+              partnerId: id,
             })
             console.log(`[Email] Partner approval email sent to ${partner.email}`)
 

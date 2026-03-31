@@ -1,7 +1,8 @@
 // Resend 이메일 라이브러리
 // 환경변수: RESEND_API_KEY, FROM_EMAIL (기본값: noreply@updates.puzl.co.kr)
 
-import { canSendEmail, logEmailSent } from '@/lib/email-throttle';
+import { canSendEmail, isEmailOptedOut, logEmailSent } from '@/lib/email-throttle';
+import { generateUnsubscribeUrl } from '@/lib/email-token';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
@@ -57,8 +58,15 @@ export async function sendReferralNotification(options: {
   leadName: string
   advertiserCompanyName: string
   programName: string
+  partnerId?: string
 }): Promise<boolean> {
-  const { partnerEmail, partnerName, leadName, advertiserCompanyName, programName } = options
+  const { partnerEmail, partnerName, leadName, advertiserCompanyName, programName, partnerId } = options
+
+  if (partnerId && await isEmailOptedOut(partnerId)) return false;
+
+  const unsubscribeUrl = partnerId
+    ? generateUnsubscribeUrl(partnerId)
+    : 'https://referio.puzl.co.kr/dashboard/profile';
 
   const html = `
 <!DOCTYPE html>
@@ -97,7 +105,7 @@ export async function sendReferralNotification(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        수신 거부를 원하시면 <a href="${unsubscribeUrl}" style="color:#6b7280;">수신거부</a>하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
@@ -123,11 +131,18 @@ export async function sendPartnerApprovalEmail(options: {
   advertiserId?: string // advertiser_id (text slug, e.g. "keepermate")
   leadCommission?: number
   contractCommission?: number
+  partnerId?: string
 }): Promise<boolean> {
   const {
     partnerEmail, partnerName, advertiserCompanyName, programName,
-    referralCode, referralUrl, advertiserId, leadCommission, contractCommission,
+    referralCode, referralUrl, advertiserId, leadCommission, contractCommission, partnerId,
   } = options
+
+  if (partnerId && await isEmailOptedOut(partnerId)) return false;
+
+  const unsubscribeUrl = partnerId
+    ? generateUnsubscribeUrl(partnerId)
+    : 'https://referio.puzl.co.kr/dashboard/profile';
 
   const displayName = programName || advertiserCompanyName
   const programPageUrl = advertiserId
@@ -243,7 +258,7 @@ export async function sendPartnerApprovalEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 알림 메일입니다.
-        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        수신 거부를 원하시면 <a href="${unsubscribeUrl}" style="color:#6b7280;">수신거부</a>하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
@@ -702,8 +717,15 @@ export async function sendFirstLeadEmail(options: {
   advertiserCompanyName: string;
   referralUrl?: string;
   leadReceivedAt?: string; // 예: '2026-04-01 14:32'
+  partnerId?: string;
 }): Promise<boolean> {
-  const { partnerEmail, partnerName, programName, advertiserCompanyName, referralUrl, leadReceivedAt } = options;
+  const { partnerEmail, partnerName, programName, advertiserCompanyName, referralUrl, leadReceivedAt, partnerId } = options;
+
+  if (partnerId && await isEmailOptedOut(partnerId)) return false;
+
+  const unsubscribeUrl = partnerId
+    ? generateUnsubscribeUrl(partnerId)
+    : 'https://referio.puzl.co.kr/dashboard/profile';
   const displayName = programName || advertiserCompanyName;
 
   const html = `
@@ -753,7 +775,7 @@ export async function sendFirstLeadEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
-        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+        수신 거부를 원하시면 <a href="${unsubscribeUrl}" style="color:#6b7280;">수신거부</a>하세요.
       </p>
     </div>
   </div>
@@ -774,8 +796,15 @@ export async function sendFirstRevenueEmail(options: {
   programName: string;
   advertiserCompanyName: string;
   commissionAmount: number;
+  partnerId?: string;
 }): Promise<boolean> {
-  const { partnerEmail, partnerName, programName, advertiserCompanyName, commissionAmount } = options;
+  const { partnerEmail, partnerName, programName, advertiserCompanyName, commissionAmount, partnerId } = options;
+
+  if (partnerId && await isEmailOptedOut(partnerId)) return false;
+
+  const unsubscribeUrl = partnerId
+    ? generateUnsubscribeUrl(partnerId)
+    : 'https://referio.puzl.co.kr/dashboard/profile';
   const displayName = programName || advertiserCompanyName;
 
   const html = `
@@ -822,7 +851,7 @@ export async function sendFirstRevenueEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
-        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.
+        수신 거부를 원하시면 <a href="${unsubscribeUrl}" style="color:#6b7280;">수신거부</a>하세요.
       </p>
     </div>
   </div>
@@ -898,6 +927,8 @@ export async function sendNewProgramEmail(options: {
       continue;
     }
 
+    const unsubscribeUrl = generateUnsubscribeUrl(partner.id);
+
     const commissionRows = [
       commissionValid > 0 ? `
           <tr>
@@ -961,7 +992,7 @@ export async function sendNewProgramEmail(options: {
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         이 메일은 Referio 파트너 활동 관련 정보 제공을 위해 발송됩니다.
-        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
+        수신 거부를 원하시면 <a href="${unsubscribeUrl}" style="color:#6b7280;">수신거부</a>하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>

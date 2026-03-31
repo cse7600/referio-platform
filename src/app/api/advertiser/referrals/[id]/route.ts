@@ -238,6 +238,7 @@ export async function PATCH(
                     programName: adv?.program_name || '',
                     advertiserCompanyName: adv?.company_name || '',
                     commissionAmount,
+                    partnerId: referral.partner_id,
                   }).catch(() => {})
                 }
               }
