@@ -43,9 +43,16 @@
 
 ### 2.2 Out of Scope
 
-- 비밀번호 찾기 이메일 디자인 변경
 - 광고주 셀프 서비스 비밀번호 재설정 기능 신규 개발
 - 가입 페이지 변경
+
+### 2.3 추가 수정 (2026-03-31)
+
+- [x] PKCE 이중 코드 교환 버그 수정 — 클라이언트에서 `exchangeCodeForSession` 직접 호출 제거, `/auth/callback` 서버 라우트에서 처리
+- [x] Supabase `site_url` 오설정 수정 — `feedhub-ecru.vercel.app` → `referio.puzl.co.kr`
+- [x] `uri_allow_list` 업데이트 — referio.puzl.co.kr 경로 전체 추가
+- [x] Resend SMTP 연동 — 이메일 발신자 `noreply@updates.puzl.co.kr` (브랜드 도메인)
+- [x] 이메일 템플릿 한국어 브랜드 디자인으로 교체
 
 ---
 
@@ -126,6 +133,7 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 | 날짜 | 빌드 유형 | 변경 내용 요약 | 결과 |
 |------|-----------|---------------|------|
 | 2026-03-30 | production | 4가지 추가 수정: 재설정 링크 만료 시 재발급 UI, 미들웨어 recovery code 우회, BrandedSignupForm signOut 추가, 이메일 만료 안내 문구 | 성공 |
+| 2026-03-31 | production | 근본 원인 수정: PKCE 이중 교환 버그 제거 + Supabase site_url 오설정 수정 + Resend SMTP 연동 + 이메일 브랜딩 | 성공 |
 
 ## Version History
 
@@ -133,3 +141,4 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 |---------|------|---------|--------|
 | 0.1 | 2026-03-26 | Initial draft | CTO Lead |
 | 0.2 | 2026-03-30 | 추가 수정: 만료 링크 재발급 UI, 미들웨어 recovery 우회, signOut 누락, 이메일 만료 안내 | CTO Lead |
+| 0.3 | 2026-03-31 | 근본 수정: PKCE 이중 교환 버그, Supabase site_url 오설정(feedhub→referio), Resend SMTP 연동, 이메일 브랜드 템플릿 | CTO Lead |

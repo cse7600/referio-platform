@@ -32,6 +32,7 @@ import {
   Building,
   Megaphone,
   MessageSquare,
+  Gift,
 } from 'lucide-react'
 import { ProgramProvider, useProgram } from './ProgramContext'
 import { FeedbackWidget } from '@/components/ui/feedback-widget'
@@ -39,6 +40,7 @@ import { FeedbackWidget } from '@/components/ui/feedback-widget'
 const NAV_ITEMS = [
   { href: '/dashboard', label: '홈', icon: Home },
   { href: '/dashboard/programs', label: '프로그램', icon: Building },
+  { href: '/dashboard/events', label: '이벤트', icon: Gift },
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
   { href: '/dashboard/activity', label: '활동 지원', icon: Megaphone },

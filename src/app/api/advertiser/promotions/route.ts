@@ -20,7 +20,26 @@ export async function GET() {
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
     }
 
-    return NextResponse.json({ promotions: data || [] })
+    // Fetch participation counts
+    const ids = (data || []).map(p => p.id)
+    let participationCounts: Record<string, number> = {}
+    if (ids.length > 0) {
+      const { data: counts } = await supabase
+        .from('partner_promotion_participations')
+        .select('promotion_id')
+        .in('promotion_id', ids)
+
+      for (const row of (counts || [])) {
+        participationCounts[row.promotion_id] = (participationCounts[row.promotion_id] || 0) + 1
+      }
+    }
+
+    const promotions = (data || []).map(p => ({
+      ...p,
+      participation_count: participationCounts[p.id] || 0,
+    }))
+
+    return NextResponse.json({ promotions })
   } catch (error) {
     console.error('Promotions GET error:', error)
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })
