@@ -165,6 +165,10 @@ export default function AdminSettlementsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editForm, setEditForm] = useState({ id: '', amount: '', type: '' })
 
+  // Test email send
+  const [testEmailTo, setTestEmailTo] = useState('')
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -455,6 +459,37 @@ export default function AdminSettlementsPage() {
     toast.success('정산이 수정되었습니다')
     setEditDialogOpen(false)
     fetchData()
+  }
+
+  // Send test email to arbitrary address
+  const handleSendTestEmail = async () => {
+    if (!testEmailTo || !testEmailTo.includes('@')) {
+      toast.error('올바른 이메일 주소를 입력하세요')
+      return
+    }
+    const sample = previewTargets[0]
+    if (!sample) return
+
+    const group = filteredGroups.find(g => g.partner_id === sample.id)
+    setSendingTestEmail(true)
+    try {
+      const res = await fetch('/api/admin/settlements/send-test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: testEmailTo,
+          partnerName: sample.name,
+          pendingAmount: group?.pending_amount || 0,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      toast.success(`${testEmailTo}로 테스트 발송 완료`)
+      setTestEmailTo('')
+    } catch {
+      toast.error('테스트 발송에 실패했습니다')
+    } finally {
+      setSendingTestEmail(false)
+    }
   }
 
   // Filter partner groups by search
@@ -981,6 +1016,33 @@ export default function AdminSettlementsPage() {
                   />
                 </div>
               )}
+            </div>
+
+            {/* Test send section */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <p className="text-sm font-semibold text-gray-700 mb-1">테스트 발송</p>
+              <p className="text-xs text-gray-500 mb-3">
+                파트너에게 실제 발송하기 전, 이 주소로 이메일 내용을 미리 받아볼 수 있습니다.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="테스트 수신 이메일 주소"
+                  value={testEmailTo}
+                  onChange={(e) => setTestEmailTo(e.target.value)}
+                  className="flex-1 bg-white"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendTestEmail()}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTestEmail}
+                  disabled={sendingTestEmail || !testEmailTo}
+                >
+                  <Mail className="w-4 h-4 mr-1.5" />
+                  {sendingTestEmail ? '발송 중...' : '테스트 발송'}
+                </Button>
+              </div>
             </div>
           </div>
 
