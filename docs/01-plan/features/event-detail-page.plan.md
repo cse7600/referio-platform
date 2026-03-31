@@ -45,5 +45,5 @@ started: 2026-03-31
 | 2026-03-31 | Playwright 브라우저 직접 테스트 (7개 항목) | PASS | 0 | 0 | Tiptap 에디터/상세 페이지/모달/라우팅 모두 정상, Tiptap JSON DB 저장 확인 | 없음 |
 
 ## 미완료
-- [ ] git commit & push → Vercel 배포
+- [x] git commit & push → Vercel 배포 (2026-03-31 완료)
 - [ ] keepermate 계정으로 실제 이벤트 생성 (키퍼메이트 첫 활동 인증 이벤트 docx 내용)
