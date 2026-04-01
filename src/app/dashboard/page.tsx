@@ -57,6 +57,29 @@ interface Promotion {
   end_date: string | null
 }
 
+// Extract plain text from Tiptap JSON string for card previews
+function extractPlainText(value: string): string {
+  try {
+    const parsed = JSON.parse(value)
+    if (parsed && parsed.type === 'doc' && Array.isArray(parsed.content)) {
+      const texts: string[] = []
+      const walk = (node: Record<string, unknown>) => {
+        if (node.type === 'text' && typeof node.text === 'string') {
+          texts.push(node.text as string)
+        }
+        if (Array.isArray(node.content)) {
+          (node.content as Record<string, unknown>[]).forEach(walk)
+        }
+      }
+      walk(parsed)
+      return texts.join(' ')
+    }
+  } catch {
+    // Not JSON — return as-is (plain text description)
+  }
+  return value
+}
+
 const GUIDES = [
   { title: '블로거를 위한 가이드', href: '/dashboard/guides#blog' },
   { title: '인스타그래머를 위한 가이드', href: '/dashboard/guides#instagram' },
@@ -259,7 +282,7 @@ export default function DashboardPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-indigo-900">{promo.title}</p>
                 {promo.description && (
-                  <p className="text-sm text-indigo-700 mt-0.5 line-clamp-2">{promo.description}</p>
+                  <p className="text-sm text-indigo-700 mt-0.5 line-clamp-2">{extractPlainText(promo.description)}</p>
                 )}
                 {promo.reward_description && (
                   <p className="text-xs text-indigo-600 mt-1">
