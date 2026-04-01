@@ -451,6 +451,8 @@ export async function sendWelcomeEmail(options: {
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
+        이 메일은 Referio 가입 시 발송되는 서비스 안내 메일입니다.
+        수신 거부를 원하시면 <a href="https://referio.puzl.co.kr/dashboard/profile" style="color:#6b7280;">프로필 설정</a>에서 변경하세요.<br/>
         문의가 있으시면 <a href="mailto:referio@puzl.co.kr" style="color:#6b7280;">referio@puzl.co.kr</a>로 연락해 주세요.
       </p>
     </div>
