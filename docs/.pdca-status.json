@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-01T02:19:04.441Z",
+  "lastUpdated": "2026-04-01T04:11:03.999Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -82,7 +82,8 @@
     "withdraw",
     "violation",
     "unsubscribe",
-    "lead"
+    "lead",
+    "notify"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -355,9 +356,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-03-31T10:07:55.797Z"
+        "lastUpdated": "2026-04-01T04:11:03.999Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email-throttle.ts"
     },
     "[id]": {
       "phase": "do",
@@ -368,9 +369,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-03-31T09:56:47.022Z"
+        "lastUpdated": "2026-04-01T02:45:52.602Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/[id]/page.tsx"
     },
     "schema": {
       "phase": "do",
@@ -844,7 +845,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-04-01T02:18:58.186Z"
+        "lastUpdated": "2026-04-01T02:44:32.885Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/page.tsx"
     },
@@ -1039,7 +1040,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:48:59.446Z",
-        "lastUpdated": "2026-04-01T02:19:04.441Z"
+        "lastUpdated": "2026-04-01T04:09:34.693Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/promotions/page.tsx"
     },
@@ -1052,7 +1053,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T05:25:57.718Z",
-        "lastUpdated": "2026-03-31T07:28:30.215Z"
+        "lastUpdated": "2026-04-01T02:56:49.661Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/participations/route.ts"
     },
@@ -1146,6 +1147,19 @@
         "lastUpdated": "2026-03-31T09:56:36.363Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/webhook/lead/route.ts"
+    },
+    "notify": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-01T04:07:58.366Z",
+        "lastUpdated": "2026-04-01T04:07:58.366Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/notify/route.ts"
     }
   },
   "pipeline": {
@@ -1156,7 +1170,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-01T02:19:04.441Z"
+    "lastActivity": "2026-04-01T04:11:03.999Z"
   },
   "history": [
     {
@@ -7096,6 +7110,138 @@
     {
       "timestamp": "2026-04-01T02:19:04.441Z",
       "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:43:23.704Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:43:26.719Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:43:30.287Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:43:33.837Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:43:37.233Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:44:11.572Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:44:19.026Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:44:32.885Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:45:13.793Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:45:19.205Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:45:52.602Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:56:43.873Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T02:56:49.661Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T03:03:56.052Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:07:58.366Z",
+      "feature": "notify",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:09:01.099Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:09:06.229Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:09:15.543Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:09:22.185Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:09:34.693Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:11:00.094Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T04:11:03.999Z",
+      "feature": "referio-platform",
       "phase": "do",
       "action": "updated"
     }
