@@ -606,16 +606,6 @@ function SettlementConfirmSheet({
             <p className="mt-1">· 계좌 정보가 미등록된 파트너에게는 정보 입력 요청 메일이 자동 발송됩니다.</p>
           </div>
 
-          {/* Signature area */}
-          <div className="grid grid-cols-3 gap-6 border-t border-slate-200 pt-8">
-            {['담당자', '검토', '결재'].map(role => (
-              <div key={role} className="text-center">
-                <p className="text-sm font-medium text-slate-700 mb-8">{role}</p>
-                <div className="border-b border-slate-400 h-12"></div>
-                <p className="text-xs text-slate-400 mt-2">(서명)</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
