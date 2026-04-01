@@ -479,9 +479,10 @@ function SettlementConfirmSheet({
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
+      <style>{`@media print { body * { visibility: hidden; } #settlement-confirm-sheet, #settlement-confirm-sheet * { visibility: visible; } #settlement-confirm-sheet { position: absolute; left: 0; top: 0; width: 100%; } .print-hidden { display: none !important; } }`}</style>
       <div className="w-full max-w-3xl">
         {/* Action bar (hidden on print) */}
-        <div className="flex justify-between items-center mb-4 print:hidden">
+        <div className="flex justify-between items-center mb-4 print-hidden">
           <h2 className="text-white font-semibold text-lg">정산 확인서 미리보기</h2>
           <div className="flex gap-2">
             <button
@@ -507,7 +508,7 @@ function SettlementConfirmSheet({
         </div>
 
         {/* Document body */}
-        <div className="bg-white rounded-xl shadow-2xl p-10 print:shadow-none print:rounded-none">
+        <div id="settlement-confirm-sheet" className="bg-white rounded-xl shadow-2xl p-10 print:shadow-none print:rounded-none">
           {/* Header */}
           <div className="text-center border-b-2 border-slate-900 pb-6 mb-8">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">정 산 확 인 서</h1>
