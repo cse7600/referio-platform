@@ -1397,96 +1397,9 @@ export async function sendEventNotificationEmail(options: {
 
     const unsubscribeUrl = generateUnsubscribeUrl(partner.id);
 
-    const stepsHtml = guideSteps.map((step, i) => `
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
-        <tr>
-          <td width="28" valign="top" style="padding-top:1px;">
-            <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;font-size:12px;font-weight:700;line-height:22px;text-align:center;">${i + 1}</span>
-          </td>
-          <td valign="top" style="font-size:14px;color:#374151;line-height:1.5;padding-top:3px;">${step}</td>
-        </tr>
-      </table>`).join('');
+    const stepsHtml = guideSteps.map((step, i) => `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;"><tr><td width="28" valign="top" style="padding-top:1px;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;font-size:12px;font-weight:700;line-height:22px;text-align:center;">${i + 1}</span></td><td valign="top" style="font-size:14px;color:#374151;line-height:1.5;padding-top:3px;">${step}</td></tr></table>`).join('');
 
-    const html = `<!DOCTYPE html>
-<html lang="ko">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${eventTitle}</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',Helvetica,sans-serif;">
-  <div style="max-width:580px;margin:40px auto 60px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-
-    <!-- Header -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#4f46e5;">
-      <tr>
-        <td style="padding:24px 32px;">
-          <table cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td width="32" style="vertical-align:middle;">
-                <div style="width:32px;height:32px;background:#ffffff;border-radius:8px;text-align:center;line-height:32px;">
-                  <span style="color:#4f46e5;font-weight:900;font-size:16px;">R</span>
-                </div>
-              </td>
-              <td style="padding-left:12px;vertical-align:middle;">
-                <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Referio</span>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-
-    <!-- Event Banner -->
-    <div style="background:${headerBg};padding:32px 32px 28px;">
-      <div style="display:inline-block;background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;margin-bottom:12px;">
-        <span style="font-size:12px;font-weight:600;color:#1e1b4b;">${typeLabel}</span>
-      </div>
-      <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1e1b4b;line-height:1.3;">${eventTitle}</h1>
-      ${rewardDescription ? `<p style="margin:0 0 4px;font-size:15px;color:#312e81;font-weight:600;">리워드: ${rewardDescription}</p>` : ''}
-      ${dateText ? `<p style="margin:8px 0 0;font-size:13px;color:#4338ca;">기간: ${dateText}</p>` : ''}
-    </div>
-
-    <!-- Body -->
-    <div style="padding:32px;">
-      <p style="margin:0 0 6px;font-size:15px;color:#374151;">안녕하세요, <strong>${partner.name}</strong>님</p>
-      <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
-        <strong>${advertiserName}</strong>의 <strong>${programName}</strong> 파트너 여러분께<br>
-        새로운 이벤트 소식을 전합니다!
-      </p>
-
-      <!-- Divider -->
-      <div style="height:1px;background:#e5e7eb;margin:0 0 24px;"></div>
-
-      <!-- How to participate -->
-      <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111827;">참여 방법</h2>
-      ${stepsHtml}
-
-      <!-- CTA Button -->
-      <div style="text-align:center;margin:32px 0 8px;">
-        <a href="${eventUrl}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;letter-spacing:-0.2px;">이벤트 참여하기 →</a>
-      </div>
-      <p style="text-align:center;margin:12px 0 0;font-size:12px;color:#9ca3af;">버튼이 작동하지 않으면 아래 링크를 복사해 브라우저에 붙여넣으세요<br>
-        <a href="${eventUrl}" style="color:#6366f1;font-size:11px;">${eventUrl}</a>
-      </p>
-
-      <!-- Divider -->
-      <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
-
-      <!-- Program info -->
-      <div style="background:#f8fafc;border-radius:10px;padding:16px 20px;">
-        <p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">파트너 프로그램</p>
-        <p style="margin:0;font-size:14px;color:#374151;font-weight:600;">${programName}</p>
-        <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${advertiserName}</p>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
-      <p style="margin:0 0 6px;font-size:12px;color:#6b7280;">이 이메일은 Referio 파트너 프로그램을 통해 발송되었습니다.</p>
-      <a href="${unsubscribeUrl}" style="font-size:11px;color:#9ca3af;text-decoration:underline;">수신 거부하기</a>
-    </div>
-
-  </div>
-</body>
-</html>`;
+    const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${eventTitle}</title></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${eventTitle} - ${advertiserName} 이벤트에 참여하세요</div><div style="max-width:580px;margin:40px auto 60px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#4f46e5;"><tr><td style="padding:24px 32px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td width="32" style="vertical-align:middle;"><div style="width:32px;height:32px;background:#fff;border-radius:8px;text-align:center;line-height:32px;"><span style="color:#4f46e5;font-weight:900;font-size:16px;">R</span></div></td><td style="padding-left:12px;vertical-align:middle;"><span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Referio</span></td></tr></table></td></tr></table><div style="background:${headerBg};padding:32px 32px 28px;"><div style="display:inline-block;background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;margin-bottom:12px;"><span style="font-size:12px;font-weight:600;color:#1e1b4b;">${typeLabel}</span></div><h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1e1b4b;line-height:1.3;">${eventTitle}</h1>${rewardDescription ? `<p style="margin:0 0 4px;font-size:15px;color:#312e81;font-weight:600;">리워드: ${rewardDescription}</p>` : ''}${dateText ? `<p style="margin:8px 0 0;font-size:13px;color:#4338ca;">기간: ${dateText}</p>` : ''}</div><div style="padding:32px;"><p style="margin:0 0 6px;font-size:15px;color:#374151;">안녕하세요, <strong>${partner.name}</strong>님</p><p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;"><strong>${advertiserName}</strong>의 <strong>${programName}</strong> 파트너 여러분께<br>새로운 이벤트 소식을 전합니다!</p><div style="height:1px;background:#e5e7eb;margin:0 0 24px;"></div><h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111827;">참여 방법</h2>${stepsHtml}<div style="text-align:center;margin:32px 0 8px;"><a href="${eventUrl}" style="display:inline-block;background:#4f46e5;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;letter-spacing:-0.2px;">이벤트 참여하기 →</a></div><p style="text-align:center;margin:12px 0 0;font-size:12px;color:#9ca3af;">버튼이 작동하지 않으면 아래 링크를 복사해 브라우저에 붙여넣으세요<br><a href="${eventUrl}" style="color:#6366f1;font-size:11px;">${eventUrl}</a></p><div style="height:1px;background:#e5e7eb;margin:28px 0;"></div><div style="background:#f8fafc;border-radius:10px;padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">파트너 프로그램</p><p style="margin:0;font-size:14px;color:#374151;font-weight:600;">${programName}</p><p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${advertiserName}</p></div></div><div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;"><p style="margin:0 0 6px;font-size:12px;color:#6b7280;">이 이메일은 Referio 파트너 프로그램을 통해 발송되었습니다.</p><a href="${unsubscribeUrl}" style="font-size:11px;color:#9ca3af;text-decoration:underline;">수신 거부하기</a></div></div></body></html>`;
 
     const ok = await sendEmail({
       to: partner.email,
@@ -1553,69 +1466,7 @@ export function generateEventNotificationPreview(options: {
     return null;
   })();
 
-  const stepsHtml = guideSteps.map((step, i) => `
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
-      <tr>
-        <td width="28" valign="top" style="padding-top:1px;">
-          <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;font-size:12px;font-weight:700;line-height:22px;text-align:center;">${i + 1}</span>
-        </td>
-        <td valign="top" style="font-size:14px;color:#374151;line-height:1.5;padding-top:3px;">${step}</td>
-      </tr>
-    </table>`).join('');
+  const stepsHtml = guideSteps.map((step, i) => `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;"><tr><td width="28" valign="top" style="padding-top:1px;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;font-size:12px;font-weight:700;line-height:22px;text-align:center;">${i + 1}</span></td><td valign="top" style="font-size:14px;color:#374151;line-height:1.5;padding-top:3px;">${step}</td></tr></table>`).join('');
 
-  return `<!DOCTYPE html>
-<html lang="ko">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${eventTitle}</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',Helvetica,sans-serif;">
-  <div style="max-width:580px;margin:40px auto 60px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#4f46e5;">
-      <tr>
-        <td style="padding:24px 32px;">
-          <table cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td width="32" style="vertical-align:middle;">
-                <div style="width:32px;height:32px;background:#ffffff;border-radius:8px;text-align:center;line-height:32px;">
-                  <span style="color:#4f46e5;font-weight:900;font-size:16px;">R</span>
-                </div>
-              </td>
-              <td style="padding-left:12px;vertical-align:middle;">
-                <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Referio</span>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-    <div style="background:${headerBg};padding:32px 32px 28px;">
-      <div style="display:inline-block;background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;margin-bottom:12px;">
-        <span style="font-size:12px;font-weight:600;color:#1e1b4b;">${typeLabel}</span>
-      </div>
-      <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1e1b4b;line-height:1.3;">${eventTitle}</h1>
-      ${rewardDescription ? `<p style="margin:0 0 4px;font-size:15px;color:#312e81;font-weight:600;">리워드: ${rewardDescription}</p>` : ''}
-      ${dateText ? `<p style="margin:8px 0 0;font-size:13px;color:#4338ca;">기간: ${dateText}</p>` : ''}
-    </div>
-    <div style="padding:32px;">
-      <p style="margin:0 0 6px;font-size:15px;color:#374151;">안녕하세요, <strong>파트너</strong>님</p>
-      <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;"><strong>${advertiserName}</strong>의 <strong>${programName}</strong> 파트너 여러분께<br>새로운 이벤트 소식을 전합니다!</p>
-      <div style="height:1px;background:#e5e7eb;margin:0 0 24px;"></div>
-      <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111827;">참여 방법</h2>
-      ${stepsHtml}
-      <div style="text-align:center;margin:32px 0 8px;">
-        <a href="${eventUrl}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;letter-spacing:-0.2px;">이벤트 참여하기 →</a>
-      </div>
-      <p style="text-align:center;margin:12px 0 0;font-size:12px;color:#9ca3af;">버튼이 작동하지 않으면 아래 링크를 복사해 브라우저에 붙여넣으세요<br><a href="${eventUrl}" style="color:#6366f1;font-size:11px;">${eventUrl}</a></p>
-      <div style="height:1px;background:#e5e7eb;margin:28px 0;"></div>
-      <div style="background:#f8fafc;border-radius:10px;padding:16px 20px;">
-        <p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">파트너 프로그램</p>
-        <p style="margin:0;font-size:14px;color:#374151;font-weight:600;">${programName}</p>
-        <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${advertiserName}</p>
-      </div>
-    </div>
-    <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
-      <p style="margin:0 0 6px;font-size:12px;color:#6b7280;">이 이메일은 Referio 파트너 프로그램을 통해 발송되었습니다.</p>
-      <span style="font-size:11px;color:#9ca3af;">수신 거부는 파트너 프로필 설정에서 변경하실 수 있습니다.</span>
-    </div>
-  </div>
-</body>
-</html>`;
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${eventTitle}</title></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${eventTitle} - ${advertiserName} 이벤트에 참여하세요</div><div style="max-width:580px;margin:40px auto 60px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#4f46e5;"><tr><td style="padding:24px 32px;"><table cellpadding="0" cellspacing="0" border="0"><tr><td width="32" style="vertical-align:middle;"><div style="width:32px;height:32px;background:#fff;border-radius:8px;text-align:center;line-height:32px;"><span style="color:#4f46e5;font-weight:900;font-size:16px;">R</span></div></td><td style="padding-left:12px;vertical-align:middle;"><span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Referio</span></td></tr></table></td></tr></table><div style="background:${headerBg};padding:32px 32px 28px;"><div style="display:inline-block;background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;margin-bottom:12px;"><span style="font-size:12px;font-weight:600;color:#1e1b4b;">${typeLabel}</span></div><h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1e1b4b;line-height:1.3;">${eventTitle}</h1>${rewardDescription ? `<p style="margin:0 0 4px;font-size:15px;color:#312e81;font-weight:600;">리워드: ${rewardDescription}</p>` : ''}${dateText ? `<p style="margin:8px 0 0;font-size:13px;color:#4338ca;">기간: ${dateText}</p>` : ''}</div><div style="padding:32px;"><p style="margin:0 0 6px;font-size:15px;color:#374151;">안녕하세요, <strong>파트너</strong>님</p><p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;"><strong>${advertiserName}</strong>의 <strong>${programName}</strong> 파트너 여러분께<br>새로운 이벤트 소식을 전합니다!</p><div style="height:1px;background:#e5e7eb;margin:0 0 24px;"></div><h2 style="margin:0 0 16px;font-size:16px;font-weight:700;color:#111827;">참여 방법</h2>${stepsHtml}<div style="text-align:center;margin:32px 0 8px;"><a href="${eventUrl}" style="display:inline-block;background:#4f46e5;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;letter-spacing:-0.2px;">이벤트 참여하기 →</a></div><p style="text-align:center;margin:12px 0 0;font-size:12px;color:#9ca3af;">버튼이 작동하지 않으면 아래 링크를 복사해 브라우저에 붙여넣으세요<br><a href="${eventUrl}" style="color:#6366f1;font-size:11px;">${eventUrl}</a></p><div style="height:1px;background:#e5e7eb;margin:28px 0;"></div><div style="background:#f8fafc;border-radius:10px;padding:16px 20px;"><p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">파트너 프로그램</p><p style="margin:0;font-size:14px;color:#374151;font-weight:600;">${programName}</p><p style="margin:2px 0 0;font-size:13px;color:#6b7280;">${advertiserName}</p></div></div><div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;"><p style="margin:0 0 6px;font-size:12px;color:#6b7280;">이 이메일은 Referio 파트너 프로그램을 통해 발송되었습니다.</p><span style="font-size:11px;color:#9ca3af;">수신 거부는 파트너 프로필 설정에서 변경하실 수 있습니다.</span></div></div></body></html>`;
 }
