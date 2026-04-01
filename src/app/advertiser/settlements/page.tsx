@@ -76,6 +76,14 @@ export default function AdvertiserSettlementsPage() {
   const [processing, setProcessing] = useState(false)
   const [emailSending, setEmailSending] = useState<string | null>(null) // partner_id or 'all'
 
+  const [previewModal, setPreviewModal] = useState<{
+    partnerId: string;
+    partnerName: string;
+    html: string;
+  } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState<string | null>(null) // partnerId
+  const [settlementEmailSending, setSettlementEmailSending] = useState<string | null>(null) // partnerId
+
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch('/api/advertiser/settlements')
@@ -168,6 +176,45 @@ export default function AdvertiserSettlementsPage() {
       alert('이메일 발송 중 오류가 발생했습니다')
     } finally {
       setEmailSending(null)
+    }
+  }
+
+  const handlePreviewEmail = async (partnerId: string, partnerName: string) => {
+    setPreviewLoading(partnerId)
+    try {
+      const res = await fetch('/api/advertiser/settlements/preview-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setPreviewModal({ partnerId, partnerName, html: data.html })
+      } else {
+        alert('미리보기 로드에 실패했습니다')
+      }
+    } finally {
+      setPreviewLoading(null)
+    }
+  }
+
+  const handleSendSettlementEmail = async (partnerId: string, partnerName: string) => {
+    if (!confirm(`${partnerName}님에게 정산 안내 메일을 발송하시겠습니까?`)) return
+    setSettlementEmailSending(partnerId)
+    try {
+      const res = await fetch('/api/advertiser/settlements/send-settlement-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        alert(data.type === 'confirmed' ? '정산 확정 안내 메일을 발송했습니다' : '정산 정보 입력 요청 메일을 발송했습니다')
+      } else {
+        alert('이메일 발송에 실패했습니다')
+      }
+    } finally {
+      setSettlementEmailSending(null)
     }
   }
 
@@ -302,13 +349,58 @@ export default function AdvertiserSettlementsPage() {
               selectedIds={selected[p.partner_id] || new Set()}
               processing={processing}
               emailSending={emailSending}
+              previewLoading={previewLoading}
+              settlementEmailSending={settlementEmailSending}
               onToggleExpand={() => toggleExpand(p.partner_id)}
               onToggleSelect={(sid) => toggleSelect(p.partner_id, sid)}
               onToggleSelectAll={(ids) => toggleSelectAllPending(p.partner_id, ids)}
               onComplete={(ids) => handleComplete(ids)}
               onRequestInfo={(pid) => handleRequestInfo([pid])}
+              onPreviewEmail={(pid, pname) => handlePreviewEmail(pid, pname)}
+              onSendSettlementEmail={(pid, pname) => handleSendSettlementEmail(pid, pname)}
             />
           ))}
+        </div>
+      )}
+
+      {/* Email Preview Modal */}
+      {previewModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="font-semibold text-slate-900">
+                정산 안내 이메일 미리보기 — {previewModal.partnerName}
+              </h3>
+              <button
+                onClick={() => setPreviewModal(null)}
+                className="text-slate-400 hover:text-slate-600 text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <iframe
+                srcDoc={previewModal.html}
+                className="w-full h-full min-h-[500px] border-0"
+                title="이메일 미리보기"
+              />
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t">
+              <Button variant="outline" onClick={() => setPreviewModal(null)}>
+                닫기
+              </Button>
+              <Button
+                onClick={() => {
+                  handleSendSettlementEmail(previewModal.partnerId, previewModal.partnerName)
+                  setPreviewModal(null)
+                }}
+                disabled={settlementEmailSending === previewModal.partnerId}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                메일 발송
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -323,22 +415,30 @@ function PartnerCard({
   selectedIds,
   processing,
   emailSending,
+  previewLoading,
+  settlementEmailSending,
   onToggleExpand,
   onToggleSelect,
   onToggleSelectAll,
   onComplete,
   onRequestInfo,
+  onPreviewEmail,
+  onSendSettlementEmail,
 }: {
   partner: PartnerGroup
   isExpanded: boolean
   selectedIds: Set<string>
   processing: boolean
   emailSending: string | null
+  previewLoading: string | null
+  settlementEmailSending: string | null
   onToggleExpand: () => void
   onToggleSelect: (id: string) => void
   onToggleSelectAll: (ids: string[]) => void
   onComplete: (ids: string[]) => void
   onRequestInfo: (partnerId: string) => void
+  onPreviewEmail: (partnerId: string, partnerName: string) => void
+  onSendSettlementEmail: (partnerId: string, partnerName: string) => void
 }) {
   const pendingItems = p.settlements.filter(s => s.status === 'pending')
   const pendingIds = pendingItems.map(s => s.id)
@@ -389,6 +489,18 @@ function PartnerCard({
             >
               <Mail className="w-3.5 h-3.5 mr-1" />
               {emailSending === p.partner_id ? '발송 중' : '계좌요청'}
+            </Button>
+          )}
+          {/* 정산 안내 이메일 버튼 - pending이 있는 파트너에게만 표시 */}
+          {pendingItems.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onPreviewEmail(p.partner_id, p.partner_name)}
+              disabled={previewLoading === p.partner_id}
+            >
+              <Mail className="w-3.5 h-3.5 mr-1" />
+              {previewLoading === p.partner_id ? '로딩...' : '정산 안내'}
             </Button>
           )}
           {selectedCount > 0 && (

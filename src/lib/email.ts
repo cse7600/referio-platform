@@ -467,16 +467,15 @@ export async function sendWelcomeEmail(options: {
   })
 }
 
-// CRM 이메일 10: 정산 확정 안내 (정산 정보 등록 완료된 파트너)
-export async function sendSettlementConfirmedEmail(options: {
-  partnerEmail: string;
+// CRM 이메일 10: 정산 확정 안내 HTML 생성 (exported for preview)
+export function generateSettlementConfirmedHtml(options: {
   partnerName: string;
   totalAmount: number;
-  paymentDueDate?: string; // 예: '2026-04-15'
-  accountLastFour?: string; // 계좌 끝 4자리
+  paymentDueDate?: string;
+  accountLastFour?: string;
   settlementItems?: Array<{ programName: string; count: number; amount: number }>;
-}): Promise<boolean> {
-  const { partnerEmail, partnerName, totalAmount, paymentDueDate, accountLastFour, settlementItems } = options;
+}): string {
+  const { partnerName, totalAmount, paymentDueDate, accountLastFour, settlementItems } = options;
 
   const itemRows = settlementItems?.map(item => `
     <tr>
@@ -485,7 +484,7 @@ export async function sendSettlementConfirmedEmail(options: {
       <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#111827;font-weight:600;text-align:right;">₩${item.amount.toLocaleString()}</td>
     </tr>`).join('') ?? '';
 
-  const html = `
+  return `
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -557,6 +556,20 @@ export async function sendSettlementConfirmedEmail(options: {
   </div>
 </body>
 </html>`;
+}
+
+// CRM 이메일 10: 정산 확정 안내 발송
+export async function sendSettlementConfirmedEmail(options: {
+  partnerEmail: string;
+  partnerName: string;
+  totalAmount: number;
+  paymentDueDate?: string; // e.g. '2026-04-15'
+  accountLastFour?: string; // last 4 digits of bank account
+  settlementItems?: Array<{ programName: string; count: number; amount: number }>;
+}): Promise<boolean> {
+  const { partnerEmail, partnerName, totalAmount, paymentDueDate, accountLastFour, settlementItems } = options;
+
+  const html = generateSettlementConfirmedHtml({ partnerName, totalAmount, paymentDueDate, accountLastFour, settlementItems });
 
   return sendEmail({
     to: partnerEmail,
