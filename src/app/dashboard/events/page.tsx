@@ -263,22 +263,27 @@ export default function EventsPage() {
                     {/* Bottom: dates + action */}
                     <div className="flex items-center justify-between flex-wrap gap-2 mt-3">
                       {/* Date range */}
-                      {(event.start_date || event.end_date) && (
-                        <div className="flex items-center gap-1 text-xs text-slate-500">
-                          <Calendar className="w-3 h-3 shrink-0" />
-                          <span>
-                            {event.start_date && formatDate(event.start_date)}
-                            {event.start_date && event.end_date && ' ~ '}
-                            {event.end_date && formatDate(event.end_date)}
-                          </span>
-                          {daysLeft !== null && daysLeft > 0 && (
-                            <span className="font-semibold text-orange-600 ml-1">D-{daysLeft}</span>
-                          )}
-                          {daysLeft !== null && daysLeft <= 0 && (
-                            <span className="text-slate-400 ml-1">종료됨</span>
-                          )}
-                        </div>
-                      )}
+                      <div className="flex flex-col gap-0.5">
+                        {(event.start_date || event.end_date) && (
+                          <div className="flex items-center gap-1 text-xs text-slate-500">
+                            <Calendar className="w-3 h-3 shrink-0" />
+                            <span>
+                              {event.start_date && formatDate(event.start_date)}
+                              {event.start_date && event.end_date && ' ~ '}
+                              {event.end_date && formatDate(event.end_date)}
+                            </span>
+                            {daysLeft !== null && daysLeft > 0 && (
+                              <span className="font-semibold text-orange-600 ml-1">D-{daysLeft}</span>
+                            )}
+                            {daysLeft !== null && daysLeft <= 0 && (
+                              <span className="text-slate-400 ml-1">종료됨</span>
+                            )}
+                          </div>
+                        )}
+                        <span className="text-xs text-slate-400">
+                          게시 {new Date(event.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                        </span>
+                      </div>
 
                       {/* Participate button */}
                       {event.participated ? (

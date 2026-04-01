@@ -40,13 +40,15 @@ import { FeedbackWidget } from '@/components/ui/feedback-widget'
 const NAV_ITEMS = [
   { href: '/dashboard', label: '홈', icon: Home },
   { href: '/dashboard/programs', label: '프로그램', icon: Building },
-  { href: '/dashboard/events', label: '이벤트', icon: Gift },
+  { href: '/dashboard/events', label: '이벤트', icon: Gift, badge: 'events' as const },
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
   { href: '/dashboard/activity', label: '활동 지원', icon: Megaphone },
   { href: '/dashboard/support', label: '문의', icon: MessageSquare },
   { href: '/dashboard/profile', label: '활동정보', icon: User },
 ]
+
+const EVENTS_LAST_SEEN_KEY = 'referio_events_last_seen'
 
 function ProgramSwitcher() {
   const { programs, selectedProgram, selectProgram } = useProgram()
@@ -90,10 +92,34 @@ function DashboardContent({
   const { partner } = useProgram() // ProgramContext에서 공유 — 중복 DB 조회 제거
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [hasNewEvents, setHasNewEvents] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Check for new events: compare latest event created_at with last seen timestamp
+  useEffect(() => {
+    const checkNewEvents = async () => {
+      try {
+        const lastSeen = localStorage.getItem(EVENTS_LAST_SEEN_KEY)
+        // No last_seen means first visit — don't show badge yet
+        if (!lastSeen) return
+        const res = await fetch('/api/partner/events')
+        if (!res.ok) return
+        const data = await res.json()
+        const events: { created_at: string }[] = data.events || []
+        const hasNew = events.some(e => new Date(e.created_at) > new Date(lastSeen))
+        setHasNewEvents(hasNew)
+      } catch { /* ignore */ }
+    }
+    if (mounted) checkNewEvents()
+  }, [mounted])
+
+  const markEventsSeen = () => {
+    localStorage.setItem(EVENTS_LAST_SEEN_KEY, new Date().toISOString())
+    setHasNewEvents(false)
+  }
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -105,18 +131,27 @@ function DashboardContent({
     <>
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.href
+        const showBadge = item.badge === 'events' && hasNewEvents
         return (
           <Link
             key={item.href}
             href={item.href}
-            onClick={onClick}
+            onClick={() => {
+              if (item.badge === 'events') markEventsSeen()
+              onClick?.()
+            }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               isActive
                 ? 'bg-indigo-50 text-indigo-600 font-medium'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            <item.icon className="w-5 h-5" />
+            <span className="relative shrink-0">
+              <item.icon className="w-5 h-5" />
+              {showBadge && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
+              )}
+            </span>
             {item.label}
           </Link>
         )

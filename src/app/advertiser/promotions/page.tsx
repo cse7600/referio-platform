@@ -331,7 +331,7 @@ export default function PromotionsPage() {
             const bgColor = promo.banner_bg_color || '#EEF2FF'
 
             return (
-              <Card key={promo.id} className={isEditing ? 'ring-2 ring-indigo-500' : ''}>
+              <Card key={promo.id} className={`overflow-hidden rounded-xl ${isEditing ? 'ring-2 ring-indigo-500' : ''}`}>
                 {isEditing ? (
                   <>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -354,10 +354,10 @@ export default function PromotionsPage() {
                     </CardContent>
                   </>
                 ) : (
-                  <CardContent className="pt-0 p-0 overflow-hidden rounded-xl">
+                  <CardContent className="pt-0 p-0">
                     {/* Banner color strip */}
                     <div
-                      className="flex items-center justify-between px-5 py-4 rounded-t-xl"
+                      className="flex items-center justify-between px-5 py-4"
                       style={{ backgroundColor: bgColor }}
                     >
                       <div className="flex-1 min-w-0">
@@ -403,6 +403,9 @@ export default function PromotionsPage() {
                             {promo.end_date && `${promo.end_date}`}
                           </span>
                         )}
+                        <span>
+                          게시 {new Date(promo.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                        </span>
                         {promo.participation_count > 0 ? (
                           <button
                             className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer underline-offset-2 hover:underline"
