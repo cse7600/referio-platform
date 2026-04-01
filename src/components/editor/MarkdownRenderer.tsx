@@ -2,6 +2,12 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import dynamic from 'next/dynamic'
+
+const TiptapViewer = dynamic(
+  () => import('@/components/editor/TiptapViewer'),
+  { ssr: false, loading: () => <div className="h-10 animate-pulse bg-gray-100 rounded" /> }
+)
 
 interface MarkdownRendererProps {
   content: string
@@ -18,66 +24,16 @@ function isTiptapJSON(content: string): boolean {
   }
 }
 
-// Tiptap JSON → plain text 변환 (react-markdown 렌더링용)
-function tiptapToMarkdown(content: string): string {
-  try {
-    const json = JSON.parse(content)
-    const lines: string[] = []
-    const walk = (node: { type?: string; text?: string; marks?: { type: string }[]; content?: unknown[]; attrs?: Record<string, unknown> }) => {
-      if (node.type === 'heading') {
-        const level = (node.attrs?.level as number) || 1
-        const prefix = '#'.repeat(level)
-        const texts: string[] = []
-        if (node.content) (node.content as typeof node[]).forEach(n => n.text && texts.push(n.text as string))
-        lines.push(`${prefix} ${texts.join('')}`)
-      } else if (node.type === 'paragraph') {
-        const texts: string[] = []
-        if (node.content) (node.content as typeof node[]).forEach(n => {
-          if (n.text) {
-            const marks = (n.marks || []) as { type: string }[]
-            let t = n.text as string
-            if (marks.some((m) => m.type === 'bold')) t = `**${t}**`
-            if (marks.some((m) => m.type === 'italic')) t = `*${t}*`
-            texts.push(t)
-          }
-        })
-        lines.push(texts.join('') || '')
-      } else if (node.type === 'bulletList') {
-        if (node.content) (node.content as typeof node[]).forEach(item => {
-          const texts: string[] = []
-          if (item.content) (item.content as typeof node[]).forEach(p => {
-            if (p.content) (p.content as typeof node[]).forEach(n => n.text && texts.push(n.text as string))
-          })
-          lines.push(`- ${texts.join('')}`)
-        })
-      } else if (node.type === 'orderedList') {
-        if (node.content) (node.content as typeof node[]).forEach((item, i) => {
-          const texts: string[] = []
-          if (item.content) (item.content as typeof node[]).forEach(p => {
-            if (p.content) (p.content as typeof node[]).forEach(n => n.text && texts.push(n.text as string))
-          })
-          lines.push(`${i + 1}. ${texts.join('')}`)
-        })
-      } else if (node.type === 'blockquote') {
-        if (node.content) (node.content as typeof node[]).forEach(n => {
-          lines.push(`> ${(n as { text?: string }).text || ''}`)
-        })
-      } else if (node.type === 'horizontalRule') {
-        lines.push('---')
-      } else if (node.content) {
-        (node.content as typeof node[]).forEach(walk)
-      }
-    }
-    if (json.content) json.content.forEach(walk)
-    return lines.join('\n\n')
-  } catch {
-    return content
-  }
-}
-
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
-  // Tiptap JSON이면 마크다운으로 변환 후 렌더링, 아니면 그대로 렌더링
-  const markdown = isTiptapJSON(content) ? tiptapToMarkdown(content) : content
+  // Tiptap JSON content is rendered natively via TiptapViewer
+  // to avoid GFM strikethrough misinterpretation (e.g. "100만원~300만원" → strikethrough)
+  if (isTiptapJSON(content)) {
+    return (
+      <div className={`markdown-content ${className}`}>
+        <TiptapViewer content={content} />
+      </div>
+    )
+  }
 
   return (
     <div className={`markdown-content ${className}`}>
@@ -188,7 +144,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
           ),
         }}
       >
-        {markdown}
+        {content}
       </ReactMarkdown>
     </div>
   )

@@ -68,6 +68,12 @@ export async function GET() {
       .eq('advertiser_id', session.advertiserUuid)
       .gte('created_at', monthStart)
 
+    // 누적 리드/계약 통계 조회 (all-time)
+    const { data: allTimeReferrals } = await supabase
+      .from('referrals')
+      .select('partner_id, is_valid, contract_status')
+      .eq('advertiser_id', session.advertiserUuid)
+
     // 파트너별 통계 집계
     const statsMap: Record<string, { lead_count: number; contract_count: number }> = {}
     for (const ref of (monthlyReferrals || [])) {
@@ -77,6 +83,17 @@ export async function GET() {
       }
       if (ref.is_valid) statsMap[ref.partner_id].lead_count++
       if (ref.contract_status === 'completed') statsMap[ref.partner_id].contract_count++
+    }
+
+    // 누적 통계 집계 (all-time)
+    const totalStatsMap: Record<string, { lead_count: number; contract_count: number }> = {}
+    for (const ref of (allTimeReferrals || [])) {
+      if (!ref.partner_id) continue
+      if (!totalStatsMap[ref.partner_id]) {
+        totalStatsMap[ref.partner_id] = { lead_count: 0, contract_count: 0 }
+      }
+      if (ref.is_valid) totalStatsMap[ref.partner_id].lead_count++
+      if (ref.contract_status === 'completed') totalStatsMap[ref.partner_id].contract_count++
     }
 
     // 기존 응답 형태와 호환되게 평탄화
@@ -98,6 +115,7 @@ export async function GET() {
         email: string | null
       }
       const monthStats = statsMap[partnerData.id] || { lead_count: 0, contract_count: 0 }
+      const totalStats = totalStatsMap[partnerData.id] || { lead_count: 0, contract_count: 0 }
       return {
         ...partnerData,
         status: e.status,
@@ -112,6 +130,8 @@ export async function GET() {
         program_created_at: e.created_at,
         monthly_lead_count: monthStats.lead_count,
         monthly_contract_count: monthStats.contract_count,
+        total_lead_count: totalStats.lead_count,
+        total_contract_count: totalStats.contract_count,
       }
     })
 

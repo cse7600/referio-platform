@@ -32,6 +32,8 @@ interface Partner {
   program_created_at: string
   monthly_lead_count: number
   monthly_contract_count: number
+  total_lead_count: number
+  total_contract_count: number
   bank_name: string | null
   bank_account: string | null
   account_holder: string | null
@@ -72,7 +74,7 @@ const tierLabels: Record<string, { label: string; color: string }> = {
 const hasSettlementInfo = (p: Partner) =>
   !!(p.bank_name && p.bank_account && p.account_holder)
 
-type SortKey = 'program_created_at' | 'created_at' | 'name' | 'monthly_lead_count' | 'monthly_contract_count'
+type SortKey = 'program_created_at' | 'created_at' | 'name' | 'monthly_lead_count' | 'monthly_contract_count' | 'total_lead_count' | 'total_contract_count'
 
 export default function AdvertiserPartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([])
@@ -332,6 +334,8 @@ export default function AdvertiserPartnersPage() {
                 <TableHead>티어</TableHead>
                 <SortableHead label="이번달 리드" sortK="monthly_lead_count" />
                 <SortableHead label="이번달 계약" sortK="monthly_contract_count" />
+                <SortableHead label="누적 리드" sortK="total_lead_count" />
+                <SortableHead label="누적 계약" sortK="total_contract_count" />
                 <TableHead>정산정보</TableHead>
                 <SortableHead label="참여일" sortK="program_created_at" />
                 <SortableHead label="가입일" sortK="created_at" />
@@ -341,7 +345,7 @@ export default function AdvertiserPartnersPage() {
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={14} className="text-center py-12 text-slate-500">
                     {partners.length === 0 ? '등록된 파트너가 없습니다' : '검색 결과가 없습니다'}
                   </TableCell>
                 </TableRow>
@@ -429,6 +433,16 @@ export default function AdvertiserPartnersPage() {
                           {partner.monthly_contract_count || 0}
                         </span>
                       </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-semibold ${(partner.total_lead_count || 0) > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                          {partner.total_lead_count || 0}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-semibold ${(partner.total_contract_count || 0) > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                          {partner.total_contract_count || 0}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {hasSettlementInfo(partner) ? (
                           <Badge className="bg-green-100 text-green-700 text-xs">입력완료</Badge>
@@ -497,6 +511,14 @@ export default function AdvertiserPartnersPage() {
                 <div className="bg-green-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-green-600">{selectedPartner.monthly_contract_count || 0}</div>
                   <div className="text-xs text-green-500 mt-0.5">이번 달 계약</div>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-indigo-600">{selectedPartner.total_lead_count || 0}</div>
+                  <div className="text-xs text-indigo-500 mt-0.5">누적 리드</div>
+                </div>
+                <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-emerald-600">{selectedPartner.total_contract_count || 0}</div>
+                  <div className="text-xs text-emerald-500 mt-0.5">누적 계약</div>
                 </div>
               </div>
 
