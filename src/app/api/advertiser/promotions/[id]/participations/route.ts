@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { getAdvertiserSession } from '@/lib/auth'
 
 export async function GET(
@@ -14,6 +15,8 @@ export async function GET(
 
     const { id } = await params
     const supabase = await createClient()
+    // Use service client for partners join — RLS on partners blocks anon access
+    const serviceClient = createServiceClient()
 
     // Verify the promotion belongs to this advertiser
     const { data: promotion } = await supabase
@@ -27,7 +30,7 @@ export async function GET(
       return NextResponse.json({ error: '이벤트를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('partner_promotion_participations')
       .select(`
         id,
@@ -41,7 +44,7 @@ export async function GET(
         )
       `)
       .eq('promotion_id', id)
-      .order('submitted_at', { ascending: false })
+      .order('participated_at', { ascending: false })
 
     if (error) {
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })

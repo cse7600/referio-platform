@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Plus, X, Pencil, Users, Eye, EyeOff, Camera, Link, ExternalLink, Gift, Trophy, Zap, Image, Mail } from 'lucide-react'
+import { Plus, X, Pencil, Users, Eye, EyeOff, Camera, Link, ExternalLink, Gift, Trophy, Zap, Image, Mail, Download } from 'lucide-react'
 
 const TiptapEditor = dynamic(() => import('@/components/editor/TiptapEditor'), { ssr: false })
 
@@ -602,12 +602,41 @@ export default function PromotionsPage() {
                 <h2 className="font-semibold text-slate-900">참여자 목록</h2>
                 <p className="text-sm text-slate-500">{participationModal.title}</p>
               </div>
-              <button
-                className="p-1 rounded hover:bg-slate-100"
-                onClick={() => { setParticipationModal(null); setParticipations([]) }}
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {participations.length > 0 && (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                    onClick={() => {
+                      const rows = [
+                        ['이름', '이메일', '활동 링크', '참여일시'],
+                        ...participations.map(p => [
+                          p.partner_name,
+                          p.partner_email,
+                          p.submission_url || '',
+                          new Date(p.created_at).toLocaleString('ko-KR'),
+                        ]),
+                      ]
+                      const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+                      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `${participationModal.title}_참여자목록.csv`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    CSV 다운로드
+                  </button>
+                )}
+                <button
+                  className="p-1 rounded hover:bg-slate-100"
+                  onClick={() => { setParticipationModal(null); setParticipations([]) }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <div className="overflow-y-auto flex-1 p-5">
               {loadingParticipations ? (
@@ -622,12 +651,12 @@ export default function PromotionsPage() {
                 <div className="space-y-3">
                   {participations.map((p) => (
                     <div key={p.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm text-slate-900">{p.partner_name}</p>
-                          <p className="text-xs text-slate-500">{p.partner_email}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm text-slate-900">{p.partner_name || '(이름 없음)'}</p>
+                          <p className="text-xs text-slate-500">{p.partner_email || '(이메일 없음)'}</p>
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-400 shrink-0">
                           {new Date(p.created_at).toLocaleDateString('ko-KR')}
                         </p>
                       </div>
@@ -636,7 +665,7 @@ export default function PromotionsPage() {
                           href={p.submission_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 truncate"
+                          className="mt-2 flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 break-all"
                         >
                           <Link className="w-3 h-3 shrink-0" />
                           {p.submission_url}
