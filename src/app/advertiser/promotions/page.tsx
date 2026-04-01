@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Plus, X, Pencil, Users, Eye, EyeOff, Camera, Link, ExternalLink, Gift, Trophy, Zap, Image } from 'lucide-react'
+import { Plus, X, Pencil, Users, Eye, EyeOff, Camera, Link, ExternalLink, Gift, Trophy, Zap, Image, Mail } from 'lucide-react'
 
 const TiptapEditor = dynamic(() => import('@/components/editor/TiptapEditor'), { ssr: false })
 
@@ -113,6 +113,10 @@ export default function PromotionsPage() {
   const [participationModal, setParticipationModal] = useState<{ id: string; title: string } | null>(null)
   const [participations, setParticipations] = useState<Participation[]>([])
   const [loadingParticipations, setLoadingParticipations] = useState(false)
+  const [emailModal, setEmailModal] = useState<{ id: string; title: string } | null>(null)
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState<string>('')
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   useEffect(() => {
     fetchPromotions()
@@ -261,6 +265,44 @@ export default function PromotionsPage() {
     } catch {
       toast.error('변경에 실패했습니다')
     }
+  }
+
+  const openEmailModal = async (promo: Promotion) => {
+    setEmailModal({ id: promo.id, title: promo.title })
+    setEmailPreviewHtml('')
+    setLoadingPreview(true)
+    try {
+      const res = await fetch(`/api/advertiser/promotions/${promo.id}/notify`)
+      if (res.ok) {
+        const html = await res.text()
+        setEmailPreviewHtml(html)
+      } else {
+        toast.error('미리보기를 불러오지 못했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setLoadingPreview(false)
+  }
+
+  const handleSendEmail = async () => {
+    if (!emailModal) return
+    setSendingEmail(true)
+    try {
+      const res = await fetch(`/api/advertiser/promotions/${emailModal.id}/notify`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(data.message || '이메일이 발송되었습니다')
+        setEmailModal(null)
+      } else {
+        toast.error(data.error || '발송에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+    setSendingEmail(false)
   }
 
   const startEdit = (promo: Promotion) => {
@@ -439,6 +481,15 @@ export default function PromotionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => openEmailModal(promo)}
+                          title="파트너들에게 이벤트 안내 이메일 발송"
+                        >
+                          <Mail className="w-3 h-3 mr-1" />
+                          이메일 발송
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleToggleVisible(promo.id, promo.is_visible_to_partners)}
                           title={promo.is_visible_to_partners ? '비공개로 변경' : '파트너에게 공개'}
                         >
@@ -480,6 +531,65 @@ export default function PromotionsPage() {
               </Card>
             )
           })}
+        </div>
+      )}
+
+      {/* 참여자 목록 모달 */}
+      {/* 이메일 발송 모달 */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div>
+                <h2 className="font-semibold text-slate-900">이메일 미리보기</h2>
+                <p className="text-sm text-slate-500 mt-0.5">{emailModal.title}</p>
+              </div>
+              <button
+                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                onClick={() => setEmailModal(null)}
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Preview area */}
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+              {loadingPreview ? (
+                <div className="flex items-center justify-center h-48 text-slate-400">
+                  <div className="animate-pulse">이메일 미리보기 로딩 중...</div>
+                </div>
+              ) : emailPreviewHtml ? (
+                <div
+                  className="bg-white rounded-xl overflow-hidden"
+                  dangerouslySetInnerHTML={{ __html: emailPreviewHtml }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-48 text-slate-400">
+                  미리보기를 불러올 수 없습니다
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-white flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">
+                승인된 파트너 전원에게 발송됩니다. 수신 거부한 파트너는 자동으로 제외됩니다.
+              </p>
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" onClick={() => setEmailModal(null)}>
+                  취소
+                </Button>
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || loadingPreview}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {sendingEmail ? '발송 중...' : '발송하기'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

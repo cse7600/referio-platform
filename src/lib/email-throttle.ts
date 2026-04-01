@@ -18,7 +18,8 @@ export type EmailType =
   | 'settlement_paid'
   | 'violation_warning'
   | 'account_deleted'
-  | 'program_rejected';
+  | 'program_rejected'
+  | 'event_notification';
 
 export type ThrottleCheckResult = {
   canSend: boolean;
@@ -34,6 +35,7 @@ export const PRIORITY_MAP: Record<EmailType, number> = {
   onboarding_approved:        2,
   activity_nudge:             3,
   activity_new_program:       3,
+  event_notification:         3,
   onboarding_nudge:           4,
   activity_monthly_report:    4,
   settlement_confirmed:       0,
