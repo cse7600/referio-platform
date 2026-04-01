@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Download, ChevronDown, ChevronUp, Mail, Check, Send } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp, Mail, Check, Send, FileText } from 'lucide-react'
 
 // ── Types ──
 
@@ -75,6 +75,9 @@ export default function AdvertiserSettlementsPage() {
 
   const [processing, setProcessing] = useState(false)
   const [emailSending, setEmailSending] = useState<string | null>(null) // partner_id or 'all'
+
+  const [showConfirmSheet, setShowConfirmSheet] = useState(false)
+  const [sheetProcessing, setSheetProcessing] = useState(false)
 
   const [previewModal, setPreviewModal] = useState<{
     partnerId: string;
@@ -218,6 +221,31 @@ export default function AdvertiserSettlementsPage() {
     }
   }
 
+  const handleBulkComplete = async () => {
+    const allPendingIds = partners.flatMap(p =>
+      p.settlements.filter(s => s.status === 'pending').map(s => s.id)
+    )
+    if (allPendingIds.length === 0) return
+
+    setSheetProcessing(true)
+    try {
+      const res = await fetch('/api/advertiser/settlements/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settlement_ids: allPendingIds }),
+      })
+      if (res.ok) {
+        setShowConfirmSheet(false)
+        setSelected({})
+        await fetchData()
+      } else {
+        alert('정산 처리 중 오류가 발생했습니다')
+      }
+    } finally {
+      setSheetProcessing(false)
+    }
+  }
+
   const handleExportCsv = async () => {
     try {
       const res = await fetch('/api/advertiser/settlements/export')
@@ -285,6 +313,15 @@ export default function AdvertiserSettlementsPage() {
             >
               <Send className="w-4 h-4 mr-2" />
               {emailSending === 'all' ? '발송 중...' : `전체 이메일 발송 (${missingInfoPartnerIds.length}명)`}
+            </Button>
+          )}
+          {(stats?.totalPending ?? 0) > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmSheet(true)}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              정산 확인서 ({stats?.totalPending ?? 0}건)
             </Button>
           )}
           <Button
@@ -363,6 +400,17 @@ export default function AdvertiserSettlementsPage() {
         </div>
       )}
 
+      {/* Settlement Confirm Sheet */}
+      {showConfirmSheet && (
+        <SettlementConfirmSheet
+          partners={partners}
+          stats={stats}
+          onClose={() => setShowConfirmSheet(false)}
+          onBulkComplete={handleBulkComplete}
+          processing={sheetProcessing}
+        />
+      )}
+
       {/* Email Preview Modal */}
       {previewModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -403,6 +451,173 @@ export default function AdvertiserSettlementsPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Settlement Confirm Sheet ──
+
+function SettlementConfirmSheet({
+  partners,
+  onClose,
+  onBulkComplete,
+  processing,
+}: {
+  partners: PartnerGroup[]
+  stats: Stats | null
+  onClose: () => void
+  onBulkComplete: () => void
+  processing: boolean
+}) {
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+  const pendingPartners = partners.filter(p => p.settlements.some(s => s.status === 'pending'))
+  const totalPendingAmount = pendingPartners.reduce((sum, p) => sum + p.pending_amount, 0)
+  const totalPendingCount = pendingPartners.reduce(
+    (sum, p) => sum + p.settlements.filter(s => s.status === 'pending').length,
+    0
+  )
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
+      <div className="w-full max-w-3xl">
+        {/* Action bar (hidden on print) */}
+        <div className="flex justify-between items-center mb-4 print:hidden">
+          <h2 className="text-white font-semibold text-lg">정산 확인서 미리보기</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-white text-slate-800 rounded-lg text-sm font-medium hover:bg-slate-100"
+            >
+              인쇄 / PDF 저장
+            </button>
+            <button
+              onClick={onBulkComplete}
+              disabled={processing}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {processing ? '처리 중...' : `전체 정산 완료 (${totalPendingCount}건)`}
+            </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-600"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+
+        {/* Document body */}
+        <div className="bg-white rounded-xl shadow-2xl p-10 print:shadow-none print:rounded-none">
+          {/* Header */}
+          <div className="text-center border-b-2 border-slate-900 pb-6 mb-8">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">정 산 확 인 서</h1>
+            <p className="text-slate-500 text-sm mt-1">Settlement Confirmation</p>
+          </div>
+
+          {/* Meta info */}
+          <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+            <div className="space-y-2">
+              <div className="flex">
+                <span className="w-24 text-slate-500 shrink-0">작성일</span>
+                <span className="font-medium">{today}</span>
+              </div>
+              <div className="flex">
+                <span className="w-24 text-slate-500 shrink-0">정산 대상</span>
+                <span className="font-medium">{pendingPartners.length}명</span>
+              </div>
+              <div className="flex">
+                <span className="w-24 text-slate-500 shrink-0">정산 건수</span>
+                <span className="font-medium">{totalPendingCount}건</span>
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-4 text-center">
+              <p className="text-xs text-slate-500 mb-1">총 정산 예정 금액</p>
+              <p className="text-2xl font-bold text-indigo-700">
+                {fmt(totalPendingAmount)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">세금 처리 전 금액</p>
+            </div>
+          </div>
+
+          {/* Partner table */}
+          <table className="w-full border-collapse text-sm mb-8">
+            <thead>
+              <tr className="border-y-2 border-slate-900">
+                <th className="py-2 text-left font-semibold text-slate-700 w-6">No.</th>
+                <th className="py-2 text-left font-semibold text-slate-700">파트너명</th>
+                <th className="py-2 text-left font-semibold text-slate-700">은행 / 계좌</th>
+                <th className="py-2 text-right font-semibold text-slate-700">정산 건수</th>
+                <th className="py-2 text-right font-semibold text-slate-700">정산 금액</th>
+                <th className="py-2 text-center font-semibold text-slate-700">정보 상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingPartners.map((p, idx) => {
+                const pendingCount = p.settlements.filter(s => s.status === 'pending').length
+                return (
+                  <tr key={p.partner_id} className="border-b border-slate-200">
+                    <td className="py-2.5 text-slate-400 text-xs">{idx + 1}</td>
+                    <td className="py-2.5">
+                      <div className="font-medium text-slate-900">{p.partner_name}</div>
+                      <div className="text-xs text-slate-400">{p.partner_email}</div>
+                    </td>
+                    <td className="py-2.5 text-slate-600">
+                      {p.bank_name && p.bank_account ? (
+                        <>
+                          {`${p.bank_name} ${'*'.repeat(Math.max(0, p.bank_account.length - 4))}${p.bank_account.slice(-4)}`}
+                          {p.account_holder && (
+                            <div className="text-xs text-slate-400">{p.account_holder}</div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-red-500 text-xs">미등록</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 text-right text-slate-700">{pendingCount}건</td>
+                    <td className="py-2.5 text-right font-semibold text-slate-900">
+                      {fmt(p.pending_amount)}
+                    </td>
+                    <td className="py-2.5 text-center">
+                      {p.bank_name && p.has_ssn ? (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">완료</span>
+                      ) : (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">미등록</span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-slate-900">
+                <td></td>
+                <td colSpan={3} className="py-3 font-bold text-slate-900">합 계</td>
+                <td className="py-3 text-right font-bold text-indigo-700 text-base">
+                  {fmt(totalPendingAmount)}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          {/* Notice */}
+          <div className="bg-slate-50 rounded-lg p-4 text-xs text-slate-500 mb-10">
+            <p>· 위 금액은 세금 처리 전 금액이며, 최종 입금액은 소득세 원천징수(3.3%) 후 산정됩니다.</p>
+            <p className="mt-1">· 계좌 정보가 미등록된 파트너에게는 정보 입력 요청 메일이 자동 발송됩니다.</p>
+          </div>
+
+          {/* Signature area */}
+          <div className="grid grid-cols-3 gap-6 border-t border-slate-200 pt-8">
+            {['담당자', '검토', '결재'].map(role => (
+              <div key={role} className="text-center">
+                <p className="text-sm font-medium text-slate-700 mb-8">{role}</p>
+                <div className="border-b border-slate-400 h-12"></div>
+                <p className="text-xs text-slate-400 mt-2">(서명)</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
