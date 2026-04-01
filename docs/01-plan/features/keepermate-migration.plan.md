@@ -54,7 +54,22 @@ scripts/send-test-email.js 실행
 
 ---
 
-## 5. 관련 파일
+## 5. 이슈 이력
+
+### [이슈] 멀티 프로그램 전환 후 파트너 탐색에서 미노출 → 복구 완료
+
+| 항목 | 내용 |
+|------|------|
+| 발생일 | 2026-03-31 저녁 |
+| 현상 | 파트너 프로그램 탐색에서 키퍼메이트 프로그램이 표시되지 않음 |
+| 원인 | migration 022 (멀티 프로그램 구조) 전환 시 키퍼메이트 `partner_programs` 레코드의 `program_id` 백필 누락 |
+| 조치 | Supabase 대시보드에서 `program_id` 직접 연결 (112건, 2026-03-31 13:34 KST) |
+| DB 데이터 | 파트너 데이터/커미션/추천코드 전원 정상 유지. 데이터 유실 없음 |
+| 현재 상태 | **정상화 완료** — `programs` 테이블: `is_active=true`, `is_public=true` |
+
+---
+
+## 6. 관련 파일
 
 - `scripts/migrate-keepermate-auth.js`: Auth 계정 생성 스크립트
 - `scripts/send-test-email.js`: 이관 이메일 발송 스크립트

@@ -134,9 +134,16 @@ export default function ActivitySupportPage() {
     setEditingId(post.id)
     setEditTitle(post.title)
     try {
-      setEditContent(JSON.parse(post.content))
+      const parsed = JSON.parse(post.content)
+      if (parsed && typeof parsed === 'object' && parsed.type === 'doc') {
+        setEditContent(parsed)
+      } else {
+        // Not valid Tiptap JSON — wrap as plain text paragraphs
+        setEditContent(plainTextToTiptap(post.content))
+      }
     } catch {
-      setEditContent(null)
+      // Plain text content — wrap as Tiptap doc
+      setEditContent(plainTextToTiptap(post.content))
     }
     setExpandedId(null)
   }
@@ -150,6 +157,10 @@ export default function ActivitySupportPage() {
   const handleUpdate = async () => {
     if (!editingId || !editTitle.trim()) {
       toast.error('제목을 입력해주세요')
+      return
+    }
+    if (!editContent) {
+      toast.error('내용을 입력해주세요')
       return
     }
     setUpdating(true)
@@ -428,6 +439,7 @@ function PostList({
                   <div>
                     <label className="text-sm font-medium text-slate-700 mb-1 block">내용</label>
                     <TiptapEditor
+                      key={editingId}
                       content={editContent}
                       onChange={onEditContentChange}
                       placeholder="내용을 입력하세요"
@@ -503,6 +515,18 @@ function PostList({
       })}
     </div>
   )
+}
+
+// Convert plain text / markdown string into minimal Tiptap JSON doc
+function plainTextToTiptap(text: string): JSONContent {
+  const lines = text.split('\n')
+  return {
+    type: 'doc',
+    content: lines.map((line) => ({
+      type: 'paragraph',
+      content: line.trim() ? [{ type: 'text', text: line }] : [],
+    })),
+  }
 }
 
 // Extract plain text from JSON content for preview
