@@ -240,7 +240,7 @@ export default function ProfilePage() {
   }
 
   const handleCopyProgramLink = async (refCode: string, programId: string) => {
-    const link = `https://referio.kr/security?ref=${refCode}`
+    const link = `https://referio.puzl.co.kr/security?ref=${refCode}`
     await navigator.clipboard.writeText(link)
     setCopiedProgramId(programId)
     toast.success('추천 링크가 복사되었습니다')
@@ -436,7 +436,7 @@ export default function ProfilePage() {
                 const status = PROGRAM_STATUS[prog.status]
                 const isApproved = prog.status === 'approved'
                 const isPending = prog.status === 'pending'
-                const refLink = `https://referio.kr/security?ref=${prog.referral_code}`
+                const refLink = `https://referio.puzl.co.kr/security?ref=${prog.referral_code}`
 
                 return (
                   <div

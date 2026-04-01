@@ -133,7 +133,7 @@ export default function ProgramsPage() {
       return url.toString()
     }
     // Fallback to inquiry page
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.puzl.co.kr'
     return `${origin}/inquiry/${advertiserId}?ref=${refCode}`
   }
 

@@ -195,7 +195,7 @@ export default function ProgramDetailPage() {
       url.searchParams.set('ref', refCode)
       return url.toString()
     }
-    return `https://referio.kr/inquiry/${program.id}?ref=${refCode}`
+    return `https://referio.puzl.co.kr/inquiry/${program.id}?ref=${refCode}`
   }
 
   const buildChannelLink = (channel: string) => {

@@ -391,7 +391,7 @@ export default function AdminCampaignsPage() {
               <Input
                 value={campaign.landing_url || ''}
                 onChange={(e) => setCampaign({ ...campaign, landing_url: e.target.value })}
-                placeholder="https://referio.kr/security"
+                placeholder="https://referio.puzl.co.kr/security"
               />
             </CardContent>
           </Card>

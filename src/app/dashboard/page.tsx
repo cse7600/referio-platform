@@ -191,7 +191,7 @@ export default function DashboardPage() {
         return `${base}?ref=${refCode}`
       }
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://referio.puzl.co.kr'
     return `${origin}/inquiry/${program.advertiser_id}?ref=${refCode}`
   }
 

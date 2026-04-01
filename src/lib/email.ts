@@ -72,7 +72,7 @@ export async function sendReferralNotification(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -172,7 +172,7 @@ export async function sendPartnerApprovalEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -296,7 +296,7 @@ export async function sendAdvertiserNewLeadEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">새 리드가 접수됐습니다</h1>
@@ -351,7 +351,7 @@ export function generateSettlementInfoRequestHtml(partnerName: string, pendingAm
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">Referio</h1>
@@ -425,7 +425,7 @@ export async function sendWelcomeEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -489,7 +489,7 @@ export async function sendSettlementConfirmedEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -579,7 +579,7 @@ export async function sendSettlementPaidEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -658,7 +658,7 @@ export async function sendProgramRejectedEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -734,7 +734,7 @@ export async function sendFirstLeadEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -813,7 +813,7 @@ export async function sendFirstRevenueEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -890,7 +890,7 @@ export async function sendNewProgramEmail(options: {
     partnerIds,
   } = options;
 
-  const applyLink = `https://referio.kr/dashboard/marketplace/${programId}`;
+  const applyLink = `https://referio.puzl.co.kr/dashboard/marketplace/${programId}`;
 
   // Fetch partner emails + names from DB
   const admin = createAdminClient();
@@ -954,7 +954,7 @@ export async function sendNewProgramEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -1068,7 +1068,7 @@ export async function sendAccountDeletedEmail(options: {
         </div>
         <p style="margin:12px 0 0;font-size:12px;color:#78350f;">
           입금은 탈퇴 이후에도 등록된 계좌로 자동 처리됩니다. 별도 조치는 필요하지 않습니다.<br/>
-          입금 완료 시 이메일로 별도 안내드립니다. 문의: support@referio.kr
+          입금 완료 시 이메일로 별도 안내드립니다. 문의: support@puzl.co.kr
         </p>
       </div>` : '';
 
@@ -1076,7 +1076,7 @@ export async function sendAccountDeletedEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -1115,7 +1115,7 @@ export async function sendAccountDeletedEmail(options: {
         <p style="margin:0 0 12px;font-size:13px;color:#374151;line-height:1.6;">
           탈퇴하신 이유를 알려주시면 서비스 개선에 참고하겠습니다. (선택 사항)
         </p>
-        <a href="https://referio.kr/exit-survey"
+        <a href="https://referio.puzl.co.kr/exit-survey"
            style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">
           탈퇴 사유 선택하기 (1분 소요)
         </a>
@@ -1134,7 +1134,7 @@ export async function sendAccountDeletedEmail(options: {
       <p style="margin:0;color:#9ca3af;font-size:12px;">
         본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.<br/>
         주식회사 퍼즐 | 서울특별시 |
-        <a href="https://referio.kr/privacy" style="color:#6b7280;">개인정보처리방침</a>
+        <a href="https://referio.puzl.co.kr/privacy" style="color:#6b7280;">개인정보처리방침</a>
       </p>
     </div>
   </div>
@@ -1186,7 +1186,7 @@ export async function sendViolationWarningEmail(options: {
 <!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:28px 32px;">
       <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;">Referio</h1>
@@ -1258,12 +1258,12 @@ export async function sendViolationWarningEmail(options: {
           <strong>${objectionDeadline}까지</strong> 아래 방법으로 접수해주세요.<br/>
           접수된 이의는 영업일 기준 5일 이내 검토 후 결과를 이메일로 안내드립니다.
         </p>
-        <a href="https://referio.kr/dashboard/support"
+        <a href="https://referio.puzl.co.kr/dashboard/support"
            style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:8px;">
           이의제기 접수하기
         </a>
         <p style="margin:8px 0 0;font-size:12px;color:#6b7280;">
-          또는 이메일: <a href="mailto:support@referio.kr" style="color:#4f46e5;">support@referio.kr</a>
+          또는 이메일: <a href="mailto:support@puzl.co.kr" style="color:#4f46e5;">support@puzl.co.kr</a>
         </p>
       </div>
 
@@ -1273,7 +1273,7 @@ export async function sendViolationWarningEmail(options: {
     </div>
     <div style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;">
       <p style="margin:0;color:#9ca3af;font-size:12px;">
-        Referio | <a href="https://referio.kr/privacy" style="color:#9ca3af;">개인정보처리방침</a><br/>
+        Referio | <a href="https://referio.puzl.co.kr/privacy" style="color:#9ca3af;">개인정보처리방침</a><br/>
         본 메일은 정산/계약/보안 관련 필수 통지 이메일로, 수신거부 대상에서 제외됩니다.<br/>
         주식회사 퍼즐 | 서울특별시 | noreply@updates.puzl.co.kr
       </p>
@@ -1325,7 +1325,7 @@ export async function sendEventNotificationEmail(options: {
     partnerIds,
   } = options;
 
-  const eventUrl = `https://referio.kr/dashboard/events`;
+  const eventUrl = `https://referio.puzl.co.kr/dashboard/events`;
 
   const TYPE_LABELS: Record<string, string> = {
     event: '이벤트',
@@ -1415,7 +1415,7 @@ export async function sendEventNotificationEmail(options: {
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${eventTitle}</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',Helvetica,sans-serif;">
   <div style="max-width:580px;margin:40px auto 60px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
 
     <!-- Header -->
@@ -1537,7 +1537,7 @@ export function generateEventNotificationPreview(options: {
     post_verification: ['아래 버튼을 눌러 Referio 대시보드로 이동하세요', '이벤트 탭에서 게시물 인증 이벤트를 확인하세요', '블로그/SNS에 게시물을 작성하고 URL을 제출하세요', '검토 완료 후 리워드가 지급됩니다'],
   };
 
-  const eventUrl = 'https://referio.kr/dashboard/events';
+  const eventUrl = 'https://referio.puzl.co.kr/dashboard/events';
   const headerBg = bannerBgColor || '#4f46e5';
   const typeLabel = TYPE_LABELS[eventType] ?? '이벤트';
   const typeEmoji = TYPE_EMOJIS[eventType] ?? '🎉';
@@ -1558,7 +1558,7 @@ export function generateEventNotificationPreview(options: {
   return `<!DOCTYPE html>
 <html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${eventTitle}</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Emoji','Segoe UI Symbol',Helvetica,sans-serif;">
   <div style="max-width:580px;margin:40px auto 60px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
     <div style="background:#4f46e5;padding:24px 32px;display:flex;align-items:center;gap:12px;">
       <div style="width:32px;height:32px;background:#ffffff;border-radius:8px;display:flex;align-items:center;justify-content:center;">

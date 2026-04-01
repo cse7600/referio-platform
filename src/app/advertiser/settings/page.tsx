@@ -603,7 +603,7 @@ const payload = {
 };
 ${hmacBlock}
 
-const response = await fetch('https://referio.kr/api/webhook/airtable', {
+const response = await fetch('https://referio.puzl.co.kr/api/webhook/airtable', {
   method: 'POST',
   headers,
   body: bodyStr,
@@ -870,7 +870,7 @@ console.log('Referio 응답:', JSON.stringify(result));`
               <CardContent className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://referio.kr'}/inquiry/${advertiser.id}`}
+                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://referio.puzl.co.kr'}/inquiry/${advertiser.id}`}
                     readOnly
                     className="bg-white text-sm font-mono"
                   />
