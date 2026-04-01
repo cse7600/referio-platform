@@ -34,14 +34,14 @@ export async function GET(
         post_url,
         post_note,
         submitted_at,
-        created_at,
+        participated_at,
         partners (
           name,
           email
         )
       `)
       .eq('promotion_id', id)
-      .order('created_at', { ascending: false })
+      .order('submitted_at', { ascending: false })
 
     if (error) {
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
@@ -59,7 +59,7 @@ export async function GET(
         partner_email: partner?.email || '',
         submission_url: p.post_url || null,
         note: p.post_note || null,
-        created_at: p.created_at,
+        created_at: p.participated_at,
       }
     })
 
