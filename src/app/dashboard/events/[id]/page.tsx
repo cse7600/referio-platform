@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Gift, Trophy, Zap, CheckCircle2, Calendar, Camera, ArrowLeft } from 'lucide-react'
+import { Gift, Trophy, Zap, CheckCircle2, Calendar, Camera, ArrowLeft, ExternalLink } from 'lucide-react'
 
 // SSR disabled — Tiptap requires browser APIs
 const TiptapViewer = dynamic(() => import('@/components/editor/TiptapViewer'), { ssr: false })
@@ -85,6 +85,14 @@ const TYPE_CONFIG = {
 function formatDate(dateStr: string | null): string | null {
   if (!dateStr) return null
   return new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+function formatPostedDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}. ${mm}. ${dd}.`
 }
 
 function getDaysLeft(endDate: string | null): number | null {
@@ -214,8 +222,16 @@ export default function EventDetailPage() {
   const bgColor = event.banner_bg_color || config.bgColor
   const daysLeft = getDaysLeft(event.end_date)
 
+  const handleCtaClick = () => {
+    if (event.promotion_type === 'post_verification') {
+      setPostModal({ postUrl: '', postNote: '', submitting: false })
+    } else {
+      handleParticipate()
+    }
+  }
+
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4 pb-24 lg:pb-0">
       {/* Back button */}
       <button
         onClick={() => router.push('/dashboard/events')}
@@ -230,6 +246,15 @@ export default function EventDetailPage() {
         className="rounded-xl border border-slate-200 overflow-hidden shadow-sm"
         style={{ backgroundColor: bgColor }}
       >
+        {/* Full-width banner image (when available) */}
+        {event.banner_image_url && (
+          <img
+            src={event.banner_image_url}
+            alt={event.title}
+            className="w-full max-h-48 object-cover"
+          />
+        )}
+
         <div className="flex items-stretch min-h-[140px]">
           {/* Left: text content */}
           <div className="flex-1 px-5 py-5 flex flex-col justify-between">
@@ -249,68 +274,67 @@ export default function EventDetailPage() {
               )}
             </div>
 
-            {/* Date + action */}
+            {/* Date + posted date + inline action (desktop) */}
             <div className="flex items-center justify-between flex-wrap gap-2 mt-4">
-              {(event.start_date || event.end_date) && (
-                <div className="flex items-center gap-1 text-xs text-slate-500">
-                  <Calendar className="w-3 h-3 shrink-0" />
-                  <span>
-                    {event.start_date && formatDate(event.start_date)}
-                    {event.start_date && event.end_date && ' ~ '}
-                    {event.end_date && formatDate(event.end_date)}
-                  </span>
-                  {daysLeft !== null && daysLeft > 0 && (
-                    <span className="font-semibold text-orange-600 ml-1">D-{daysLeft}</span>
-                  )}
-                  {daysLeft !== null && daysLeft <= 0 && (
-                    <span className="text-slate-400 ml-1">종료됨</span>
-                  )}
-                </div>
-              )}
+              <div className="flex flex-col gap-1">
+                {(event.start_date || event.end_date) && (
+                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span>
+                      {event.start_date && formatDate(event.start_date)}
+                      {event.start_date && event.end_date && ' ~ '}
+                      {event.end_date && formatDate(event.end_date)}
+                    </span>
+                    {daysLeft !== null && daysLeft > 0 && (
+                      <span className="font-semibold text-orange-600 ml-1">D-{daysLeft}</span>
+                    )}
+                    {daysLeft !== null && daysLeft <= 0 && (
+                      <span className="text-slate-400 ml-1">종료됨</span>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-slate-400">게시 {formatPostedDate(event.created_at)}</p>
+              </div>
 
-              {event.participated ? (
-                <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-                  <CheckCircle2 className="w-4 h-4" />
-                  참여 완료
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  className={config.btnColor}
-                  onClick={() =>
-                    event.promotion_type === 'post_verification'
-                      ? setPostModal({ postUrl: '', postNote: '', submitting: false })
-                      : handleParticipate()
-                  }
-                  disabled={participating}
-                >
-                  {participating ? '처리 중...' : '신청하기'}
-                </Button>
-              )}
+              {/* Inline CTA — desktop only (lg:) */}
+              <div className="hidden lg:block">
+                {event.participated ? (
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4" />
+                    참여 완료
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className={config.btnColor}
+                    onClick={handleCtaClick}
+                    disabled={participating}
+                  >
+                    {participating ? '처리 중...' : '신청하기'}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Right: image or icon */}
-          <div className="w-28 shrink-0 flex items-center justify-center">
-            {event.banner_image_url ? (
-              <img
-                src={event.banner_image_url}
-                alt={event.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
+          {/* Right: icon (only when no banner image) */}
+          {!event.banner_image_url && (
+            <div className="w-28 shrink-0 flex items-center justify-center">
               <div className={`w-16 h-16 rounded-2xl ${config.iconBg} flex items-center justify-center`}>
                 <span className="text-3xl select-none">{config.emoji}</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Description */}
       {event.description && (
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
-          <h2 className="text-sm font-semibold text-slate-500 mb-3">이벤트 내용</h2>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-semibold text-slate-600">이벤트 내용</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
           <TiptapViewer content={event.description} />
         </div>
       )}
@@ -318,34 +342,37 @@ export default function EventDetailPage() {
       {/* Event link */}
       {event.event_link_url && (
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm px-5 py-4">
-          <p className="text-sm text-slate-500 mb-2">이벤트 링크</p>
+          <p className="text-sm text-slate-500 mb-3">이벤트 링크</p>
           <a
             href={event.event_link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-600 underline break-all"
           >
-            {event.event_link_url}
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <ExternalLink className="w-3.5 h-3.5" />
+              바로가기
+            </Button>
           </a>
         </div>
       )}
 
-      {/* Bottom participate button (if no description or as repeat CTA) */}
-      {!event.participated && (
-        <div className="pb-4">
+      {/* Mobile sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-slate-100 lg:hidden">
+        {event.participated ? (
+          <div className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-emerald-700">
+            <CheckCircle2 className="w-4 h-4" />
+            참여 완료
+          </div>
+        ) : (
           <Button
             className={`w-full ${config.btnColor}`}
-            onClick={() =>
-              event.promotion_type === 'post_verification'
-                ? setPostModal({ postUrl: '', postNote: '', submitting: false })
-                : handleParticipate()
-            }
+            onClick={handleCtaClick}
             disabled={participating}
           >
             {participating ? '처리 중...' : '신청하기'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Post verification modal */}
       <Dialog open={!!postModal} onOpenChange={(open) => { if (!open) setPostModal(null) }}>

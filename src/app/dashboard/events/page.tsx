@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Gift, Trophy, Zap, CheckCircle2, Calendar, ChevronDown, ChevronUp, Camera } from 'lucide-react'
+import { Gift, Trophy, Zap, CheckCircle2, Calendar, ChevronRight, Camera } from 'lucide-react'
 
 interface Event {
   id: string
@@ -97,7 +97,6 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [participating, setParticipating] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState<string | null>(null)
   const [postModal, setPostModal] = useState<PostVerificationState | null>(null)
 
   useEffect(() => {
@@ -221,8 +220,6 @@ export default function EventsPage() {
         <div className="space-y-3">
           {events.map((event) => {
             const config = TYPE_CONFIG[event.promotion_type] ?? TYPE_CONFIG.event;
-            const Icon = config.icon;
-            const isExpanded = expanded === event.id;
             const daysLeft = getDaysLeft(event.end_date);
             const bgColor = event.banner_bg_color || config.bgColor;
 
@@ -234,7 +231,7 @@ export default function EventsPage() {
               >
                 {/* Banner row — click to open detail page */}
                 <div
-                  className="flex items-stretch min-h-[128px] cursor-pointer"
+                  className="flex items-stretch min-h-[144px] cursor-pointer"
                   onClick={() => router.push(`/dashboard/events/${event.id}`)}
                 >
                   {/* Left: text content */}
@@ -252,7 +249,7 @@ export default function EventsPage() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-bold text-slate-900 text-base leading-snug">{event.title}</h3>
+                      <h3 className="font-bold text-slate-900 text-[17px] leading-snug">{event.title}</h3>
 
                       {/* Reward */}
                       {event.reward_description && (
@@ -261,7 +258,7 @@ export default function EventsPage() {
                     </div>
 
                     {/* Bottom: dates + action */}
-                    <div className="flex items-center justify-between flex-wrap gap-2 mt-3">
+                    <div className={`flex items-center justify-between flex-wrap gap-2 mt-3 rounded-lg px-2 py-1.5 -mx-2 transition-colors ${event.participated ? 'bg-emerald-50/50' : ''}`}>
                       {/* Date range */}
                       <div className="flex flex-col gap-0.5">
                         {(event.start_date || event.end_date) && (
@@ -285,27 +282,42 @@ export default function EventsPage() {
                         </span>
                       </div>
 
-                      {/* Participate button */}
-                      {event.participated ? (
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-                          <CheckCircle2 className="w-4 h-4" />
-                          참여 완료
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className={config.btnColor}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            event.promotion_type === 'post_verification'
-                              ? openPostModal(event.id)
-                              : handleParticipate(event.id)
-                          }}
-                          disabled={participating === event.id}
-                        >
-                          {participating === event.id ? '처리 중...' : '신청하기'}
-                        </Button>
-                      )}
+                      {/* Right side: detail link + participate button */}
+                      <div className="flex items-center gap-2">
+                        {event.description && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/dashboard/events/${event.id}`)
+                            }}
+                            className="flex items-center gap-0.5 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
+                          >
+                            상세 보기
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {event.participated ? (
+                          <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                            <CheckCircle2 className="w-4 h-4" />
+                            참여 완료
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className={config.btnColor}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              event.promotion_type === 'post_verification'
+                                ? openPostModal(event.id)
+                                : handleParticipate(event.id)
+                            }}
+                            disabled={participating === event.id}
+                          >
+                            {participating === event.id ? '처리 중...' : '신청하기'}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -325,31 +337,6 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                {/* Description toggle */}
-                {event.description && (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setExpanded(isExpanded ? null : event.id)
-                      }}
-                      className="w-full flex items-center gap-1 px-5 py-2 text-xs text-slate-500 hover:text-slate-800 border-t border-black/5 transition-colors bg-black/[0.02]"
-                    >
-                      {isExpanded ? (
-                        <><ChevronUp className="w-3.5 h-3.5" />내용 접기</>
-                      ) : (
-                        <><ChevronDown className="w-3.5 h-3.5" />내용 보기</>
-                      )}
-                    </button>
-                    {isExpanded && (
-                      <div className="px-5 pb-4 pt-2">
-                        <div className="bg-white/70 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-line leading-relaxed">
-                          {event.description}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             );
           })}
