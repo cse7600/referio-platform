@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-01T05:36:42.669Z",
+  "lastUpdated": "2026-04-01T07:57:21.049Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -83,7 +83,8 @@
     "violation",
     "unsubscribe",
     "lead",
-    "notify"
+    "notify",
+    "send-settlement-email"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -122,9 +123,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:19.659Z",
-        "lastUpdated": "2026-04-01T02:18:41.984Z"
+        "lastUpdated": "2026-04-01T07:57:21.049Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/page.tsx"
     },
     "programs": {
       "phase": "do",
@@ -226,9 +227,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-03-31T03:30:14.557Z"
+        "lastUpdated": "2026-04-01T07:09:19.935Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/settlements/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settlements/page.tsx"
     },
     "partners": {
       "phase": "do",
@@ -239,9 +240,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-03-31T09:08:48.798Z"
+        "lastUpdated": "2026-04-01T06:22:46.283Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/partners/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
     },
     "advertiser": {
       "phase": "do",
@@ -356,7 +357,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-04-01T05:33:39.194Z"
+        "lastUpdated": "2026-04-01T06:32:55.478Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/email.ts"
     },
@@ -585,9 +586,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-24T08:32:54.549Z",
-        "lastUpdated": "2026-03-31T08:43:04.705Z"
+        "lastUpdated": "2026-04-01T06:23:20.216Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/editor/TiptapEditor.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/editor/MarkdownRenderer.tsx"
     },
     "board-image": {
       "phase": "do",
@@ -975,9 +976,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-30T07:59:27.612Z",
-        "lastUpdated": "2026-03-30T07:59:27.612Z"
+        "lastUpdated": "2026-04-01T06:33:24.041Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/settlements/preview-email/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/preview-email/route.ts"
     },
     "[programId]": {
       "phase": "do",
@@ -1160,6 +1161,19 @@
         "lastUpdated": "2026-04-01T04:07:58.366Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/notify/route.ts"
+    },
+    "send-settlement-email": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-01T06:33:37.505Z",
+        "lastUpdated": "2026-04-01T06:33:37.505Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/settlements/send-settlement-email/route.ts"
     }
   },
   "pipeline": {
@@ -1170,7 +1184,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-01T05:36:42.669Z"
+    "lastActivity": "2026-04-01T07:57:21.049Z"
   },
   "history": [
     {
@@ -7356,6 +7370,204 @@
     {
       "timestamp": "2026-04-01T05:36:42.669Z",
       "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:21:12.046Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:21:29.320Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:21:41.175Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:21:47.352Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:21:52.806Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:22:02.281Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:22:09.570Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:22:35.350Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:22:46.283Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:23:20.216Z",
+      "feature": "editor",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:32:43.966Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:32:43.993Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:32:51.693Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:32:55.478Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:32:59.225Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:33:08.854Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:33:15.791Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:33:24.041Z",
+      "feature": "preview-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:33:25.443Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:33:37.505Z",
+      "feature": "send-settlement-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:51:53.717Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:51:57.805Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:52:11.398Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:52:19.532Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:52:24.325Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:52:55.348Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T06:57:09.622Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:08:55.952Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:09:05.780Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:09:15.702Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:09:19.935Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:57:15.176Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-01T07:57:21.049Z",
+      "feature": "dashboard",
       "phase": "do",
       "action": "updated"
     }
