@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '해당 파트너에 대한 권한이 없습니다' }, { status: 403 });
     }
 
-    // Fetch partner info including bank_account from partner_profiles
+    // Fetch partner info (bank_account is directly on partners table)
     const { data: partner, error: partnerError } = await supabase
       .from('partners')
-      .select('id, name, email, partner_profiles(bank_account)')
+      .select('id, name, email, bank_account')
       .eq('id', partnerId)
       .single();
 
@@ -62,10 +62,7 @@ export async function POST(request: NextRequest) {
     const pendingAmount = (settlements || []).reduce((sum, s) => sum + (s.amount || 0), 0);
 
     // Check if partner has bank account registered
-    const profile = Array.isArray(partner.partner_profiles)
-      ? partner.partner_profiles[0]
-      : partner.partner_profiles;
-    const hasBankAccount = !!(profile?.bank_account);
+    const hasBankAccount = !!partner.bank_account;
 
     const partnerName = partner.name || '파트너';
 

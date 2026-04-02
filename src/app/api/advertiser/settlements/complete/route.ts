@@ -78,26 +78,24 @@ export async function POST(request: NextRequest) {
 
     // Send settlement emails to each partner
     try {
-      // Get settlement details with partner info
+      // Get settlement details with partner info (bank_account is on partners table)
       const { data: settlements } = await supabase
         .from('settlements')
         .select(`
           id,
           amount,
           partner_id,
-          partners!inner(id, name, email),
-          partner_profiles(bank_account, has_ssn)
+          partners!inner(id, name, email, bank_account)
         `)
         .in('id', validIds)
 
       if (settlements) {
         for (const settlement of settlements) {
           const partner = Array.isArray(settlement.partners) ? settlement.partners[0] : settlement.partners
-          const profile = Array.isArray(settlement.partner_profiles) ? settlement.partner_profiles?.[0] : settlement.partner_profiles
 
           if (!partner?.email) continue
 
-          const hasBankInfo = !!(profile?.bank_account)
+          const hasBankInfo = !!partner.bank_account
 
           if (hasBankInfo) {
             // Email 10: 정산 확정 안내 (정산 정보 등록 완료)
