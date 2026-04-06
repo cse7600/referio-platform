@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       type: 'recovery',
       email,
       options: {
-        redirectTo: 'https://referio.puzl.co.kr/auth/callback?type=recovery',
+        redirectTo: 'https://referio.puzl.co.kr/reset-password',
       },
     })
 

@@ -36,34 +36,48 @@ function ResetPasswordForm() {
     }
 
     const supabase = createClient()
-    let resolved = false
 
-    // onAuthStateChange: PKCE 플로우는 SIGNED_IN, implicit 플로우는 PASSWORD_RECOVERY 방출
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
-        resolved = true
-        setStatus('ready')
+    // generateLink (admin API) 는 항상 implicit flow: 토큰이 URL 해시에 담겨 옴
+    // #access_token=XXX&refresh_token=YYY&type=recovery
+    const hash = window.location.hash.substring(1)
+    if (hash) {
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      const type = params.get('type')
+
+      if (accessToken && type === 'recovery') {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        }).then(({ data, error: sessionError }) => {
+          if (!sessionError && data.session) {
+            // 해시 URL 제거 (토큰 노출 방지)
+            window.history.replaceState(null, '', window.location.pathname)
+            setStatus('ready')
+          } else {
+            logEvent('link_expired', { source: 'invalid_token' })
+            setStatus('error')
+          }
+        })
+        return
       }
-    })
+    }
 
-    // getUser()로 기존 세션 확인 (PKCE flow 주 경로)
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && !resolved) {
-        resolved = true
-        setStatus('ready')
-      }
-    })
-
-    // 세션 미감지 시 error (타임아웃을 넉넉히 설정 — 네트워크 지연 대비)
+    // 해시 없는 경우: 이미 세션이 있는지 확인 (fallback)
     const timeout = setTimeout(() => {
-      if (!resolved) {
-        logEvent('link_expired', { source: 'session_timeout' })
-        setStatus('error')
+      logEvent('link_expired', { source: 'session_timeout' })
+      setStatus('error')
+    }, 5000)
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        clearTimeout(timeout)
+        setStatus('ready')
       }
-    }, 6000)
+    })
 
     return () => {
-      subscription.unsubscribe()
       clearTimeout(timeout)
     }
   }, [searchParams])
