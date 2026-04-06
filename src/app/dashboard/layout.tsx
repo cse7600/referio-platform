@@ -44,6 +44,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/events', label: '이벤트', icon: Gift, badge: 'events' as const },
   { href: '/dashboard/customers', label: '고객', icon: Users },
   { href: '/dashboard/settlements', label: '지급', icon: Wallet },
+  { href: '/dashboard/recruit', label: '광고주 모집', icon: Building, badge: 'new' as const },
   { href: '/dashboard/activity', label: '활동 지원', icon: Megaphone },
   { href: '/dashboard/support', label: '문의', icon: MessageSquare },
   { href: '/dashboard/profile', label: '활동정보', icon: User },
@@ -133,6 +134,7 @@ function DashboardContent({
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.href
         const showBadge = item.badge === 'events' && hasNewEvents
+        const showNew = item.badge === 'new'
         return (
           <Link
             key={item.href}
@@ -154,6 +156,11 @@ function DashboardContent({
               )}
             </span>
             {item.label}
+            {showNew && (
+              <span className="ml-auto text-[10px] font-bold bg-indigo-500 text-white px-1.5 py-0.5 rounded-full leading-none">
+                NEW
+              </span>
+            )}
           </Link>
         )
       })}
