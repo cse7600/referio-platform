@@ -36,29 +36,31 @@ function ResetPasswordForm() {
     }
 
     const supabase = createClient()
+    let resolved = false
 
-    // onAuthStateChange로 PASSWORD_RECOVERY 이벤트 감지 (hash-based implicit flow)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+    // onAuthStateChange: PKCE 플로우는 SIGNED_IN, implicit 플로우는 PASSWORD_RECOVERY 방출
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
+        resolved = true
         setStatus('ready')
       }
     })
 
-    // 기존 세션도 확인 (PKCE flow fallback)
+    // getUser()로 기존 세션 확인 (PKCE flow 주 경로)
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setStatus('ready')
+      if (user && !resolved) {
+        resolved = true
+        setStatus('ready')
+      }
     })
 
-    // 2초 후에도 세션 미감지 시 error 로그
+    // 세션 미감지 시 error (타임아웃을 넉넉히 설정 — 네트워크 지연 대비)
     const timeout = setTimeout(() => {
-      setStatus((prev) => {
-        if (prev === 'loading') {
-          logEvent('link_expired', { source: 'session_timeout' })
-          return 'error'
-        }
-        return prev
-      })
-    }, 2000)
+      if (!resolved) {
+        logEvent('link_expired', { source: 'session_timeout' })
+        setStatus('error')
+      }
+    }, 6000)
 
     return () => {
       subscription.unsubscribe()
