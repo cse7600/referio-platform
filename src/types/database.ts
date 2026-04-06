@@ -79,6 +79,17 @@ export interface Partner {
   auth_user_id: string | null
 }
 
+export interface PartnerActivityLink {
+  id: string
+  partner_id: string
+  program_id: string | null
+  url: string
+  title: string | null
+  auto_detected: boolean
+  discovered_at: string
+  created_at: string
+}
+
 // 프로그램 (광고주당 N개 가능 — migration 022에서 advertisers에서 분리)
 export interface Program {
   id: string

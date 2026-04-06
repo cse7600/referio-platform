@@ -14,8 +14,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check, ExternalLink, X, Save, Link, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { Copy, Check, ExternalLink, X, Save, Link, ChevronUp, ChevronDown, ChevronsUpDown, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import type { PartnerActivityLink } from '@/types/database'
 
 interface Partner {
   id: string
@@ -93,10 +94,14 @@ export default function AdvertiserPartnersPage() {
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
   const [panelActive, setPanelActive] = useState(false)
   const [editIsActive, setEditIsActive] = useState(false)
-  const [editActivityLink, setEditActivityLink] = useState('')
   const [editMainChannelLink, setEditMainChannelLink] = useState('')
   const [editMemo, setEditMemo] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // Activity links (plural)
+  const [activityLinks, setActivityLinks] = useState<PartnerActivityLink[]>([])
+  const [newLinkUrl, setNewLinkUrl] = useState('')
+  const [addingLink, setAddingLink] = useState(false)
 
   useEffect(() => {
     fetchPartners()
@@ -120,18 +125,73 @@ export default function AdvertiserPartnersPage() {
     }
   }
 
+  const fetchActivityLinks = async (partnerId: string) => {
+    try {
+      const res = await fetch(`/api/advertiser/partners/${partnerId}/activity-links`)
+      if (res.ok) {
+        const data = await res.json()
+        setActivityLinks(data.links ?? [])
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const openPanel = (partner: Partner) => {
     setSelectedPartner(partner)
     setEditIsActive(partner.is_active_partner ?? false)
-    setEditActivityLink(partner.activity_link ?? '')
     setEditMainChannelLink(partner.main_channel_link ?? '')
     setEditMemo(partner.memo ?? '')
+    setActivityLinks([])
+    setNewLinkUrl('')
     setPanelActive(true)
+    fetchActivityLinks(partner.id)
   }
 
   const closePanel = () => {
     setPanelActive(false)
-    setTimeout(() => setSelectedPartner(null), 300)
+    setTimeout(() => { setSelectedPartner(null); setActivityLinks([]) }, 300)
+  }
+
+  const handleAddLink = async () => {
+    if (!selectedPartner || !newLinkUrl.trim()) return
+    setAddingLink(true)
+    try {
+      const res = await fetch(`/api/advertiser/partners/${selectedPartner.id}/activity-links`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: newLinkUrl.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setActivityLinks(prev => [data.link, ...prev])
+        setNewLinkUrl('')
+        toast.success('링크가 추가됐습니다')
+      } else {
+        toast.error('링크 추가에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setAddingLink(false)
+    }
+  }
+
+  const handleDeleteLink = async (linkId: string) => {
+    if (!selectedPartner) return
+    try {
+      const res = await fetch(`/api/advertiser/partners/${selectedPartner.id}/activity-links/${linkId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setActivityLinks(prev => prev.filter(l => l.id !== linkId))
+        toast.success('링크가 삭제됐습니다')
+      } else {
+        toast.error('링크 삭제에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
   }
 
   const handleSave = async () => {
@@ -143,7 +203,6 @@ export default function AdvertiserPartnersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           is_active_partner: editIsActive,
-          activity_link: editActivityLink || null,
           main_channel_link: editMainChannelLink || null,
           memo: editMemo || null,
         }),
@@ -151,10 +210,10 @@ export default function AdvertiserPartnersPage() {
       if (res.ok) {
         setPartners(prev => prev.map(p =>
           p.id === selectedPartner.id
-            ? { ...p, is_active_partner: editIsActive, activity_link: editActivityLink || null, main_channel_link: editMainChannelLink || null, memo: editMemo || null }
+            ? { ...p, is_active_partner: editIsActive, main_channel_link: editMainChannelLink || null, memo: editMemo || null }
             : p
         ))
-        setSelectedPartner(prev => prev ? { ...prev, is_active_partner: editIsActive, activity_link: editActivityLink || null, main_channel_link: editMainChannelLink || null, memo: editMemo || null } : null)
+        setSelectedPartner(prev => prev ? { ...prev, is_active_partner: editIsActive, main_channel_link: editMainChannelLink || null, memo: editMemo || null } : null)
         toast.success('저장됐습니다')
       } else {
         toast.error('저장에 실패했습니다')
@@ -378,7 +437,7 @@ export default function AdvertiserPartnersPage() {
                           {partner.channels && partner.channels.length > 0 ? (
                             <div className="flex flex-wrap gap-1 items-center">
                               {partner.channels.slice(0, 2).map((ch, i) => {
-                                const link = partner.main_channel_link || partner.activity_link
+                                const link = partner.main_channel_link
                                 return link ? (
                                   <a key={i} href={link} target="_blank" rel="noopener noreferrer"
                                     onClick={e => e.stopPropagation()}>
@@ -400,18 +459,9 @@ export default function AdvertiserPartnersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-1 items-start">
-                          <span className={`text-xs font-medium ${partner.is_active_partner ? 'text-green-600' : 'text-slate-400'}`}>
-                            {partner.is_active_partner ? '활동 중' : '비활동'}
-                          </span>
-                          {partner.activity_link && (
-                            <a href={partner.activity_link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-                              <span className="text-xs text-blue-500 underline flex items-center gap-0.5">
-                                링크 <ExternalLink className="w-2.5 h-2.5" />
-                              </span>
-                            </a>
-                          )}
-                        </div>
+                        <span className={`text-xs font-medium ${partner.is_active_partner ? 'text-green-600' : 'text-slate-400'}`}>
+                          {partner.is_active_partner ? '활동 중' : '비활동'}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Badge className={statusLabels[partner.status]?.color}>
@@ -608,23 +658,53 @@ export default function AdvertiserPartnersPage() {
                 </div>
               </div>
 
-              {/* 활동 링크 */}
+              {/* 활동 링크 (복수) */}
               <div>
                 <label className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
                   <Link className="w-3 h-3" />활동 링크
                 </label>
-                <div className="mt-1.5 flex gap-2">
-                  <Input
-                    value={editActivityLink}
-                    onChange={e => setEditActivityLink(e.target.value)}
-                    placeholder="게시물 URL..."
-                    className="text-sm h-8"
-                  />
-                  {editActivityLink && (
-                    <a href={editActivityLink} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="outline" className="h-8 px-2"><ExternalLink className="w-3.5 h-3.5" /></Button>
-                    </a>
+                <div className="mt-1.5 space-y-1.5">
+                  {activityLinks.map(link => (
+                    <div key={link.id} className="flex items-center gap-1.5">
+                      <span className="flex-1 text-xs text-slate-700 truncate bg-slate-50 border border-slate-200 rounded px-2 py-1.5" title={link.url}>
+                        {link.title || link.url}
+                      </span>
+                      <a href={link.url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Button>
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-500"
+                        onClick={() => handleDeleteLink(link.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                  {activityLinks.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">등록된 링크가 없습니다</p>
                   )}
+                  <div className="flex gap-1.5 mt-1">
+                    <Input
+                      value={newLinkUrl}
+                      onChange={e => setNewLinkUrl(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddLink() }}
+                      placeholder="https://..."
+                      className="text-sm h-8 flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2"
+                      onClick={handleAddLink}
+                      disabled={addingLink || !newLinkUrl.trim()}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 

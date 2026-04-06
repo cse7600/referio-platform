@@ -26,18 +26,29 @@ function ResetPasswordForm() {
       return
     }
 
-    // 코드 교환은 /auth/callback 서버에서 완료됨. 세션만 확인
-    const checkSession = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setStatus('ready')
-      } else {
-        setStatus('error')
-      }
-    }
+    const supabase = createClient()
 
-    checkSession()
+    // onAuthStateChange로 PASSWORD_RECOVERY 이벤트 감지 (hash-based implicit flow)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setStatus('ready')
+      }
+    })
+
+    // 기존 세션도 확인 (PKCE flow fallback)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setStatus('ready')
+    })
+
+    // 2초 후에도 세션 미감지 시 error
+    const timeout = setTimeout(() => {
+      setStatus((prev) => prev === 'loading' ? 'error' : prev)
+    }, 2000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {

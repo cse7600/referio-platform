@@ -44,6 +44,10 @@ import {
   Trophy,
   Megaphone,
   ShieldAlert,
+  Plus,
+  Trash2,
+  Loader2,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -55,7 +59,8 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import type { Partner } from '@/types/database'
+import { Checkbox } from '@/components/ui/checkbox'
+import type { Partner, PartnerActivityLink } from '@/types/database'
 
 interface PartnerWithStats extends Partner {
   total_referrals: number
@@ -141,6 +146,22 @@ export default function AdminPartnersPage() {
   const [sortBy, setSortBy] = useState<string>('rank')
   const [mounted, setMounted] = useState(false)
 
+  // Detail panel state
+  const [selectedPartner, setSelectedPartner] = useState<PartnerWithStats | null>(null)
+  const [panelActive, setPanelActive] = useState(false)
+  const [panelActivityLinks, setPanelActivityLinks] = useState<PartnerActivityLink[]>([])
+  const [panelNewLinkUrl, setPanelNewLinkUrl] = useState('')
+  const [panelNewLinkTitle, setPanelNewLinkTitle] = useState('')
+  const [panelAddingLink, setPanelAddingLink] = useState(false)
+  const [scanLoading, setScanLoading] = useState(false)
+  const [scanResults, setScanResults] = useState<Array<{
+    url: string; title: string; keyword: string; programId: string; programName: string; searchUrl: string
+  }> | null>(null)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [scanSearchUrls, setScanSearchUrls] = useState<Array<{ keyword: string; url: string }>>([])
+  const [selectedScanItems, setSelectedScanItems] = useState<Set<string>>(new Set())
+  const [registeringScanned, setRegisteringScanned] = useState(false)
+
   // Violation warning modal state
   const [violationModalOpen, setViolationModalOpen] = useState(false)
   const [violationTargetId, setViolationTargetId] = useState<string | null>(null)
@@ -206,6 +227,133 @@ export default function AdminPartnersPage() {
 
     toast.success(newStatus === 'approved' ? '파트너가 승인되었습니다' : '파트너가 반려되었습니다')
     fetchPartners()
+  }
+
+  const openDetailPanel = async (partner: PartnerWithStats) => {
+    setSelectedPartner(partner)
+    setPanelActivityLinks([])
+    setPanelNewLinkUrl('')
+    setPanelNewLinkTitle('')
+    setScanResults(null)
+    setScanError(null)
+    setScanSearchUrls([])
+    setSelectedScanItems(new Set())
+    setPanelActive(true)
+    // Fetch activity links
+    try {
+      const res = await fetch(`/api/admin/partners/${partner.id}/activity-links`)
+      if (res.ok) {
+        const data = await res.json()
+        setPanelActivityLinks(data.links ?? [])
+      }
+    } catch { /* ignore */ }
+  }
+
+  const closeDetailPanel = () => {
+    setPanelActive(false)
+    setTimeout(() => { setSelectedPartner(null); setPanelActivityLinks([]) }, 300)
+  }
+
+  const handlePanelAddLink = async () => {
+    if (!selectedPartner || !panelNewLinkUrl.trim()) return
+    setPanelAddingLink(true)
+    try {
+      const res = await fetch(`/api/admin/partners/${selectedPartner.id}/activity-links`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: panelNewLinkUrl.trim(), title: panelNewLinkTitle.trim() || undefined }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setPanelActivityLinks(prev => [data.link, ...prev])
+        setPanelNewLinkUrl('')
+        setPanelNewLinkTitle('')
+        toast.success('링크가 추가됐습니다')
+      } else {
+        toast.error('링크 추가에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    } finally {
+      setPanelAddingLink(false)
+    }
+  }
+
+  const handlePanelDeleteLink = async (linkId: string) => {
+    if (!selectedPartner) return
+    try {
+      const res = await fetch(`/api/admin/partners/${selectedPartner.id}/activity-links/${linkId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setPanelActivityLinks(prev => prev.filter(l => l.id !== linkId))
+        toast.success('링크가 삭제됐습니다')
+      } else {
+        toast.error('링크 삭제에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+  }
+
+  const handleScanBlog = async () => {
+    if (!selectedPartner) return
+    setScanLoading(true)
+    setScanResults(null)
+    setScanError(null)
+    setScanSearchUrls([])
+    setSelectedScanItems(new Set())
+    try {
+      const res = await fetch(`/api/admin/partners/${selectedPartner.id}/scan-blog`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setScanError(data.error ?? '블로그 검색에 실패했습니다')
+        if (data.channel) setScanSearchUrls([{ keyword: '직접 확인', url: data.channel }])
+      } else {
+        setScanResults(data.results ?? [])
+        setScanSearchUrls(data.searchUrls ?? [])
+      }
+    } catch {
+      setScanError('서버 오류가 발생했습니다')
+    } finally {
+      setScanLoading(false)
+    }
+  }
+
+  const toggleScanItem = (url: string) => {
+    setSelectedScanItems(prev => {
+      const next = new Set(prev)
+      if (next.has(url)) next.delete(url)
+      else next.add(url)
+      return next
+    })
+  }
+
+  const handleRegisterScanned = async () => {
+    if (!selectedPartner || selectedScanItems.size === 0 || !scanResults) return
+    setRegisteringScanned(true)
+    let successCount = 0
+    for (const url of selectedScanItems) {
+      const item = scanResults.find(r => r.url === url)
+      if (!item) continue
+      try {
+        const res = await fetch(`/api/admin/partners/${selectedPartner.id}/activity-links`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: item.url, title: item.title, program_id: item.programId }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPanelActivityLinks(prev => [data.link, ...prev])
+          successCount++
+        }
+      } catch { /* ignore */ }
+    }
+    setRegisteringScanned(false)
+    setSelectedScanItems(new Set())
+    if (successCount > 0) toast.success(`${successCount}개 링크가 등록됐습니다`)
   }
 
   const openViolationModal = (partnerId: string, partnerName: string) => {
@@ -355,7 +503,8 @@ export default function AdminPartnersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-0 relative">
+    <div className={`flex-1 space-y-6 transition-all duration-300 ${panelActive ? 'mr-[400px]' : ''}`}>
       <div>
         <h1 className="text-2xl font-bold">파트너 관리</h1>
         <p className="text-gray-500 mt-1">파트너 성과 분석 및 관리</p>
@@ -469,8 +618,13 @@ export default function AdminPartnersPage() {
                 ) : (
                   filteredPartners.map((partner) => {
                     const statusBadge = getPartnerStatusBadge(partner)
+                    const isSelected = selectedPartner?.id === partner.id
                     return (
-                      <TableRow key={partner.id}>
+                      <TableRow
+                        key={partner.id}
+                        onClick={() => openDetailPanel(partner)}
+                        className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : 'hover:bg-slate-50'}`}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-1">
                             {partner.rank <= 3 ? (
@@ -549,7 +703,7 @@ export default function AdminPartnersPage() {
                             {TIER_LABELS[partner.tier]}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={e => e.stopPropagation()}>
                           {mounted && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -710,6 +864,200 @@ export default function AdminPartnersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+
+      {/* Detail Side Panel */}
+      <div
+        className={`fixed top-0 right-0 h-full w-[400px] bg-white border-l border-slate-200 shadow-xl z-40 flex flex-col transition-transform duration-300 ${panelActive ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        {selectedPartner && (
+          <>
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div>
+                <h2 className="font-semibold text-slate-900 text-base">{selectedPartner.name}</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{selectedPartner.email}</p>
+              </div>
+              <button onClick={closeDetailPanel} className="p-1.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Panel body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+              {/* 기본 정보 */}
+              <div>
+                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">기본 정보</label>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">상태</span>
+                    <Badge className={STATUS_COLORS[selectedPartner.status]}>{STATUS_LABELS[selectedPartner.status]}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">티어</span>
+                    <Badge className={TIER_COLORS[selectedPartner.tier]}>{TIER_LABELS[selectedPartner.tier]}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500">전화번호</span>
+                    <span className="text-slate-800">{selectedPartner.phone || '-'}</span>
+                  </div>
+                  {selectedPartner.main_channel_link && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">채널 링크</span>
+                      <a href={selectedPartner.main_channel_link} target="_blank" rel="noopener noreferrer"
+                        className="text-blue-500 underline flex items-center gap-0.5 text-xs">
+                        열기 <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 활동 링크 (복수) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">활동 링크</label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={handleScanBlog}
+                    disabled={scanLoading}
+                  >
+                    {scanLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                    블로그 검색
+                  </Button>
+                </div>
+
+                {/* 등록된 링크 목록 */}
+                <div className="space-y-1.5">
+                  {panelActivityLinks.map(link => (
+                    <div key={link.id} className="flex items-center gap-1.5">
+                      <span className="flex-1 text-xs text-slate-700 truncate bg-slate-50 border border-slate-200 rounded px-2 py-1.5" title={link.url}>
+                        {link.title || link.url}
+                      </span>
+                      <a href={link.url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-400 hover:text-blue-600">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Button>
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-500"
+                        onClick={() => handlePanelDeleteLink(link.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                  {panelActivityLinks.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">등록된 링크가 없습니다</p>
+                  )}
+                </div>
+
+                {/* 새 링크 추가 입력 */}
+                <div className="mt-2 space-y-1.5">
+                  <Input
+                    value={panelNewLinkUrl}
+                    onChange={e => setPanelNewLinkUrl(e.target.value)}
+                    placeholder="URL (필수) https://..."
+                    className="text-sm h-8"
+                  />
+                  <div className="flex gap-1.5">
+                    <Input
+                      value={panelNewLinkTitle}
+                      onChange={e => setPanelNewLinkTitle(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handlePanelAddLink() }}
+                      placeholder="제목 (선택)"
+                      className="text-sm h-8 flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2"
+                      onClick={handlePanelAddLink}
+                      disabled={panelAddingLink || !panelNewLinkUrl.trim()}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 블로그 검색 결과 */}
+                {scanError && (
+                  <div className="mt-3 p-3 bg-red-50 rounded border border-red-100 text-xs text-red-600 space-y-1">
+                    <p>{scanError}</p>
+                    {scanSearchUrls.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-slate-500">검색 링크를 직접 열어보세요:</p>
+                        {scanSearchUrls.map((s, i) => (
+                          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-500 underline">
+                            {s.keyword} <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {scanResults !== null && !scanError && (
+                  <div className="mt-3 space-y-2">
+                    {scanResults.length === 0 ? (
+                      <div className="p-3 bg-slate-50 rounded border border-slate-100 text-xs text-slate-500 space-y-1">
+                        <p>발견된 게시물이 없습니다. 검색 링크를 직접 열어보세요.</p>
+                        {scanSearchUrls.map((s, i) => (
+                          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-500 underline">
+                            {s.keyword} <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-slate-500">{scanResults.length}개 게시물 발견 — 체크 후 등록하세요</p>
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {scanResults.map((r, i) => (
+                            <label key={i} className="flex items-start gap-2 p-2 rounded border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                              <Checkbox
+                                checked={selectedScanItems.has(r.url)}
+                                onCheckedChange={() => toggleScanItem(r.url)}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-slate-700 truncate">{r.title}</p>
+                                <p className="text-xs text-slate-400 truncate">{r.url}</p>
+                              </div>
+                              <a href={r.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
+                                <ExternalLink className="w-3 h-3 text-slate-400 hover:text-blue-500" />
+                              </a>
+                            </label>
+                          ))}
+                        </div>
+                        <Button
+                          size="sm"
+                          className="w-full h-8 text-xs"
+                          onClick={handleRegisterScanned}
+                          disabled={selectedScanItems.size === 0 || registeringScanned}
+                        >
+                          {registeringScanned ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                          선택 항목 등록 ({selectedScanItems.size})
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Backdrop for mobile */}
+      {panelActive && (
+        <div className="fixed inset-0 bg-black/10 z-30 lg:hidden" onClick={closeDetailPanel} />
+      )}
     </div>
   )
 }
