@@ -18,11 +18,20 @@ function ResetPasswordForm() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
+  const logEvent = (event: string, metadata?: Record<string, unknown>) => {
+    fetch('/api/log/reset-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, metadata }),
+    }).catch(() => {})
+  }
+
   useEffect(() => {
     const error = searchParams.get('error')
 
     if (error) {
       setStatus('error')
+      logEvent('link_expired', { source: 'query_param_error' })
       return
     }
 
@@ -40,9 +49,15 @@ function ResetPasswordForm() {
       if (user) setStatus('ready')
     })
 
-    // 2초 후에도 세션 미감지 시 error
+    // 2초 후에도 세션 미감지 시 error 로그
     const timeout = setTimeout(() => {
-      setStatus((prev) => prev === 'loading' ? 'error' : prev)
+      setStatus((prev) => {
+        if (prev === 'loading') {
+          logEvent('link_expired', { source: 'session_timeout' })
+          return 'error'
+        }
+        return prev
+      })
     }, 2000)
 
     return () => {
@@ -74,11 +89,13 @@ function ResetPasswordForm() {
         error.message?.toLowerCase().includes('expired') ||
         error.message?.toLowerCase().includes('not authenticated') ||
         error.status === 401
+      logEvent('update_failed', { reason: isSessionError ? 'session_expired' : 'unknown', message: error.message })
       setErrorMsg(isSessionError
         ? '세션이 만료되었습니다. 로그인 페이지에서 비밀번호 재설정을 다시 요청해주세요.'
         : '비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
       setSubmitting(false)
     } else {
+      logEvent('reset_success')
       await supabase.auth.signOut()
       setStatus('success')
     }
