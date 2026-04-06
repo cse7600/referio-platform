@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-06T01:22:30.812Z",
+  "lastUpdated": "2026-04-06T08:12:08.403Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -128,9 +128,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:19.659Z",
-        "lastUpdated": "2026-04-01T07:57:21.049Z"
+        "lastUpdated": "2026-04-06T06:16:37.059Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/layout.tsx"
     },
     "programs": {
       "phase": "do",
@@ -284,7 +284,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T06:55:49.716Z",
-        "lastUpdated": "2026-04-06T01:22:30.812Z"
+        "lastUpdated": "2026-04-06T06:46:38.505Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/reset-password/page.tsx"
     },
@@ -362,9 +362,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-04-02T07:56:40.937Z"
+        "lastUpdated": "2026-04-06T03:20:14.473Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/types/database.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/airbridge.ts"
     },
     "[id]": {
       "phase": "do",
@@ -375,9 +375,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-04-01T02:45:52.602Z"
+        "lastUpdated": "2026-04-06T03:20:57.302Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/[id]/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
     },
     "schema": {
       "phase": "do",
@@ -474,9 +474,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-04-06T01:08:32.085Z"
+        "lastUpdated": "2026-04-06T06:11:10.652Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/test-reset-email.js"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-keepermate-newsletter.js"
     },
     "stats": {
       "phase": "do",
@@ -760,9 +760,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-26T04:47:08.368Z",
-        "lastUpdated": "2026-03-30T02:43:51.163Z"
+        "lastUpdated": "2026-04-06T06:16:29.321Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/ui/feedback-widget.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/ui/keeper-trend-modal.tsx"
     },
     "resend-setup-link": {
       "phase": "do",
@@ -851,7 +851,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-04-01T02:44:32.885Z"
+        "lastUpdated": "2026-04-06T08:12:08.403Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/page.tsx"
     },
@@ -1228,7 +1228,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-06T00:52:36.013Z",
-        "lastUpdated": "2026-04-06T00:52:36.013Z"
+        "lastUpdated": "2026-04-06T06:46:25.845Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/auth/request-reset/route.ts"
     },
@@ -1254,7 +1254,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-06T01:22:30.812Z"
+    "lastActivity": "2026-04-06T08:12:08.403Z"
   },
   "history": [
     {
@@ -7854,6 +7854,102 @@
     {
       "timestamp": "2026-04-06T01:22:30.812Z",
       "feature": "reset-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T03:04:46.385Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T03:20:14.473Z",
+      "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T03:20:35.008Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T03:20:57.302Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:06:40.315Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:10:59.816Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:11:10.652Z",
+      "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:16:29.321Z",
+      "feature": "ui",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:16:33.699Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:16:37.060Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:29:41.920Z",
+      "feature": "reset-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:42:13.462Z",
+      "feature": "request-reset",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:46:25.845Z",
+      "feature": "request-reset",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T06:46:38.505Z",
+      "feature": "reset-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T07:52:22.798Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T08:12:08.403Z",
+      "feature": "events",
       "phase": "do",
       "action": "updated"
     }

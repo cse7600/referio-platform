@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { ProgramProvider, useProgram } from './ProgramContext'
 import { FeedbackWidget } from '@/components/ui/feedback-widget'
+import { KeeperTrendModal } from '@/components/ui/keeper-trend-modal'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: '홈', icon: Home },
@@ -286,6 +287,7 @@ function DashboardContent({
       </main>
 
       <FeedbackWidget />
+      <KeeperTrendModal />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdvertiserSession, canManage } from '@/lib/auth'
 import { sendPartnerApprovalEmail, sendProgramRejectedEmail } from '@/lib/email'
 import { notifyPartnerApproval } from '@/lib/slack'
+import { autoAssignAirbridgeTrackingLink } from '@/lib/airbridge'
 
 export async function PATCH(
   request: NextRequest,
@@ -68,6 +69,11 @@ export async function PATCH(
       if (progErr) {
         console.error('Program status update error:', progErr)
         return NextResponse.json({ error: '상태 변경에 실패했습니다' }, { status: 500 })
+      }
+
+      // Airbridge 트래킹 링크 자동 할당 (승인 시, 연동 없는 광고주는 자동 스킵)
+      if (status === 'approved') {
+        autoAssignAirbridgeTrackingLink(id, session.advertiserUuid).catch(() => {});
       }
 
       // Send approval email when status changes to 'approved'

@@ -6,7 +6,11 @@
 > **Version**: Next.js 15 App Router + Supabase Auth
 > **Author**: CTO Lead
 > **Date**: 2026-03-26
-> **Status**: 완료 (2026-03-30 추가 수정)
+> **Status**: ✅ 완전 완료 — 2026-04-06 최종 확인
+>
+> ⛔ FREEZE: 이 기능은 PO 명시적 오더 없이 절대 수정 금지
+> 비밀번호 재설정 플로우는 implicit flow(해시 기반)로 동작 확정.
+> 임의 리팩토링·개선·"정리" 시도 전면 금지.
 
 ---
 
@@ -137,6 +141,7 @@ Dynamic (Next.js 15 + Supabase Auth, BaaS 기반)
 | 2026-03-31 | production | 완전 재작성: Supabase 순정 플로우 적용 — callback 서버 교환 + reset-password 세션 확인만 | 성공 |
 | 2026-03-31 | production | 버그픽스: createBrowserClient 자동 코드교환 ↔ 수동 exchangeCodeForSession 이중 교환 경쟁 상태 해결 | 성공 |
 | 2026-03-31 | production | 보안·안정성 개선: 스크립트 하드코딩 시크릿 제거, BrandedSignupForm Case 3 PKCE 폴백 세션 확인, 이메일 발송 에러 처리, reset-password 세션 만료 메시지 구분 | 성공 |
+| 2026-04-06 | production | **최종 수정 (FREEZE)**: admin.generateLink는 implicit flow(해시 기반) 사용 확인. reset-password 페이지에서 #access_token 해시 직접 파싱 후 setSession() 호출. redirectTo=/reset-password 유지. 실사용자 테스트 PASS. | 성공 |
 
 ## Version History
 

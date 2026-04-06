@@ -22,14 +22,28 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const advertiserId = searchParams.get('advertiser_id')
 
+    // Fetch advertiser IDs this partner is approved for
+    const { data: myPrograms } = await supabase
+      .from('partner_programs')
+      .select('advertiser_id')
+      .eq('partner_id', partner.id)
+      .eq('status', 'approved')
+
+    const myAdvertiserIds = (myPrograms || []).map((p: { advertiser_id: string }) => p.advertiser_id)
+
+    if (myAdvertiserIds.length === 0) {
+      return NextResponse.json({ events: [] })
+    }
+
     let query = supabase
       .from('partner_promotions')
       .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, banner_image_url, banner_bg_color, event_link_url, created_at')
       .eq('status', 'active')
       .eq('is_visible_to_partners', true)
+      .in('advertiser_id', myAdvertiserIds)
       .order('created_at', { ascending: false })
 
-    if (advertiserId) {
+    if (advertiserId && myAdvertiserIds.includes(advertiserId)) {
       query = query.eq('advertiser_id', advertiserId)
     }
 

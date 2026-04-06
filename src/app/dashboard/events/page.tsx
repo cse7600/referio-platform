@@ -114,6 +114,9 @@ export default function EventsPage() {
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);
+      } else if (res.status === 401) {
+        // Session expired — redirect to login
+        router.push('/login');
       }
     } catch { /* ignore */ }
     setLoading(false);
