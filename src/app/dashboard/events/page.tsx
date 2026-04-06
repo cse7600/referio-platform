@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { useProgram } from '../ProgramContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -107,17 +108,55 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const url = selectedProgram
-        ? `/api/partner/events?advertiser_id=${selectedProgram.advertiser_id}`
-        : '/api/partner/events';
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data.events || []);
-      } else if (res.status === 401) {
-        // Session expired — redirect to login
-        router.push('/login');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/login'); return; }
+
+      const { data: partnerRow } = await supabase
+        .from('partners')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (!partnerRow) { setLoading(false); return; }
+
+      // approved 프로그램의 광고주 ID 목록
+      const { data: myPrograms } = await supabase
+        .from('partner_programs')
+        .select('advertiser_id')
+        .eq('partner_id', partnerRow.id)
+        .eq('status', 'approved');
+
+      const myAdvertiserIds = (myPrograms || []).map((p: { advertiser_id: string }) => p.advertiser_id);
+      if (myAdvertiserIds.length === 0) { setEvents([]); setLoading(false); return; }
+
+      let query = supabase
+        .from('partner_promotions')
+        .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, banner_image_url, banner_bg_color, event_link_url, created_at')
+        .eq('status', 'active')
+        .eq('is_visible_to_partners', true)
+        .in('advertiser_id', myAdvertiserIds)
+        .order('created_at', { ascending: false });
+
+      if (selectedProgram && myAdvertiserIds.includes(selectedProgram.advertiser_id)) {
+        query = query.eq('advertiser_id', selectedProgram.advertiser_id);
       }
+
+      const { data: promotions } = await query;
+
+      // 참여 여부 조회
+      const promotionIds = (promotions || []).map((p: { id: string }) => p.id);
+      let participatedIds = new Set<string>();
+      if (promotionIds.length > 0) {
+        const { data: participations } = await supabase
+          .from('partner_promotion_participations')
+          .select('promotion_id')
+          .eq('partner_id', partnerRow.id)
+          .in('promotion_id', promotionIds);
+        participatedIds = new Set((participations || []).map((p: { promotion_id: string }) => p.promotion_id));
+      }
+
+      setEvents((promotions || []).map((p: { id: string; advertiser_id: string; title: string; description: string | null; promotion_type: 'event' | 'bonus' | 'ranking' | 'post_verification'; reward_description: string | null; start_date: string | null; end_date: string | null; status: string; banner_image_url: string | null; banner_bg_color: string | null; event_link_url: string | null; created_at: string }) => ({ ...p, participated: participatedIds.has(p.id) })));
     } catch { /* ignore */ }
     setLoading(false);
   }
