@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const {
       title, description, promotion_type, reward_description,
       start_date, end_date, condition_type, condition_value,
-      status, is_visible_to_partners,
+      status, is_visible_to_partners, allow_multiple_submissions,
       banner_image_url, banner_bg_color, event_link_url,
     } = body
 
@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         condition_value: condition_value || {},
         status: status || 'active',
         is_visible_to_partners: is_visible_to_partners !== false,
+        allow_multiple_submissions: allow_multiple_submissions === true,
         banner_image_url: banner_image_url || null,
         banner_bg_color: banner_bg_color || null,
         event_link_url: event_link_url || null,
@@ -116,7 +117,7 @@ export async function PATCH(request: NextRequest) {
       id,
       title, description, promotion_type, reward_description,
       start_date, end_date, condition_type, condition_value,
-      status, is_visible_to_partners,
+      status, is_visible_to_partners, allow_multiple_submissions,
       banner_image_url, banner_bg_color, event_link_url,
     } = body
 
@@ -136,6 +137,7 @@ export async function PATCH(request: NextRequest) {
     if (condition_value !== undefined) updateData.condition_value = condition_value
     if (status !== undefined) updateData.status = status
     if (is_visible_to_partners !== undefined) updateData.is_visible_to_partners = is_visible_to_partners
+    if (allow_multiple_submissions !== undefined) updateData.allow_multiple_submissions = allow_multiple_submissions
     if (banner_image_url !== undefined) updateData.banner_image_url = banner_image_url
     if (banner_bg_color !== undefined) updateData.banner_bg_color = banner_bg_color
     if (event_link_url !== undefined) updateData.event_link_url = event_link_url

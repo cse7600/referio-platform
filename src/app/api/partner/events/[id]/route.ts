@@ -26,7 +26,7 @@ export async function GET(
 
     const { data: promotion, error } = await supabase
       .from('partner_promotions')
-      .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, banner_image_url, banner_bg_color, event_link_url, created_at')
+      .select('id, advertiser_id, title, description, promotion_type, reward_description, start_date, end_date, status, banner_image_url, banner_bg_color, event_link_url, created_at, allow_multiple_submissions')
       .eq('id', id)
       .eq('status', 'active')
       .eq('is_visible_to_partners', true)
@@ -36,18 +36,20 @@ export async function GET(
       return NextResponse.json({ error: '이벤트를 찾을 수 없습니다' }, { status: 404 })
     }
 
-    // Check participation status
-    const { data: participation } = await supabase
+    // Check participation count
+    const { data: participations } = await supabase
       .from('partner_promotion_participations')
       .select('id')
       .eq('partner_id', partner.id)
       .eq('promotion_id', id)
-      .maybeSingle()
+
+    const participation_count = (participations || []).length
 
     return NextResponse.json({
       event: {
         ...promotion,
-        participated: !!participation,
+        participation_count,
+        participated: participation_count > 0,
       },
     })
   } catch (error) {

@@ -27,6 +27,8 @@ interface Event {
   end_date: string | null
   status: string
   participated: boolean
+  participation_count: number
+  allow_multiple_submissions: boolean
   banner_image_url: string | null
   banner_bg_color: string | null
   event_link_url: string | null
@@ -180,14 +182,19 @@ export default function EventDetailPage() {
       const data = await res.json()
       if (res.ok) {
         toast.success('게시물 인증이 제출되었습니다!')
+        setEvent(prev => prev ? {
+          ...prev,
+          participated: true,
+          participation_count: prev.participation_count + 1,
+        } : prev)
         setPostModal(null)
       } else {
-        setEvent(prev => prev ? { ...prev, participated: false } : prev)
+        setEvent(prev => prev ? { ...prev, participated: prev.participation_count > 0 } : prev)
         setPostModal(prev => prev ? { ...prev, submitting: false } : null)
         toast.error(data.error || '제출에 실패했습니다')
       }
     } catch {
-      setEvent(prev => prev ? { ...prev, participated: false } : prev)
+      setEvent(prev => prev ? { ...prev, participated: prev ? prev.participation_count > 0 : false } : prev)
       setPostModal(prev => prev ? { ...prev, submitting: false } : null)
       toast.error('서버 오류가 발생했습니다')
     }
@@ -261,12 +268,17 @@ export default function EventDetailPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <Badge className={`text-xs ${config.badgeColor}`}>{config.label}</Badge>
-                {event.participated && (
+                {event.allow_multiple_submissions && event.participation_count > 0 ? (
+                  <Badge className="text-xs bg-emerald-100 text-emerald-700">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                    {event.participation_count}개 인증 완료
+                  </Badge>
+                ) : !event.allow_multiple_submissions && event.participated ? (
                   <Badge className="text-xs bg-emerald-100 text-emerald-700">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     참여 완료
                   </Badge>
-                )}
+                ) : null}
               </div>
               <h1 className="font-bold text-slate-900 text-lg leading-snug">{event.title}</h1>
               {event.reward_description && (
@@ -298,7 +310,7 @@ export default function EventDetailPage() {
 
               {/* Inline CTA — desktop only (lg:) */}
               <div className="hidden lg:block">
-                {event.participated ? (
+                {!event.allow_multiple_submissions && event.participated ? (
                   <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
                     <CheckCircle2 className="w-4 h-4" />
                     참여 완료
@@ -310,7 +322,7 @@ export default function EventDetailPage() {
                     onClick={handleCtaClick}
                     disabled={participating}
                   >
-                    {participating ? '처리 중...' : '신청하기'}
+                    {participating ? '처리 중...' : event.allow_multiple_submissions && event.participation_count > 0 ? '게시물 추가 인증' : '신청하기'}
                   </Button>
                 )}
               </div>
@@ -358,7 +370,7 @@ export default function EventDetailPage() {
 
       {/* Mobile sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-slate-100 lg:hidden">
-        {event.participated ? (
+        {!event.allow_multiple_submissions && event.participated ? (
           <div className="flex items-center justify-center gap-2 py-2 text-sm font-medium text-emerald-700">
             <CheckCircle2 className="w-4 h-4" />
             참여 완료
@@ -369,7 +381,7 @@ export default function EventDetailPage() {
             onClick={handleCtaClick}
             disabled={participating}
           >
-            {participating ? '처리 중...' : '신청하기'}
+            {participating ? '처리 중...' : event.allow_multiple_submissions && event.participation_count > 0 ? '게시물 추가 인증하기' : '신청하기'}
           </Button>
         )}
       </div>

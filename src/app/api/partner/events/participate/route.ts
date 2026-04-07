@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Verify event is active and visible
     const { data: promotion } = await supabase
       .from('partner_promotions')
-      .select('id, status, is_visible_to_partners, promotion_type')
+      .select('id, status, is_visible_to_partners, promotion_type, allow_multiple_submissions')
       .eq('id', promotion_id)
       .single()
 
@@ -40,6 +40,20 @@ export async function POST(request: NextRequest) {
     // post_verification type requires post_url
     if (promotion.promotion_type === 'post_verification' && !post_url) {
       return NextResponse.json({ error: '게시물 인증 이벤트는 post_url이 필요합니다' }, { status: 400 })
+    }
+
+    // Single-submission events: block if already participated
+    if (!promotion.allow_multiple_submissions) {
+      const { data: existing } = await supabase
+        .from('partner_promotion_participations')
+        .select('id')
+        .eq('promotion_id', promotion_id)
+        .eq('partner_id', partner.id)
+        .maybeSingle()
+
+      if (existing) {
+        return NextResponse.json({ error: '이미 참여한 이벤트입니다' }, { status: 409 })
+      }
     }
 
     const { error } = await supabase
@@ -55,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (error.code === '23505') {
-        return NextResponse.json({ error: '이미 참여한 이벤트입니다' }, { status: 409 })
+        return NextResponse.json({ error: '이미 동일한 게시물 URL을 제출하셨습니다' }, { status: 409 })
       }
       return NextResponse.json({ error: '참여에 실패했습니다' }, { status: 500 })
     }

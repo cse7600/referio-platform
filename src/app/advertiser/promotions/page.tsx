@@ -24,6 +24,7 @@ interface Promotion {
   end_date: string | null
   status: 'active' | 'ended' | 'draft'
   is_visible_to_partners: boolean
+  allow_multiple_submissions: boolean
   participation_count: number
   created_at: string
   banner_image_url?: string | null
@@ -43,7 +44,7 @@ interface Participation {
 type FormState = {
   title: string
   description: string
-  promotionType: 'event' | 'bonus' | 'ranking' | 'post_verification'
+  promotionType: 'event' | 'bonus' | 'ranking' | 'post_verification' | 'post_verification_multi'
   rewardDescription: string
   startDate: string
   endDate: string
@@ -57,7 +58,8 @@ const TYPE_LABELS: Record<string, { label: string; color: string; icon: React.Re
   event: { label: '이벤트', color: 'bg-purple-100 text-purple-700', icon: <Zap className="w-3 h-3" /> },
   bonus: { label: '보너스', color: 'bg-green-100 text-green-700', icon: <Gift className="w-3 h-3" /> },
   ranking: { label: '랭킹', color: 'bg-orange-100 text-orange-700', icon: <Trophy className="w-3 h-3" /> },
-  post_verification: { label: '게시물 인증', color: 'bg-blue-100 text-blue-700', icon: <Camera className="w-3 h-3" /> },
+  post_verification: { label: '활동 인증 (1회)', color: 'bg-blue-100 text-blue-700', icon: <Camera className="w-3 h-3" /> },
+  post_verification_multi: { label: '활동 인증 (여러 게시물)', color: 'bg-sky-100 text-sky-700', icon: <Camera className="w-3 h-3" /> },
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -71,6 +73,7 @@ const TYPE_EMOJIS: Record<string, string> = {
   bonus: '🎁',
   ranking: '🏆',
   post_verification: '📸',
+  post_verification_multi: '📸',
 }
 
 function emptyForm(): FormState {
@@ -89,10 +92,13 @@ function emptyForm(): FormState {
 }
 
 function promotionToForm(p: Promotion): FormState {
+  const promotionType = p.promotion_type === 'post_verification' && p.allow_multiple_submissions
+    ? 'post_verification_multi'
+    : p.promotion_type
   return {
     title: p.title,
     description: p.description || '',
-    promotionType: p.promotion_type,
+    promotionType,
     rewardDescription: p.reward_description || '',
     startDate: p.start_date || '',
     endDate: p.end_date || '',
@@ -158,7 +164,7 @@ export default function PromotionsPage() {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
-  const handleCreate = async () => {
+  const handleCreate = async (saveDraft = false) => {
     if (!form.title.trim()) {
       toast.error('제목을 입력해주세요')
       return
@@ -171,25 +177,26 @@ export default function PromotionsPage() {
         body: JSON.stringify({
           title: form.title,
           description: form.description || null,
-          promotion_type: form.promotionType,
+          promotion_type: form.promotionType === 'post_verification_multi' ? 'post_verification' : form.promotionType,
+          allow_multiple_submissions: form.promotionType === 'post_verification_multi',
           reward_description: form.rewardDescription || null,
           start_date: form.startDate || null,
           end_date: form.endDate || null,
-          is_visible_to_partners: form.isVisible,
-          status: 'active',
+          is_visible_to_partners: saveDraft ? false : form.isVisible,
+          status: saveDraft ? 'draft' : 'active',
           banner_image_url: form.bannerImageUrl || null,
           banner_bg_color: form.bannerBgColor || null,
           event_link_url: form.eventLinkUrl || null,
         }),
       })
       if (res.ok) {
-        toast.success('이벤트가 생성되었습니다')
+        toast.success(saveDraft ? '임시저장되었습니다' : '이벤트가 생성되었습니다')
         setShowForm(false)
         setForm(emptyForm())
         fetchPromotions()
       } else {
         const data = await res.json()
-        toast.error(data.error || '생성에 실패했습니다')
+        toast.error(data.error || '저장에 실패했습니다')
       }
     } catch {
       toast.error('서버 오류가 발생했습니다')
@@ -197,7 +204,7 @@ export default function PromotionsPage() {
     setSaving(false)
   }
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (saveDraft = false) => {
     if (!editingId || !form.title.trim()) {
       toast.error('제목을 입력해주세요')
       return
@@ -211,18 +218,20 @@ export default function PromotionsPage() {
           id: editingId,
           title: form.title,
           description: form.description || null,
-          promotion_type: form.promotionType,
+          promotion_type: form.promotionType === 'post_verification_multi' ? 'post_verification' : form.promotionType,
+          allow_multiple_submissions: form.promotionType === 'post_verification_multi',
           reward_description: form.rewardDescription || null,
           start_date: form.startDate || null,
           end_date: form.endDate || null,
-          is_visible_to_partners: form.isVisible,
+          is_visible_to_partners: saveDraft ? false : form.isVisible,
+          ...(saveDraft && { status: 'draft' }),
           banner_image_url: form.bannerImageUrl || null,
           banner_bg_color: form.bannerBgColor || null,
           event_link_url: form.eventLinkUrl || null,
         }),
       })
       if (res.ok) {
-        toast.success('이벤트가 수정되었습니다')
+        toast.success(saveDraft ? '임시저장되었습니다' : '이벤트가 수정되었습니다')
         setEditingId(null)
         fetchPromotions()
       } else {
@@ -251,15 +260,21 @@ export default function PromotionsPage() {
     }
   }
 
-  const handleToggleVisible = async (id: string, current: boolean) => {
+  const handleToggleVisible = async (id: string, current: boolean, currentStatus: string) => {
+    const goingVisible = !current
     try {
       const res = await fetch('/api/advertiser/promotions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, is_visible_to_partners: !current }),
+        body: JSON.stringify({
+          id,
+          is_visible_to_partners: goingVisible,
+          // draft 이벤트를 공개할 때 status도 active로 전환
+          ...(goingVisible && currentStatus === 'draft' && { status: 'active' }),
+        }),
       })
       if (res.ok) {
-        toast.success(!current ? '파트너에게 공개되었습니다' : '비공개로 변경되었습니다')
+        toast.success(goingVisible ? '파트너에게 공개되었습니다' : '비공개로 변경되었습니다')
         fetchPromotions()
       }
     } catch {
@@ -349,7 +364,8 @@ export default function PromotionsPage() {
           form={form}
           setField={setField}
           saving={saving}
-          onSubmit={handleCreate}
+          onSubmit={() => handleCreate(false)}
+          onDraftSave={() => handleCreate(true)}
           onCancel={() => { setShowForm(false); setForm(emptyForm()) }}
           title="새 이벤트 생성"
           submitLabel="이벤트 생성"
@@ -367,7 +383,8 @@ export default function PromotionsPage() {
       ) : (
         <div className="space-y-4">
           {promotions.map((promo) => {
-            const typeInfo = TYPE_LABELS[promo.promotion_type] ?? TYPE_LABELS.event
+            const typeKey = promo.promotion_type === 'post_verification' && promo.allow_multiple_submissions ? 'post_verification_multi' : promo.promotion_type
+            const typeInfo = TYPE_LABELS[typeKey] ?? TYPE_LABELS.event
             const statusInfo = STATUS_LABELS[promo.status]
             const isEditing = editingId === promo.id
             const bgColor = promo.banner_bg_color || '#EEF2FF'
@@ -387,9 +404,12 @@ export default function PromotionsPage() {
                     </CardHeader>
                     <CardContent>
                       <EventFormFields form={form} setField={setField} />
-                      <div className="flex gap-2 pt-4">
-                        <Button onClick={handleUpdate} disabled={saving}>
+                      <div className="flex gap-2 pt-4 flex-wrap">
+                        <Button onClick={() => handleUpdate(false)} disabled={saving}>
                           {saving ? '저장 중...' : '수정 저장'}
+                        </Button>
+                        <Button variant="outline" onClick={() => handleUpdate(true)} disabled={saving}>
+                          임시저장
                         </Button>
                         <Button variant="outline" onClick={cancelEdit}>취소</Button>
                       </div>
@@ -490,7 +510,7 @@ export default function PromotionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleToggleVisible(promo.id, promo.is_visible_to_partners)}
+                          onClick={() => handleToggleVisible(promo.id, promo.is_visible_to_partners, promo.status)}
                           title={promo.is_visible_to_partners ? '비공개로 변경' : '파트너에게 공개'}
                         >
                           {promo.is_visible_to_partners
@@ -691,6 +711,7 @@ function EventForm({
   setField,
   saving,
   onSubmit,
+  onDraftSave,
   onCancel,
   title,
   submitLabel,
@@ -699,6 +720,7 @@ function EventForm({
   setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void
   saving: boolean
   onSubmit: () => void
+  onDraftSave?: () => void
   onCancel: () => void
   title: string
   submitLabel: string
@@ -716,10 +738,15 @@ function EventForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <EventFormFields form={form} setField={setField} />
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-2 flex-wrap">
           <Button onClick={onSubmit} disabled={saving}>
             {saving ? '저장 중...' : submitLabel}
           </Button>
+          {onDraftSave && (
+            <Button variant="outline" onClick={onDraftSave} disabled={saving}>
+              임시저장
+            </Button>
+          )}
           <Button variant="outline" onClick={onCancel}>취소</Button>
         </div>
       </CardContent>
@@ -757,7 +784,8 @@ function EventFormFields({
           <option value="event">이벤트</option>
           <option value="bonus">보너스</option>
           <option value="ranking">랭킹</option>
-          <option value="post_verification">게시물 인증</option>
+          <option value="post_verification">활동 인증 (1회 제출)</option>
+          <option value="post_verification_multi">활동 인증 (여러 게시물)</option>
         </select>
       </div>
 

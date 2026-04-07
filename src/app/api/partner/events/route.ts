@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
     }
 
-    // Fetch my participations
+    // Fetch my participations (count per promotion)
     const promotionIds = (promotions || []).map(p => p.id)
-    let participatedIds = new Set<string>()
+    const participationCountMap = new Map<string, number>()
 
     if (promotionIds.length > 0) {
       const { data: participations } = await supabase
@@ -64,12 +64,15 @@ export async function GET(request: NextRequest) {
         .eq('partner_id', partner.id)
         .in('promotion_id', promotionIds)
 
-      participatedIds = new Set((participations || []).map(p => p.promotion_id))
+      for (const p of participations || []) {
+        participationCountMap.set(p.promotion_id, (participationCountMap.get(p.promotion_id) ?? 0) + 1)
+      }
     }
 
     const result = (promotions || []).map(p => ({
       ...p,
-      participated: participatedIds.has(p.id),
+      participation_count: participationCountMap.get(p.id) ?? 0,
+      participated: (participationCountMap.get(p.id) ?? 0) > 0,
     }))
 
     return NextResponse.json({ events: result })
