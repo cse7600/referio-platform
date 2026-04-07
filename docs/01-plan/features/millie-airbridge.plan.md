@@ -107,8 +107,13 @@
 - [ ] 포스트백 페이로드 구조 확인 후 webhook/airbridge route.ts 최종 보정
   - Preview payload 스크린샷 수신 후 필드 매핑 확인 필요
 
-### 미완료 항목 (Referio 관리자 액션 필요)
-- [ ] 파트너 대시보드에서 tracking_link_url 우선 표시 UI 반영
+### 미완료 항목 (밀리의서재 담당자 액션 필요)
+- [ ] 에어브릿지 포스트백 엔드포인트 등록
+  - URL: `POST https://referio.puzl.co.kr/api/webhook/airbridge`
+  - 헤더: `X-API-Key: 94818dfd1485459fbe124dbae88315f3`
+  - 이벤트: install, sign_up, subscribe
+  - 가이드 문서: `docs/millie-airbridge-postback-guide.md`
+- [ ] 실제 포스트백 수신 후 webhook/airbridge 필드 매핑 최종 확인
 
 ## 7. Success Criteria
 - [x] tracking_links, tracking_events 테이블 생성
@@ -116,11 +121,31 @@
 - [x] 트래킹 링크 할당 API 동작
 - [x] 에어브릿지 웹훅 수신 API 구현 (3단계 퍼널)
 - [x] 이벤트 현황 UI 구현 (퍼널 요약, 파트너별 테이블, 최근 이벤트)
-- [ ] 에어브릿지 실제 포스트백 수신 -> 리퍼럴 생성/업데이트 (실환경 테스트 필요)
-- [ ] 파트너 대시보드에서 tracking_link_url 우선 표시
+- [x] 실제 Airbridge API 호출로 5개 파트너 트래킹 링크 생성 (short.millie.co.kr)
+- [x] partner_programs.tracking_link_url 5개 채우기 완료
+- [x] 파트너 대시보드에서 tracking_link_url 우선 표시 (코드 기존 구현 확인)
+- [x] 파트너 승인 시 자동 트래킹 링크 할당 (`src/lib/airbridge.ts`)
+- [x] DB tracking_link_api_token 실제 토큰으로 업데이트
+- [ ] 에어브릿지 실제 포스트백 수신 → 리퍼럴 생성/업데이트 (밀리 설정 대기)
 - [x] 기존 광고주 기능 무영향
 
+## 8. 토큰 정보 (확정, 2026-04-07)
+- App Name: `millie`
+- Tracking Link API Token: `035e98f131b14e80950ad0115ee2d6c2`
+- API Token: `9210b70030c4403a8cd0facb9b2000ec`
+- Web SDK Token: `90273799bec74231abb6796fd3fc0831`
+- App SDK Token: `a568eb7e863c49a18bf96cf423feea04`
+
+## 9. 파트너별 실제 트래킹 링크 (2026-04-07 생성)
+| 파트너 | 추천 코드 | 트래킹 링크 |
+|--------|-----------|------------|
+| 김도서 | MIL_KIM001 | https://short.millie.co.kr/p8spy3 |
+| 이독서 | MIL_LEE002 | https://short.millie.co.kr/9qy9w5 |
+| 박밀리 | MIL_PARK003 | https://short.millie.co.kr/yaz0rm |
+| 최책방 | MIL_CHOI004 | https://short.millie.co.kr/ag8c8k |
+| 정구독 | MIL_JUNG005 | https://short.millie.co.kr/ejzqc3 |
+
 ---
-**Status**: In Progress (B2C 이벤트 퍼널 구현 완료, 에어브릿지 포스트백 설정 대기 중)
+**Status**: In Progress (트래킹 링크 생성 완료, 에어브릿지 포스트백 설정 대기 중)
 **Created**: 2026-03-27
-**Updated**: 2026-03-27
+**Updated**: 2026-04-07
