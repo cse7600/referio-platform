@@ -52,7 +52,7 @@ function buildEmailHtml({ partnerName = '파트너님' } = {}) {
         <p style="margin:0 0 10px;color:#dc2626;font-size:13px;font-weight:800;letter-spacing:0.3px;">🔔 이벤트 조기 마감 안내</p>
         <p style="margin:0 0 12px;color:#1f2937;font-size:14px;line-height:1.75;">
           더 큰 혜택의 이벤트를 준비하게 되어 기존 이벤트는<br>
-          <strong style="color:#dc2626;">4월 7일(월) 오후 12시부</strong>로 조기 마감될 예정입니다.
+          <strong style="color:#dc2626;">4월 8일(화) 오후 12시부</strong>로 조기 마감될 예정입니다.
         </p>
         <p style="margin:0;color:#4b5563;font-size:13px;line-height:1.7;">
           기존 이벤트 참여자분들께는 상품이 순차적으로 발송될 예정이니<br>
@@ -71,7 +71,7 @@ function buildEmailHtml({ partnerName = '파트너님' } = {}) {
         </p>
         <div style="background:#ffffff;border-radius:8px;padding:14px 18px;border:1px solid #bfdbfe;">
           <p style="margin:0;color:#1d4ed8;font-size:14px;font-weight:700;text-align:center;">
-            📅 새 이벤트 공개: <strong>4월 8일(화)</strong>
+            📅 새 이벤트 공개: <strong>4월 9일(수)</strong>
           </p>
         </div>
       </div>
