@@ -4,8 +4,8 @@
 >
 > **Author**: Claude (PM Agent) / PO
 > **Created**: 2026-04-06
-> **Last Modified**: 2026-04-06
-> **Status**: Draft
+> **Last Modified**: 2026-04-07
+> **Status**: Implemented (Phase 1 완료, Vercel 배포 완료)
 > **Plan Reference**: `docs/01-plan/features/advertiser-recruitment.plan.md`
 
 ---
@@ -847,8 +847,8 @@ Coming Soon 삭제. `coming_soon_interests`는 CASCADE로 자동 삭제.
 | 2 | 카테고리를 DB enum으로 강제할지 자유 텍스트로 할지? | Phase 1 시작 전 | 자유 텍스트 (UI 드롭다운으로 가이드) |
 | 3 | launched 전환 시 예약 파트너에게 알림을 보낼지? | Phase 2 | 보내지 않음 (MVP) |
 | 4 | 파트너 요청이 일정 공감 수 이상이면 자동으로 어드민에게 알림? | Phase 2 | 알림 없음 (어드민이 수시로 확인) |
-| 5 | rejected 요청을 요청자에게도 숨길지? | Phase 1 | 요청자에게만 거절 뱃지 표시 (투명성) |
-| 6 | 파트너 탈퇴 시 해당 파트너의 요청/공감 처리 방식? | Phase 1 | CASCADE 삭제 (FK 설정) |
+| 5 | rejected 요청을 요청자에게도 숨길지? | **확정** | **어드민에게만 표시, 요청자 포함 파트너에게 미노출** |
+| 6 | 파트너 탈퇴 시 해당 파트너의 요청/공감 처리 방식? | **확정** | CASCADE 삭제 (FK 설정, 구현 완료) |
 
 ---
 
@@ -876,9 +876,34 @@ Coming Soon 삭제. `coming_soon_interests`는 CASCADE로 자동 삭제.
 
 ### Migration 번호
 
-현재 최신 migration: 026 (`partners.email_opted_out`). 이 기능의 migration은 **027** 번으로 생성.
+Migration 번호: **028** (`supabase/migrations/028_advertiser_recruitment.sql`)
+Supabase 적용 완료 (2026-04-07)
 
-파일명: `supabase/migrations/027_advertiser_recruitment.sql`
+---
+
+## 14. 구현 이력
+
+### Phase 1 완료 (2026-04-07, Vercel 배포 완료)
+
+| 항목 | 파일 경로 | 상태 |
+|------|----------|:----:|
+| DB migration (테이블 4개) | `supabase/migrations/028_advertiser_recruitment.sql` | ✅ |
+| Coming Soon 목록 API | `src/app/api/partner/recruit/coming-soon/route.ts` | ✅ |
+| 사전 예약 API | `src/app/api/partner/recruit/coming-soon/[id]/interest/route.ts` | ✅ |
+| 요청 목록/등록 API | `src/app/api/partner/recruit/requests/route.ts` | ✅ |
+| 공감 투표 API | `src/app/api/partner/recruit/requests/[id]/vote/route.ts` | ✅ |
+| 어드민 Coming Soon CRUD | `src/app/api/admin/recruit/coming-soon/route.ts` + `[id]/route.ts` | ✅ |
+| 어드민 요청 목록/검수 | `src/app/api/admin/recruit/requests/route.ts` + `[id]/route.ts` | ✅ |
+| 파트너 UI | `src/app/dashboard/recruit/page.tsx` | ✅ |
+| 어드민 UI | `src/app/admin/recruit/page.tsx` | ✅ |
+| 파트너 네비 탭 + NEW 뱃지 | `src/app/dashboard/layout.tsx` | ✅ |
+| 어드민 네비 탭 | `src/app/admin/admin-nav.tsx` | ✅ |
+
+### 확정된 비즈니스 규칙 (PRD 검토 중 결정)
+- `rejected` 요청: 어드민에게만 노출, 요청자 포함 파트너에게 **완전 미노출**
+- 요청 삭제: 파트너 불가, 어드민이 `rejected` 처리로 대체
+- 일일 요청 한도: 파트너당 **3건** (KST 자정 리셋)
+- `approved` 후에만 다른 파트너에게 공개 및 공감 가능
 
 ---
 
@@ -887,3 +912,5 @@ Coming Soon 삭제. `coming_soon_interests`는 CASCADE로 자동 삭제.
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
 | 1.0 | 2026-04-06 | Initial PRD (Plan 기반 작성) | Claude (PM Agent) |
+| 1.1 | 2026-04-06 | 어드민 검수 플로우 추가, rejected 공개 범위 확정 | PO / Claude |
+| 1.2 | 2026-04-07 | Phase 1 구현 완료 반영, 배포 이력 추가 | Claude |

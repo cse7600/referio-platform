@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-06T08:38:47.744Z",
+  "lastUpdated": "2026-04-07T01:43:22.108Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -89,7 +89,12 @@
     "[linkId]",
     "scan-blog",
     "request-reset",
-    "reset-event"
+    "reset-event",
+    "coming-soon",
+    "interest",
+    "requests",
+    "vote",
+    "recruit"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -128,7 +133,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:19.659Z",
-        "lastUpdated": "2026-04-06T06:16:37.059Z"
+        "lastUpdated": "2026-04-06T10:26:51.117Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/layout.tsx"
     },
@@ -297,7 +302,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T07:16:11.872Z",
-        "lastUpdated": "2026-03-30T06:55:53.282Z"
+        "lastUpdated": "2026-04-06T10:13:38.241Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/admin-nav.tsx"
     },
@@ -375,9 +380,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-04-06T03:20:57.302Z"
+        "lastUpdated": "2026-04-07T01:37:42.119Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partners/[id]/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/[id]/page.tsx"
     },
     "schema": {
       "phase": "do",
@@ -474,9 +479,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-23T01:00:33.293Z",
-        "lastUpdated": "2026-04-06T06:11:10.652Z"
+        "lastUpdated": "2026-04-07T01:43:22.108Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-keepermate-newsletter.js"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/scripts/send-keepermate-event-closure.js"
     },
     "stats": {
       "phase": "do",
@@ -851,9 +856,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-04-06T08:38:47.744Z"
+        "lastUpdated": "2026-04-07T01:17:15.234Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/route.ts"
     },
     "support": {
       "phase": "do",
@@ -1033,7 +1038,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:48:50.759Z",
-        "lastUpdated": "2026-03-31T07:47:41.675Z"
+        "lastUpdated": "2026-04-07T01:17:03.342Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/participate/route.ts"
     },
@@ -1046,7 +1051,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:48:59.446Z",
-        "lastUpdated": "2026-04-01T04:27:57.606Z"
+        "lastUpdated": "2026-04-07T01:35:55.545Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/promotions/page.tsx"
     },
@@ -1244,6 +1249,71 @@
         "lastUpdated": "2026-04-06T01:22:02.812Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/log/reset-event/route.ts"
+    },
+    "coming-soon": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-06T10:09:39.461Z",
+        "lastUpdated": "2026-04-06T10:10:37.850Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/recruit/coming-soon/route.ts"
+    },
+    "interest": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-06T10:09:48.084Z",
+        "lastUpdated": "2026-04-06T10:09:48.084Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/recruit/coming-soon/[id]/interest/route.ts"
+    },
+    "requests": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-06T10:10:10.135Z",
+        "lastUpdated": "2026-04-06T10:11:00.598Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/recruit/requests/route.ts"
+    },
+    "vote": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-06T10:10:24.790Z",
+        "lastUpdated": "2026-04-06T10:10:24.790Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/recruit/requests/[id]/vote/route.ts"
+    },
+    "recruit": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-06T10:12:16.755Z",
+        "lastUpdated": "2026-04-07T01:23:40.917Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/recruit/page.tsx"
     }
   },
   "pipeline": {
@@ -1254,7 +1324,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-06T08:38:47.744Z"
+    "lastActivity": "2026-04-07T01:43:22.108Z"
   },
   "history": [
     {
@@ -7968,6 +8038,276 @@
     {
       "timestamp": "2026-04-06T08:38:47.744Z",
       "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:09:39.461Z",
+      "feature": "coming-soon",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:09:48.084Z",
+      "feature": "interest",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:10:10.135Z",
+      "feature": "requests",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:10:24.790Z",
+      "feature": "vote",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:10:37.850Z",
+      "feature": "coming-soon",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:10:50.794Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:11:00.598Z",
+      "feature": "requests",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:11:08.342Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:12:16.755Z",
+      "feature": "recruit",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:13:28.695Z",
+      "feature": "recruit",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:13:33.078Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:13:38.241Z",
+      "feature": "admin",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:26:37.233Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-06T10:26:51.117Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:03.342Z",
+      "feature": "participate",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:15.234Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:25.769Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:38.585Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:50.017Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:17:59.185Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:18:08.545Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:18:16.308Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:21:50.349Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:21:58.176Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:09.265Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:17.178Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:23.881Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:29.647Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:35.549Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:45.485Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:22:56.580Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:23:28.139Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:23:40.917Z",
+      "feature": "recruit",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:34:53.405Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:02.959Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:13.107Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:21.567Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:25.382Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:32.924Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:39.287Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:45.897Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:51.167Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:35:55.545Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:37:42.119Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-07T01:43:22.108Z",
+      "feature": "scripts",
       "phase": "do",
       "action": "updated"
     }
