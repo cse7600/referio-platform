@@ -319,6 +319,19 @@ export default function AdminRecruitPage() {
                       <p className="text-xs text-slate-400 mt-1">요청자: {req.requester_name} · {new Date(req.created_at).toLocaleDateString('ko-KR')}</p>
                       {req.admin_note && <p className="text-xs text-blue-600 mt-1">메모: {req.admin_note}</p>}
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-500 hover:bg-red-50 shrink-0"
+                      onClick={async () => {
+                        if (!confirm('삭제하시겠습니까?')) return
+                        const res = await fetch(`/api/admin/recruit/requests/${req.id}`, { method: 'DELETE' })
+                        if (res.ok) { toast.success('삭제되었습니다'); fetchAll() }
+                        else { const d = await res.json(); toast.error(d.error || '삭제에 실패했습니다') }
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 ))}
               </div>

@@ -38,3 +38,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })
   }
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const auth = await verifyAdmin()
+    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+
+    const { error } = await auth.supabase
+      .from('advertiser_requests')
+      .delete()
+      .eq('id', id)
+
+    if (error) return NextResponse.json({ error: '삭제에 실패했습니다' }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('admin requests DELETE error:', error)
+    return NextResponse.json({ error: '서버 오류' }, { status: 500 })
+  }
+}
