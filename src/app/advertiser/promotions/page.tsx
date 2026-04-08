@@ -36,6 +36,7 @@ interface Participation {
   id: string
   partner_name: string
   partner_email: string
+  partner_phone: string
   submission_url?: string | null
   note?: string | null
   created_at: string
@@ -628,9 +629,10 @@ export default function PromotionsPage() {
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
                     onClick={() => {
                       const rows = [
-                        ['이름', '이메일', '활동 링크', '참여일시'],
+                        ['이름', '휴대폰번호', '이메일', '활동 링크', '참여일시'],
                         ...participations.map(p => [
                           p.partner_name,
+                          p.partner_phone || '',
                           p.partner_email,
                           p.submission_url || '',
                           new Date(p.created_at).toLocaleString('ko-KR'),

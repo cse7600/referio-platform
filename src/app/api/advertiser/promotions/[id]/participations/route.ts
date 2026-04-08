@@ -40,7 +40,8 @@ export async function GET(
         participated_at,
         partners (
           name,
-          email
+          email,
+          phone
         )
       `)
       .eq('promotion_id', id)
@@ -54,12 +55,13 @@ export async function GET(
       // Supabase join returns array or object depending on relation cardinality
       const raw = p.partners as unknown
       const partner = Array.isArray(raw)
-        ? (raw as { name: string; email: string }[])[0]
-        : (raw as { name: string; email: string } | null)
+        ? (raw as { name: string; email: string; phone: string }[])[0]
+        : (raw as { name: string; email: string; phone: string } | null)
       return {
         id: p.id,
         partner_name: partner?.name || '',
         partner_email: partner?.email || '',
+        partner_phone: partner?.phone || '',
         submission_url: p.post_url || null,
         note: p.post_note || null,
         created_at: p.participated_at,
