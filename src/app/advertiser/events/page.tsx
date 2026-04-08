@@ -1,5 +1,9 @@
 'use client';
 
+// DEMO[chabyulhwa]
+import { useDemoMode } from '@/contexts/demo-mode-context';
+import { DEMO_EVENTS_DATA } from '@/lib/demo-data/chabyulhwa-demo';
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +48,7 @@ const EVENT_LABELS: Record<string, string> = {
   subscribe: '구독',
   purchase: '구매',
   registration: '등록',
+  first_purchase: '첫구매', // DEMO[chabyulhwa]
 };
 
 // Colors for funnel cards
@@ -60,13 +65,23 @@ function getEventLabel(eventType: string): string {
 }
 
 export default function EventsPage() {
+  // DEMO[chabyulhwa]
+  const { advertiserId, isDemoMode } = useDemoMode();
+  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode;
+
   const [data, setData] = useState<EventsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // DEMO[chabyulhwa] — API 호출 없이 더미 데이터 사용
+    if (isDemo) {
+      setData(DEMO_EVENTS_DATA as EventsData);
+      setLoading(false);
+      return;
+    }
     fetchEvents();
-  }, []);
+  }, [isDemo]);
 
   const fetchEvents = async () => {
     try {
@@ -262,6 +277,8 @@ function EventBadge({ type }: { type: string }) {
       return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{label}</Badge>;
     case 'subscribe':
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{label}</Badge>;
+    case 'first_purchase': // DEMO[chabyulhwa]
+      return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">{label}</Badge>;
     default:
       return <Badge variant="outline">{label}</Badge>;
   }

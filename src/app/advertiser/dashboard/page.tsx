@@ -1,17 +1,24 @@
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
+'use client'
 
-// cookies() 사용 — 정적 렌더링 불가 (사용자별 데이터)
+// DEMO[chabyulhwa] — 시연 모드 지원을 위해 Client Component로 전환
+// 시연 모드 제거 시: 이 파일을 원래 Server Component 버전으로 교체
+
 export const dynamic = 'force-dynamic'
-import { Card } from '@/components/ui/card'
-import { getAdvertiserSession } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
 
-interface RecentActivity {
-  id: string
-  type: 'partner' | 'referral' | 'settlement'
-  description: string
-  createdAt: string
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Card } from '@/components/ui/card'
+import { useDemoMode } from '@/contexts/demo-mode-context'
+import { DEMO_DASHBOARD_STATS, DEMO_EVENTS_DATA } from '@/lib/demo-data/chabyulhwa-demo'
+
+interface DashboardStats {
+  totalPartners: number
+  activePartners: number
+  totalReferrals: number
+  validReferrals: number
+  totalSettlements: number
+  pendingSettlements: number
+  thisMonthSettlementAmount: number
 }
 
 function formatCurrency(amount: number) {
@@ -22,78 +29,66 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
-function formatRelativeTime(dateString: string) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMins / 60)
-  const diffDays = Math.floor(diffHours / 24)
+export default function AdvertiserDashboardPage() {
+  const { advertiserId, isDemoMode } = useDemoMode()
+  // DEMO[chabyulhwa]
+  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode
 
-  if (diffMins < 1) return '방금 전'
-  if (diffMins < 60) return `${diffMins}분 전`
-  if (diffHours < 24) return `${diffHours}시간 전`
-  if (diffDays < 7) return `${diffDays}일 전`
-  return date.toLocaleDateString('ko-KR')
-}
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
-// Server Component — 데이터를 서버에서 직접 가져옴 (API 왕복 제거)
-export default async function AdvertiserDashboardPage() {
-  const session = await getAdvertiserSession()
-  if (!session) redirect('/advertiser/login')
+  useEffect(() => {
+    if (isDemo) {
+      // DEMO[chabyulhwa] — 시연용 더미 통계
+      setStats({
+        totalPartners: DEMO_DASHBOARD_STATS.totalPartners,
+        activePartners: DEMO_DASHBOARD_STATS.activePartners,
+        totalReferrals: DEMO_DASHBOARD_STATS.totalSignups,
+        validReferrals: DEMO_DASHBOARD_STATS.totalFirstPurchase,
+        totalSettlements: DEMO_DASHBOARD_STATS.totalSettlements,
+        pendingSettlements: DEMO_DASHBOARD_STATS.pendingSettlements,
+        thisMonthSettlementAmount: DEMO_DASHBOARD_STATS.thisMonthSettlementAmount,
+      })
+      setLoading(false)
+      return
+    }
+    fetchStats()
+  }, [isDemo])
 
-  const supabase = await createClient()
-  const advertiserUuid = session.advertiserUuid
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/advertiser/dashboard')
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats ?? data)
+      } else {
+        setStats({ totalPartners: 0, activePartners: 0, totalReferrals: 0, validReferrals: 0, totalSettlements: 0, pendingSettlements: 0, thisMonthSettlementAmount: 0 })
+      }
+    } catch {
+      setStats({ totalPartners: 0, activePartners: 0, totalReferrals: 0, validReferrals: 0, totalSettlements: 0, pendingSettlements: 0, thisMonthSettlementAmount: 0 })
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // 병렬 쿼리로 DB 왕복 최소화
-  const [programsResult, referralsResult, settlementsResult, recentProgramsResult, recentReferralsResult, recentSettlementsResult] =
-    await Promise.all([
-      supabase.from('partner_programs').select('id, status').eq('advertiser_id', advertiserUuid),
-      supabase.from('referrals').select('id, is_valid').eq('advertiser_id', advertiserUuid),
-      supabase.from('settlements').select('id, status, amount, created_at').eq('advertiser_id', advertiserUuid),
-      supabase.from('partner_programs').select('id, created_at, partners!inner(name)').eq('advertiser_id', advertiserUuid).order('created_at', { ascending: false }).limit(5),
-      supabase.from('referrals').select('id, name, created_at').eq('advertiser_id', advertiserUuid).order('created_at', { ascending: false }).limit(5),
-      supabase.from('settlements').select('id, amount, status, created_at').eq('advertiser_id', advertiserUuid).order('created_at', { ascending: false }).limit(5),
-    ])
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <p className="text-slate-500">로딩 중...</p>
+      </div>
+    )
+  }
 
-  const programs = programsResult.data ?? []
-  const referrals = referralsResult.data ?? []
-  const settlements = settlementsResult.data ?? []
-
-  const totalPartners = programs.length
-  const activePartners = programs.filter(p => p.status === 'approved').length
-  const totalReferrals = referrals.length
-  const validReferrals = referrals.filter(r => r.is_valid === true).length
-  const totalSettlements = settlements.length
-  const pendingSettlements = settlements.filter(s => s.status === 'pending').length
-
-  const now = new Date()
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const thisMonthSettlementAmount = settlements
-    .filter(s => new Date(s.created_at) >= firstDayOfMonth)
-    .reduce((sum, s) => sum + (s.amount || 0), 0)
-
-  // 최근 활동 조합
-  const activities: RecentActivity[] = []
-  recentProgramsResult.data?.forEach(p => {
-    const partner = p.partners as unknown as { name: string }
-    activities.push({ id: p.id, type: 'partner', description: `새 파트너 신청: ${partner.name}`, createdAt: p.created_at })
-  })
-  recentReferralsResult.data?.forEach(r => {
-    activities.push({ id: r.id, type: 'referral', description: `새 고객 유입: ${r.name?.substring(0, 1)}**`, createdAt: r.created_at })
-  })
-  recentSettlementsResult.data?.forEach(s => {
-    activities.push({ id: s.id, type: 'settlement', description: `정산 ${s.status === 'completed' ? '완료' : '대기'}: ₩${s.amount.toLocaleString()}`, createdAt: s.created_at })
-  })
-  activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-  const isNewUser = totalPartners === 0 && totalReferrals === 0
+  const s = stats!
+  const isNewUser = !isDemo && s.totalPartners === 0 && s.totalReferrals === 0
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">대시보드</h1>
-        <p className="text-slate-500 mt-1">파트너 프로그램 현황을 확인하세요</p>
+        <p className="text-slate-500 mt-1">
+          {isDemo ? '파트너 프로그램 현황 (시연 데이터)' : '파트너 프로그램 현황을 확인하세요'}
+        </p>
       </div>
 
       {/* 신규 가입자 시작 가이드 */}
@@ -140,72 +135,108 @@ export default async function AdvertiserDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">전체 파트너</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{totalPartners}</p>
-              <p className="text-xs text-green-600 mt-1">활성 {activePartners}명</p>
+              <p className="text-3xl font-bold text-slate-900 mt-1">{s.totalPartners}</p>
+              <p className="text-xs text-green-600 mt-1">활성 {s.activePartners}명</p>
             </div>
             <div className="text-4xl">👥</div>
           </div>
         </Card>
 
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">총 유입 고객</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{totalReferrals}</p>
-              <p className="text-xs text-green-600 mt-1">유효 {validReferrals}건</p>
-            </div>
-            <div className="text-4xl">📊</div>
-          </div>
-        </Card>
+        {/* DEMO[chabyulhwa] — 이벤트 추적 모드: 유입고객 대신 전환 지표 표시 */}
+        {isDemo ? (
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">총 가입</p>
+                  <p className="text-3xl font-bold text-blue-600 mt-1">{DEMO_EVENTS_DATA.funnel.sign_up.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mt-1">sign_up 이벤트</p>
+                </div>
+                <div className="text-4xl">📝</div>
+              </div>
+            </Card>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">첫구매 전환</p>
+                  <p className="text-3xl font-bold text-green-600 mt-1">{DEMO_EVENTS_DATA.funnel.first_purchase.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mt-1">전환율 {DEMO_EVENTS_DATA.funnel.sign_up_to_first_purchase}%</p>
+                </div>
+                <div className="text-4xl">🛒</div>
+              </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">총 유입 고객</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{s.totalReferrals}</p>
+                  <p className="text-xs text-green-600 mt-1">유효 {s.validReferrals}건</p>
+                </div>
+                <div className="text-4xl">📊</div>
+              </div>
+            </Card>
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">정산 건수</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{s.totalSettlements}</p>
+                  <p className="text-xs text-orange-600 mt-1">대기 {s.pendingSettlements}건</p>
+                </div>
+                <div className="text-4xl">📝</div>
+              </div>
+            </Card>
+          </>
+        )}
 
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">정산 건수</p>
-              <p className="text-3xl font-bold text-slate-900 mt-1">{totalSettlements}</p>
-              <p className="text-xs text-orange-600 mt-1">대기 {pendingSettlements}건</p>
-            </div>
-            <div className="text-4xl">📝</div>
-          </div>
-        </Card>
-
-        <Card className="p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500">이번 달 정산</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(thisMonthSettlementAmount)}</p>
+              <p className="text-sm text-slate-500">
+                {isDemo ? '정산 파트너 수' : '정산 건수'}
+              </p>
+              {isDemo ? (
+                <>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{s.totalSettlements}</p>
+                  <p className="text-xs text-orange-600 mt-1">대기 {s.pendingSettlements}명</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{s.totalSettlements}</p>
+                  <p className="text-xs text-orange-600 mt-1">대기 {s.pendingSettlements}건</p>
+                </>
+              )}
             </div>
             <div className="text-4xl">💰</div>
           </div>
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card className="p-6">
-        <h2 className="text-xl font-bold text-slate-900 mb-4">최근 활동</h2>
-        {activities.length > 0 ? (
-          <div className="space-y-3">
-            {activities.slice(0, 10).map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">
-                    {activity.type === 'partner' && '👤'}
-                    {activity.type === 'referral' && '📋'}
-                    {activity.type === 'settlement' && '💵'}
-                  </div>
-                  <span className="text-sm text-slate-700">{activity.description}</span>
+      {/* DEMO[chabyulhwa] — 이벤트 현황 요약 카드 */}
+      {isDemo && (
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">이벤트 현황 요약</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {DEMO_EVENTS_DATA.partners.slice(0, 4).map(p => (
+              <div key={p.sub_id} className="bg-white rounded-xl p-4 border border-blue-100">
+                <p className="text-xs text-slate-500 mb-1 truncate">{p.partner_name}</p>
+                <p className="text-xs text-slate-400 mb-2">{p.sub_id}</p>
+                <div className="flex justify-between text-xs">
+                  <span className="text-blue-600">가입 {p.event_counts.sign_up}</span>
+                  <span className="text-green-600">구매 {p.event_counts.first_purchase}</span>
                 </div>
-                <span className="text-xs text-slate-400">{formatRelativeTime(activity.createdAt)}</span>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-12 text-slate-500">
-            <div className="text-5xl mb-4">📭</div>
-            <p>아직 활동 내역이 없습니다</p>
+          <div className="mt-4 text-right">
+            <Link href="/advertiser/events" className="text-sm text-blue-600 hover:underline font-medium">
+              전체 이벤트 현황 보기 →
+            </Link>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -217,13 +248,23 @@ export default async function AdvertiserDashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/advertiser/campaigns">
-          <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-            <div className="text-3xl mb-3">📢</div>
-            <h3 className="font-bold text-slate-900">캠페인 설정</h3>
-            <p className="text-sm text-slate-500 mt-1">수수료와 정책을 설정하세요</p>
-          </Card>
-        </Link>
+        {isDemo ? (
+          <Link href="/advertiser/events">
+            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="text-3xl mb-3">📈</div>
+              <h3 className="font-bold text-slate-900">이벤트 현황</h3>
+              <p className="text-sm text-slate-500 mt-1">가입·첫구매 전환 현황을 확인하세요</p>
+            </Card>
+          </Link>
+        ) : (
+          <Link href="/advertiser/campaigns">
+            <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="text-3xl mb-3">📢</div>
+              <h3 className="font-bold text-slate-900">캠페인 설정</h3>
+              <p className="text-sm text-slate-500 mt-1">수수료와 정책을 설정하세요</p>
+            </Card>
+          </Link>
+        )}
 
         <Link href="/advertiser/settlements">
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">

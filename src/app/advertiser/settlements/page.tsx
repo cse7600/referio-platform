@@ -1,5 +1,9 @@
 'use client'
 
+// DEMO[chabyulhwa]
+import { useDemoMode } from '@/contexts/demo-mode-context'
+import { DEMO_SETTLEMENTS, DEMO_SETTLEMENT_STATS } from '@/lib/demo-data/chabyulhwa-demo'
+
 import { useEffect, useState, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -64,6 +68,10 @@ const fmt = (n: number) =>
 // ── Page Component ──
 
 export default function AdvertiserSettlementsPage() {
+  // DEMO[chabyulhwa]
+  const { advertiserId, isDemoMode } = useDemoMode()
+  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode
+
   const [partners, setPartners] = useState<PartnerGroup[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -88,6 +96,20 @@ export default function AdvertiserSettlementsPage() {
   const [settlementEmailSending, setSettlementEmailSending] = useState<string | null>(null) // partnerId
 
   const fetchData = useCallback(async () => {
+    // DEMO[chabyulhwa]
+    if (isDemo) {
+      setPartners(DEMO_SETTLEMENTS as PartnerGroup[])
+      setStats({
+        totalPartners: DEMO_SETTLEMENT_STATS.totalPartners,
+        totalPending: DEMO_SETTLEMENT_STATS.totalPending,
+        totalPendingAmount: DEMO_SETTLEMENT_STATS.totalPendingAmount,
+        totalCompleted: DEMO_SETTLEMENT_STATS.totalCompleted,
+        totalCompletedAmount: DEMO_SETTLEMENT_STATS.totalCompletedAmount,
+        thisMonthAmount: Math.floor(DEMO_SETTLEMENT_STATS.totalPendingAmount * 0.3),
+      })
+      setLoading(false)
+      return
+    }
     try {
       const res = await fetch('/api/advertiser/settlements')
       if (res.ok) {
@@ -100,7 +122,7 @@ export default function AdvertiserSettlementsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isDemo])
 
   useEffect(() => {
     fetchData()

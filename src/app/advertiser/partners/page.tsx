@@ -1,5 +1,9 @@
 'use client'
 
+// DEMO[chabyulhwa]
+import { useDemoMode } from '@/contexts/demo-mode-context'
+import { DEMO_PARTNERS } from '@/lib/demo-data/chabyulhwa-demo'
+
 import { useEffect, useState, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -78,6 +82,12 @@ const hasSettlementInfo = (p: Partner) =>
 type SortKey = 'program_created_at' | 'created_at' | 'name' | 'monthly_lead_count' | 'monthly_contract_count' | 'total_lead_count' | 'total_contract_count'
 
 export default function AdvertiserPartnersPage() {
+  // DEMO[chabyulhwa]
+  const { advertiserId: demoAdvertiserId, isDemoMode } = useDemoMode()
+  const isDemo = demoAdvertiserId === 'chabyulhwa' && isDemoMode
+  const leadLabel = isDemo ? '가입' : '리드'
+  const contractLabel = isDemo ? '첫구매' : '계약'
+
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -104,12 +114,18 @@ export default function AdvertiserPartnersPage() {
   const [addingLink, setAddingLink] = useState(false)
 
   useEffect(() => {
+    // DEMO[chabyulhwa]
+    if (isDemo) {
+      setPartners(DEMO_PARTNERS as Partner[])
+      setLoading(false)
+      return
+    }
     fetchPartners()
     fetch('/api/auth/advertiser/me')
       .then(r => r.json())
       .then(d => { if (d.advertiser?.advertiserId) setAdvertiserId(d.advertiser.advertiserId) })
       .catch(() => {})
-  }, [])
+  }, [isDemo])
 
   const fetchPartners = async () => {
     try {
@@ -391,10 +407,10 @@ export default function AdvertiserPartnersPage() {
                 <TableHead>활동</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>티어</TableHead>
-                <SortableHead label="이번달 리드" sortK="monthly_lead_count" />
-                <SortableHead label="이번달 계약" sortK="monthly_contract_count" />
-                <SortableHead label="누적 리드" sortK="total_lead_count" />
-                <SortableHead label="누적 계약" sortK="total_contract_count" />
+                <SortableHead label={`이번달 ${leadLabel}`} sortK="monthly_lead_count" />
+                <SortableHead label={`이번달 ${contractLabel}`} sortK="monthly_contract_count" />
+                <SortableHead label={`누적 ${leadLabel}`} sortK="total_lead_count" />
+                <SortableHead label={`누적 ${contractLabel}`} sortK="total_contract_count" />
                 <TableHead>정산정보</TableHead>
                 <SortableHead label="참여일" sortK="program_created_at" />
                 <SortableHead label="가입일" sortK="created_at" />
@@ -556,19 +572,19 @@ export default function AdvertiserPartnersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-blue-600">{selectedPartner.monthly_lead_count || 0}</div>
-                  <div className="text-xs text-blue-500 mt-0.5">이번 달 리드</div>
+                  <div className="text-xs text-blue-500 mt-0.5">이번 달 {leadLabel}</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-green-600">{selectedPartner.monthly_contract_count || 0}</div>
-                  <div className="text-xs text-green-500 mt-0.5">이번 달 계약</div>
+                  <div className="text-xs text-green-500 mt-0.5">이번 달 {contractLabel}</div>
                 </div>
                 <div className="bg-indigo-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-indigo-600">{selectedPartner.total_lead_count || 0}</div>
-                  <div className="text-xs text-indigo-500 mt-0.5">누적 리드</div>
+                  <div className="text-xs text-indigo-500 mt-0.5">누적 {leadLabel}</div>
                 </div>
                 <div className="bg-emerald-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-emerald-600">{selectedPartner.total_contract_count || 0}</div>
-                  <div className="text-xs text-emerald-500 mt-0.5">누적 계약</div>
+                  <div className="text-xs text-emerald-500 mt-0.5">누적 {contractLabel}</div>
                 </div>
               </div>
 
@@ -584,7 +600,7 @@ export default function AdvertiserPartnersPage() {
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500">계약 단가</span>
+                      <span className="text-slate-500">{contractLabel} 단가</span>
                       <span className="text-slate-800 font-medium">
                         {selectedPartner.contract_commission > 0 ? `${selectedPartner.contract_commission.toLocaleString()}원` : '-'}
                       </span>
