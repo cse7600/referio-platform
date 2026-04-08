@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { FeedbackWidget } from '@/components/ui/feedback-widget'
-// DEMO[chabyulhwa]
+// DEMO[sales-demo]
 import { DemoModeProvider, useDemoMode } from '@/contexts/demo-mode-context'
+import { isDemoSupported } from '@/lib/demo-data/demo-config'
 
 type AdvertiserType = 'inquiry' | 'event_tracking' | 'hybrid'
 
@@ -19,8 +20,7 @@ interface Advertiser {
   advertiserType?: AdvertiserType
 }
 
-// DEMO[chabyulhwa] — 시연 모드일 때 event_tracking 으로 오버라이드
-const DEMO_ADVERTISER_ID = 'chabyulhwa'
+// DEMO[sales-demo] — 시연 모드일 때 event_tracking 으로 오버라이드
 
 function AdvertiserLayoutInner({
   children,
@@ -35,9 +35,9 @@ function AdvertiserLayoutInner({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  // DEMO[chabyulhwa]
+  // DEMO[sales-demo]
   const { isDemoMode, toggleDemoMode } = useDemoMode()
-  const isDemo = advertiser.advertiserId === DEMO_ADVERTISER_ID
+  const isDemo = isDemoSupported(advertiser.advertiserId)
   const effectiveType: AdvertiserType = isDemo && isDemoMode
     ? 'event_tracking'
     : (advertiser.advertiserType ?? 'inquiry')
@@ -148,7 +148,7 @@ function AdvertiserLayoutInner({
           </button>
 
           <div className="flex items-center gap-4">
-            {/* DEMO[chabyulhwa] — 시연 모드 토글 버튼 */}
+            {/* DEMO[sales-demo] — 시연 모드 토글 버튼 */}
             {isDemo && (
               <button
                 onClick={toggleDemoMode}
@@ -240,7 +240,7 @@ export default function AdvertiserLayout({
   if (!advertiser) return null
 
   return (
-    // DEMO[chabyulhwa] — DemoModeProvider 래퍼 (삭제 시 children 만 남기면 됨)
+    // DEMO[sales-demo] — DemoModeProvider 래퍼 (삭제 시 children 만 남기면 됨)
     <DemoModeProvider advertiserId={advertiser.advertiserId}>
       <AdvertiserLayoutInner advertiser={advertiser} onLogout={handleLogout}>
         {children}

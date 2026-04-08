@@ -1,8 +1,10 @@
 'use client'
 
-// DEMO[chabyulhwa]
+// DEMO[sales-demo]
 import { useDemoMode } from '@/contexts/demo-mode-context'
-import { DEMO_PARTNERS } from '@/lib/demo-data/chabyulhwa-demo'
+import { getDemoConfig } from '@/lib/demo-data/demo-config'
+import { DEMO_PARTNERS as CHABYULHWA_PARTNERS } from '@/lib/demo-data/chabyulhwa-demo'
+import { DEMO_PARTNERS as MILLIE_PARTNERS } from '@/lib/demo-data/millie-demo'
 
 import { useEffect, useState, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
@@ -82,11 +84,12 @@ const hasSettlementInfo = (p: Partner) =>
 type SortKey = 'program_created_at' | 'created_at' | 'name' | 'monthly_lead_count' | 'monthly_contract_count' | 'total_lead_count' | 'total_contract_count'
 
 export default function AdvertiserPartnersPage() {
-  // DEMO[chabyulhwa]
+  // DEMO[sales-demo]
   const { advertiserId: demoAdvertiserId, isDemoMode } = useDemoMode()
-  const isDemo = demoAdvertiserId === 'chabyulhwa' && isDemoMode
-  const leadLabel = isDemo ? '가입' : '리드'
-  const contractLabel = isDemo ? '첫구매' : '계약'
+  const isDemo = isDemoMode && (demoAdvertiserId === 'chabyulhwa' || demoAdvertiserId === 'millie')
+  const demoConfig = isDemo ? getDemoConfig(demoAdvertiserId) : undefined
+  const leadLabel = demoConfig?.leadLabel ?? '리드'
+  const contractLabel = demoConfig?.contractLabel ?? '계약'
 
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,9 +117,10 @@ export default function AdvertiserPartnersPage() {
   const [addingLink, setAddingLink] = useState(false)
 
   useEffect(() => {
-    // DEMO[chabyulhwa]
+    // DEMO[sales-demo]
     if (isDemo) {
-      setPartners(DEMO_PARTNERS as Partner[])
+      const demoPartners = demoAdvertiserId === 'millie' ? MILLIE_PARTNERS : CHABYULHWA_PARTNERS
+      setPartners(demoPartners as Partner[])
       setLoading(false)
       return
     }

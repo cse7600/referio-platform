@@ -1,8 +1,9 @@
 'use client'
 
-// DEMO[chabyulhwa]
+// DEMO[sales-demo]
 import { useDemoMode } from '@/contexts/demo-mode-context'
-import { DEMO_SETTLEMENTS, DEMO_SETTLEMENT_STATS } from '@/lib/demo-data/chabyulhwa-demo'
+import { DEMO_SETTLEMENTS as CHABYULHWA_SETTLEMENTS, DEMO_SETTLEMENT_STATS as CHABYULHWA_STATS } from '@/lib/demo-data/chabyulhwa-demo'
+import { DEMO_SETTLEMENTS as MILLIE_SETTLEMENTS, DEMO_SETTLEMENT_STATS as MILLIE_STATS } from '@/lib/demo-data/millie-demo'
 
 import { useEffect, useState, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
@@ -68,9 +69,9 @@ const fmt = (n: number) =>
 // ── Page Component ──
 
 export default function AdvertiserSettlementsPage() {
-  // DEMO[chabyulhwa]
+  // DEMO[sales-demo]
   const { advertiserId, isDemoMode } = useDemoMode()
-  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode
+  const isDemo = isDemoMode && (advertiserId === 'chabyulhwa' || advertiserId === 'millie')
 
   const [partners, setPartners] = useState<PartnerGroup[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -96,16 +97,18 @@ export default function AdvertiserSettlementsPage() {
   const [settlementEmailSending, setSettlementEmailSending] = useState<string | null>(null) // partnerId
 
   const fetchData = useCallback(async () => {
-    // DEMO[chabyulhwa]
+    // DEMO[sales-demo]
     if (isDemo) {
-      setPartners(DEMO_SETTLEMENTS as PartnerGroup[])
+      const demoSettlements = advertiserId === 'millie' ? MILLIE_SETTLEMENTS : CHABYULHWA_SETTLEMENTS
+      const demoStats = advertiserId === 'millie' ? MILLIE_STATS : CHABYULHWA_STATS
+      setPartners(demoSettlements as PartnerGroup[])
       setStats({
-        totalPartners: DEMO_SETTLEMENT_STATS.totalPartners,
-        totalPending: DEMO_SETTLEMENT_STATS.totalPending,
-        totalPendingAmount: DEMO_SETTLEMENT_STATS.totalPendingAmount,
-        totalCompleted: DEMO_SETTLEMENT_STATS.totalCompleted,
-        totalCompletedAmount: DEMO_SETTLEMENT_STATS.totalCompletedAmount,
-        thisMonthAmount: Math.floor(DEMO_SETTLEMENT_STATS.totalPendingAmount * 0.3),
+        totalPartners: demoStats.totalPartners,
+        totalPending: demoStats.totalPending,
+        totalPendingAmount: demoStats.totalPendingAmount,
+        totalCompleted: demoStats.totalCompleted,
+        totalCompletedAmount: demoStats.totalCompletedAmount,
+        thisMonthAmount: Math.floor(demoStats.totalPendingAmount * 0.3),
       })
       setLoading(false)
       return

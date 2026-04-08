@@ -1,8 +1,9 @@
 'use client';
 
-// DEMO[chabyulhwa]
+// DEMO[sales-demo]
 import { useDemoMode } from '@/contexts/demo-mode-context';
-import { DEMO_EVENTS_DATA } from '@/lib/demo-data/chabyulhwa-demo';
+import { DEMO_EVENTS_DATA as CHABYULHWA_EVENTS } from '@/lib/demo-data/chabyulhwa-demo';
+import { DEMO_EVENTS_DATA as MILLIE_EVENTS } from '@/lib/demo-data/millie-demo';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +50,7 @@ const EVENT_LABELS: Record<string, string> = {
   purchase: '구매',
   registration: '등록',
   first_purchase: '첫구매', // DEMO[chabyulhwa]
+  app_install: '앱설치', // DEMO[sales-demo] millie
 };
 
 // Colors for funnel cards
@@ -65,18 +67,19 @@ function getEventLabel(eventType: string): string {
 }
 
 export default function EventsPage() {
-  // DEMO[chabyulhwa]
+  // DEMO[sales-demo]
   const { advertiserId, isDemoMode } = useDemoMode();
-  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode;
+  const isDemo = isDemoMode && (advertiserId === 'chabyulhwa' || advertiserId === 'millie');
 
   const [data, setData] = useState<EventsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // DEMO[chabyulhwa] — API 호출 없이 더미 데이터 사용
+    // DEMO[sales-demo] — API 호출 없이 더미 데이터 사용
     if (isDemo) {
-      setData(DEMO_EVENTS_DATA as EventsData);
+      const eventsData = advertiserId === 'millie' ? MILLIE_EVENTS : CHABYULHWA_EVENTS;
+      setData(eventsData as EventsData);
       setLoading(false);
       return;
     }
@@ -279,6 +282,8 @@ function EventBadge({ type }: { type: string }) {
       return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{label}</Badge>;
     case 'first_purchase': // DEMO[chabyulhwa]
       return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">{label}</Badge>;
+    case 'app_install': // DEMO[sales-demo] millie
+      return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">{label}</Badge>;
     default:
       return <Badge variant="outline">{label}</Badge>;
   }

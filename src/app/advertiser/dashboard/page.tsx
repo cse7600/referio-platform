@@ -9,7 +9,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { useDemoMode } from '@/contexts/demo-mode-context'
-import { DEMO_DASHBOARD_STATS, DEMO_EVENTS_DATA } from '@/lib/demo-data/chabyulhwa-demo'
+import { getDemoConfig } from '@/lib/demo-data/demo-config'
+import { DEMO_DASHBOARD_STATS as CHABYULHWA_DASHBOARD, DEMO_EVENTS_DATA as CHABYULHWA_EVENTS } from '@/lib/demo-data/chabyulhwa-demo'
+import { DEMO_DASHBOARD_STATS as MILLIE_DASHBOARD, DEMO_EVENTS_DATA as MILLIE_EVENTS } from '@/lib/demo-data/millie-demo'
 
 interface DashboardStats {
   totalPartners: number
@@ -31,20 +33,29 @@ function formatCurrency(amount: number) {
 
 export default function AdvertiserDashboardPage() {
   const { advertiserId, isDemoMode } = useDemoMode()
-  // DEMO[chabyulhwa]
-  const isDemo = advertiserId === 'chabyulhwa' && isDemoMode
+  // DEMO[sales-demo]
+  const isDemo = isDemoMode && (advertiserId === 'chabyulhwa' || advertiserId === 'millie')
+  const demoConfig = isDemo ? getDemoConfig(advertiserId) : undefined
+  const DEMO_DASHBOARD_STATS = advertiserId === 'millie' ? MILLIE_DASHBOARD : CHABYULHWA_DASHBOARD
+  const DEMO_EVENTS_DATA = advertiserId === 'millie' ? MILLIE_EVENTS : CHABYULHWA_EVENTS
 
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (isDemo) {
-      // DEMO[chabyulhwa] — 시연용 더미 통계
+      // DEMO[sales-demo] — 시연용 더미 통계
+      const topFunnel = advertiserId === 'millie'
+        ? (DEMO_DASHBOARD_STATS as typeof MILLIE_DASHBOARD).totalAppInstall
+        : (DEMO_DASHBOARD_STATS as typeof CHABYULHWA_DASHBOARD).totalSignups
+      const bottomFunnel = advertiserId === 'millie'
+        ? (DEMO_DASHBOARD_STATS as typeof MILLIE_DASHBOARD).totalSubscribe
+        : (DEMO_DASHBOARD_STATS as typeof CHABYULHWA_DASHBOARD).totalFirstPurchase
       setStats({
         totalPartners: DEMO_DASHBOARD_STATS.totalPartners,
         activePartners: DEMO_DASHBOARD_STATS.activePartners,
-        totalReferrals: DEMO_DASHBOARD_STATS.totalSignups,
-        validReferrals: DEMO_DASHBOARD_STATS.totalFirstPurchase,
+        totalReferrals: topFunnel,
+        validReferrals: bottomFunnel,
         totalSettlements: DEMO_DASHBOARD_STATS.totalSettlements,
         pendingSettlements: DEMO_DASHBOARD_STATS.pendingSettlements,
         thisMonthSettlementAmount: DEMO_DASHBOARD_STATS.thisMonthSettlementAmount,
@@ -142,15 +153,15 @@ export default function AdvertiserDashboardPage() {
           </div>
         </Card>
 
-        {/* DEMO[chabyulhwa] — 이벤트 추적 모드: 유입고객 대신 전환 지표 표시 */}
+        {/* DEMO[sales-demo] — 이벤트 추적 모드: 유입고객 대신 전환 지표 표시 */}
         {isDemo ? (
           <>
             <Card className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">총 가입</p>
-                  <p className="text-3xl font-bold text-blue-600 mt-1">{DEMO_EVENTS_DATA.funnel.sign_up.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500 mt-1">sign_up 이벤트</p>
+                  <p className="text-sm text-slate-500">총 {demoConfig?.funnelEvents[0]?.label ?? '유입'}</p>
+                  <p className="text-3xl font-bold text-blue-600 mt-1">{((DEMO_EVENTS_DATA.funnel as Record<string, number>)[DEMO_EVENTS_DATA.funnel_events[0]] || 0).toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mt-1">{DEMO_EVENTS_DATA.funnel_events[0]} 이벤트</p>
                 </div>
                 <div className="text-4xl">📝</div>
               </div>
@@ -158,9 +169,9 @@ export default function AdvertiserDashboardPage() {
             <Card className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500">첫구매 전환</p>
-                  <p className="text-3xl font-bold text-green-600 mt-1">{DEMO_EVENTS_DATA.funnel.first_purchase.toLocaleString()}</p>
-                  <p className="text-xs text-slate-500 mt-1">전환율 {DEMO_EVENTS_DATA.funnel.sign_up_to_first_purchase}%</p>
+                  <p className="text-sm text-slate-500">{demoConfig?.funnelEvents[1]?.label ?? '전환'} 전환</p>
+                  <p className="text-3xl font-bold text-green-600 mt-1">{((DEMO_EVENTS_DATA.funnel as Record<string, number>)[DEMO_EVENTS_DATA.funnel_events[1]] || 0).toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 mt-1">전환율 {(DEMO_EVENTS_DATA.funnel as Record<string, number>)[`${DEMO_EVENTS_DATA.funnel_events[0]}_to_${DEMO_EVENTS_DATA.funnel_events[1]}`]}%</p>
                 </div>
                 <div className="text-4xl">🛒</div>
               </div>
@@ -224,8 +235,8 @@ export default function AdvertiserDashboardPage() {
                 <p className="text-xs text-slate-500 mb-1 truncate">{p.partner_name}</p>
                 <p className="text-xs text-slate-400 mb-2">{p.sub_id}</p>
                 <div className="flex justify-between text-xs">
-                  <span className="text-blue-600">가입 {p.event_counts.sign_up}</span>
-                  <span className="text-green-600">구매 {p.event_counts.first_purchase}</span>
+                  <span className="text-blue-600">{demoConfig?.funnelEvents[0]?.label ?? '유입'} {(p.event_counts as Record<string, number>)[DEMO_EVENTS_DATA.funnel_events[0]] ?? 0}</span>
+                  <span className="text-green-600">{demoConfig?.funnelEvents[1]?.label ?? '전환'} {(p.event_counts as Record<string, number>)[DEMO_EVENTS_DATA.funnel_events[1]] ?? 0}</span>
                 </div>
               </div>
             ))}
