@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Target, Search, MessageSquare } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Target, Search, MessageSquare, Download } from 'lucide-react'
 
 interface Keyword {
   id: string
@@ -159,6 +160,7 @@ export default function KeywordsPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<'featured' | 'volume' | 'abc'>('featured')
 
@@ -232,6 +234,65 @@ export default function KeywordsPage() {
 
     if (reset) setLoading(false)
     else setLoadingMore(false)
+  }
+
+  // CSV download — fetches all pages then triggers browser download
+  const handleDownload = async () => {
+    if (!activeProgramId || downloading) return
+    setDownloading(true)
+
+    const allKeywords: Keyword[] = []
+    let cursor: string | null = null
+
+    try {
+      while (true) {
+        const qp: Record<string, string> = {
+          program_id: activeProgramId,
+          limit: '100',
+          sort,
+        }
+        if (cursor) qp.cursor = cursor
+        if (search) qp.search = search
+        const params = new URLSearchParams(qp)
+        const res = await fetch(`/api/partner/keywords?${params}`)
+        if (!res.ok) break
+        const data = await res.json()
+        allKeywords.push(...(data.keywords ?? []))
+        if (!data.has_more || !data.next_cursor) break
+        cursor = data.next_cursor
+      }
+
+      // Build CSV rows
+      const headers = ['키워드', '추천', '마케터메모', '총검색량', 'PC검색량', '모바일검색량', '경쟁도']
+      const rows = allKeywords.map(kw => {
+        const total = kw.naver_cached_at
+          ? (kw.naver_pc_volume ?? 0) + (kw.naver_mobile_volume ?? 0)
+          : ''
+        return [
+          kw.keyword,
+          kw.is_featured ? 'O' : '',
+          kw.memo_public && kw.memo ? kw.memo : '',
+          total,
+          kw.naver_cached_at ? (kw.naver_pc_volume ?? '') : '',
+          kw.naver_cached_at ? (kw.naver_mobile_volume ?? '') : '',
+          kw.naver_competition ?? '',
+        ]
+      })
+
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `keywords_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { /* ignore */ }
+
+    setDownloading(false)
   }
 
   // Debounced search
@@ -337,16 +398,28 @@ export default function KeywordsPage() {
             전체 키워드
             {total > 0 && <span className="text-sm font-normal text-slate-500 ml-2">{total.toLocaleString()}개</span>}
           </h2>
-          <Select value={sort} onValueChange={v => setSort(v as 'featured' | 'volume' | 'abc')}>
-            <SelectTrigger className="w-28 h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="featured">추천순</SelectItem>
-              <SelectItem value="volume">검색량순</SelectItem>
-              <SelectItem value="abc">가나다순</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={sort} onValueChange={v => setSort(v as 'featured' | 'volume' | 'abc')}>
+              <SelectTrigger className="w-28 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="featured">추천순</SelectItem>
+                <SelectItem value="volume">검색량순</SelectItem>
+                <SelectItem value="abc">가나다순</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1.5"
+              onClick={handleDownload}
+              disabled={downloading || keywords.length === 0}
+            >
+              <Download className="w-3.5 h-3.5" />
+              {downloading ? '준비 중...' : 'CSV'}
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
