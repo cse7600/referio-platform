@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, User } from 'lucide-react'
+import { Mail, Lock, User, ChevronDown } from 'lucide-react'
 
 // Kakao OAuth signup page — dedicated path for Kakao review submission
 // Always shows Kakao button (not gated by env var)
 export default function KakaoSignupPage() {
   const [loading, setLoading] = useState(false)
+  const [showEmail, setShowEmail] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -84,77 +85,83 @@ export default function KakaoSignupPage() {
                 카카오 로그인
               </button>
 
-              {/* 구분선 */}
-              <div className="relative flex items-center gap-3">
-                <hr className="flex-1 border-gray-200" />
-                <span className="text-xs text-gray-400">또는 이메일로 가입</span>
-                <hr className="flex-1 border-gray-200" />
-              </div>
-
-              {/* 이메일 가입 폼 */}
-              <div className="space-y-2">
-                <Label htmlFor="name">이름</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="홍길동"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">이메일</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">비밀번호</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="6자 이상"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    minLength={6}
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-500">
-                가입 시,{' '}
-                <Link href="/terms" className="text-slate-900 hover:underline">이용약관</Link> 및{' '}
-                <Link href="/privacy" className="text-slate-900 hover:underline">개인정보처리방침</Link>에
-                동의하는 것으로 간주됩니다.
-              </p>
-
-              <Button
+              {/* 이메일 가입 더보기 토글 */}
+              <button
                 type="button"
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => setShowEmail(!showEmail)}
+                className="w-full flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
               >
-                파트너 가입하기
-              </Button>
+                이메일로 가입하기
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${showEmail ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-              <div className="text-center text-sm text-gray-600">
+              {/* 이메일 가입 폼 — 토글로 숨김 */}
+              {showEmail && (
+                <div className="space-y-3 pt-1 border-t border-gray-100">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">이름</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="홍길동"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">이메일</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">비밀번호</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="6자 이상"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500">
+                    가입 시,{' '}
+                    <Link href="/terms" className="text-slate-900 hover:underline">이용약관</Link> 및{' '}
+                    <Link href="/privacy" className="text-slate-900 hover:underline">개인정보처리방침</Link>에
+                    동의하는 것으로 간주됩니다.
+                  </p>
+
+                  <Button type="button" className="w-full bg-indigo-600 hover:bg-indigo-700">
+                    파트너 가입하기
+                  </Button>
+                </div>
+              )}
+
+              <div className="text-center text-sm text-gray-600 pt-2">
                 이미 파트너이신가요?{' '}
-                <Link href="/login" className="text-slate-900 hover:underline font-medium">
+                <Link href="/kakao-login" className="text-slate-900 hover:underline font-medium">
                   로그인하기
                 </Link>
               </div>
