@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
+import { logAuditEvent, AUDIT_ACTIONS, extractRequestContext } from '@/lib/audit'
+import { checkLoginRateLimit, recordFailedAttempt, clearLoginAttempts } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +14,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '로그인 ID와 비밀번호를 입력해주세요' },
         { status: 400 }
+      )
+    }
+
+    // Rate limiting: check before any DB lookup
+    const reqCtx = extractRequestContext(request)
+    const ipAddress = reqCtx.ipAddress || 'unknown'
+    const rateCheck = await checkLoginRateLimit(ipAddress, loginId)
+
+    if (!rateCheck.allowed) {
+      // Log the blocked attempt
+      logAuditEvent(
+        { type: 'advertiser', email: loginId },
+        AUDIT_ACTIONS.LOGIN_LOCKED,
+        { type: 'advertiser_session' },
+        { ...reqCtx, metadata: { reason: 'rate_limit', retryAfterSeconds: rateCheck.retryAfterSeconds } }
+      )
+
+      return NextResponse.json(
+        {
+          error: `너무 많은 로그인 시도입니다. ${Math.ceil((rateCheck.retryAfterSeconds || 900) / 60)}분 후에 다시 시도해주세요.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        { status: 429 }
       )
     }
 
@@ -34,6 +59,15 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (legacyError || !legacyUser) {
+        // Record failed attempt + audit log
+        await recordFailedAttempt(ipAddress, loginId)
+        logAuditEvent(
+          { type: 'advertiser', email: loginId },
+          AUDIT_ACTIONS.LOGIN_FAILURE,
+          { type: 'advertiser_session' },
+          { ...reqCtx, metadata: { reason: 'user_not_found' } }
+        )
+
         return NextResponse.json(
           { error: '로그인 ID 또는 비밀번호가 일치하지 않습니다' },
           { status: 401 }
@@ -52,7 +86,7 @@ export async function POST(request: NextRequest) {
         companyName: legacyUser.company_name,
         logoUrl: legacyUser.logo_url,
         primaryColor: legacyUser.primary_color,
-      }, password)
+      }, password, ipAddress, reqCtx)
     }
 
     // 광고주 정보 조회 (id 포함, RLS 우회)
@@ -74,7 +108,7 @@ export async function POST(request: NextRequest) {
       companyName: advertiser?.company_name || loginId,
       logoUrl: advertiser?.logo_url,
       primaryColor: advertiser?.primary_color,
-    }, password)
+    }, password, ipAddress, reqCtx)
 
   } catch (error) {
     console.error('Login error:', error)
@@ -101,12 +135,23 @@ async function handleLogin(
     logoUrl?: string
     primaryColor?: string
   },
-  password: string
+  password: string,
+  ipAddress: string,
+  reqCtx: { ipAddress?: string; userAgent?: string }
 ) {
   // 비밀번호 확인
   const isValidPassword = await bcrypt.compare(password, userData.passwordHash)
 
   if (!isValidPassword) {
+    // Record failed attempt + audit log
+    await recordFailedAttempt(ipAddress, userData.userId)
+    logAuditEvent(
+      { type: 'advertiser', id: userData.id, email: userData.userId },
+      AUDIT_ACTIONS.LOGIN_FAILURE,
+      { type: 'advertiser_session' },
+      { ...reqCtx, metadata: { reason: 'invalid_password' } }
+    )
+
     return NextResponse.json(
       { error: '광고주 ID, 사용자 ID 또는 비밀번호가 일치하지 않습니다' },
       { status: 401 }
@@ -147,6 +192,17 @@ async function handleLogin(
       { status: 500 }
     )
   }
+
+  // Clear rate limit counter on successful login
+  clearLoginAttempts(ipAddress, userData.userId)
+
+  // Audit log: successful login
+  logAuditEvent(
+    { type: 'advertiser', id: userData.id, email: userData.userId },
+    AUDIT_ACTIONS.LOGIN_SUCCESS,
+    { type: 'advertiser_session' },
+    { ...reqCtx, metadata: { advertiserId: userData.advertiserId, companyName: userData.companyName } }
+  )
 
   // 마지막 로그인 시간 업데이트
   await admin

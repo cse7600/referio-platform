@@ -6,7 +6,7 @@ async function verifyAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
   if (!masterEmail || user.email !== masterEmail) return null;
   return user;
 }

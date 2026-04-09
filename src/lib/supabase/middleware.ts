@@ -54,7 +54,7 @@ export async function updateSession(request: NextRequest) {
 
     // Admin route: verify master admin email server-side
     if (user && isAdmin) {
-      const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL
+      const masterEmail = process.env.MASTER_ADMIN_EMAIL
       if (!masterEmail || user.email !== masterEmail) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'

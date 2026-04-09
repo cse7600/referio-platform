@@ -37,7 +37,8 @@ function extractCode(raw: unknown): string {
 // 3. 초대 이메일 발송 (invite_email: true인 경우)
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: '권한 없음' }, { status: 401 })
   }
 

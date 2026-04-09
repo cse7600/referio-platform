@@ -6,7 +6,7 @@ async function verifyAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
   const isMaster = masterEmail && user.email === masterEmail;
   const isAdmin = user.app_metadata?.role === 'admin';
   if (!isMaster && !isAdmin) return null;
@@ -76,7 +76,7 @@ export async function GET() {
   }
 
   const admin = createAdminClient();
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
 
   const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
 
@@ -115,7 +115,7 @@ export async function DELETE(req: NextRequest) {
   // 마스터 계정은 취소 불가
   const admin = createAdminClient();
   const { data: targetUser } = await admin.auth.admin.getUserById(userId);
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
   if (targetUser?.user?.email === masterEmail) {
     return NextResponse.json({ error: '마스터 계정의 액세스는 취소할 수 없습니다' }, { status: 403 });
   }

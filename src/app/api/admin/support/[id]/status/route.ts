@@ -20,7 +20,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+    const masterEmail = process.env.MASTER_ADMIN_EMAIL;
     if (!masterEmail || user.email !== masterEmail) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

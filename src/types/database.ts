@@ -77,6 +77,8 @@ export interface Partner {
   marketing_consent: boolean
   created_at: string
   auth_user_id: string | null
+  kakao_channel_added?: boolean
+  kakao_channel_added_at?: string | null
 }
 
 export interface PartnerActivityLink {

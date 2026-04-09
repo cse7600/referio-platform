@@ -699,9 +699,16 @@ export default function AdminPartnersPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge className={TIER_COLORS[partner.tier]}>
-                            {TIER_LABELS[partner.tier]}
-                          </Badge>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Badge className={TIER_COLORS[partner.tier]}>
+                              {TIER_LABELS[partner.tier]}
+                            </Badge>
+                            {process.env.NEXT_PUBLIC_KAKAO_CHANNEL_PUBLIC_ID && partner.kakao_channel_added && (
+                              <Badge style={{ backgroundColor: '#FEE500', color: 'rgba(0,0,0,0.85)' }}>
+                                카카오 채널
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell onClick={e => e.stopPropagation()}>
                           {mounted && (
@@ -897,6 +904,12 @@ export default function AdminPartnersPage() {
                     <span className="text-slate-500">티어</span>
                     <Badge className={TIER_COLORS[selectedPartner.tier]}>{TIER_LABELS[selectedPartner.tier]}</Badge>
                   </div>
+                  {process.env.NEXT_PUBLIC_KAKAO_CHANNEL_PUBLIC_ID && selectedPartner.kakao_channel_added && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">카카오 채널</span>
+                      <Badge style={{ backgroundColor: '#FEE500', color: 'rgba(0,0,0,0.85)' }}>채널 추가됨</Badge>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-500">전화번호</span>
                     <span className="text-slate-800">{selectedPartner.phone || '-'}</span>

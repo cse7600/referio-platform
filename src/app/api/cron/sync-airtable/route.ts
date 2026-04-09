@@ -31,7 +31,8 @@ interface AirtableRecord {
 // Polls Airtable for recently modified records and syncs to Referio
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: '권한 없음' }, { status: 401 })
   }
 

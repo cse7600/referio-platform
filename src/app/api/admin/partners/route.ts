@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logAuditEvent, AUDIT_ACTIONS, extractRequestContext } from '@/lib/audit';
 
 async function verifyAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
   if (!masterEmail || user.email !== masterEmail) return null;
   return user;
 }
@@ -80,15 +81,42 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Missing partnerId or updates' }, { status: 400 });
   }
 
+  // Mass Assignment 방어: 허용된 필드만 업데이트 가능
+  const ALLOWED_FIELDS = [
+    'status', 'name', 'phone', 'bank_name', 'bank_account', 'bank_holder',
+    'tier', 'notes', 'email_opted_out', 'kakao_channel_added', 'kakao_channel_added_at',
+  ] as const;
+  type AllowedField = typeof ALLOWED_FIELDS[number];
+
+  const safeUpdates: Partial<Record<AllowedField, unknown>> = {};
+  for (const field of ALLOWED_FIELDS) {
+    if (field in updates) {
+      safeUpdates[field] = updates[field];
+    }
+  }
+
+  if (Object.keys(safeUpdates).length === 0) {
+    return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+  }
+
   const admin = createAdminClient();
   const { error } = await admin
     .from('partners')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', partnerId);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Audit log: partner update
+  const reqCtx = extractRequestContext(request);
+  logAuditEvent(
+    { type: 'admin', id: user.id, email: user.email ?? undefined },
+    AUDIT_ACTIONS.UPDATE_PARTNER,
+    { type: 'partner', id: partnerId },
+    { ...reqCtx, metadata: { updatedFields: Object.keys(safeUpdates) } }
+  );
 
   return NextResponse.json({ success: true });
 }

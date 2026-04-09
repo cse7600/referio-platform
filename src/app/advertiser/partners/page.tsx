@@ -52,6 +52,7 @@ interface Partner {
   program_id: string
   applied_at: string
   approved_at: string | null
+  kakao_channel_added?: boolean
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -489,9 +490,16 @@ export default function AdvertiserPartnersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={tierLabels[partner.tier]?.color}>
-                          {tierLabels[partner.tier]?.label}
-                        </Badge>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <Badge className={tierLabels[partner.tier]?.color}>
+                            {tierLabels[partner.tier]?.label}
+                          </Badge>
+                          {process.env.NEXT_PUBLIC_KAKAO_CHANNEL_PUBLIC_ID && partner.kakao_channel_added && (
+                            <Badge style={{ backgroundColor: '#FEE500', color: 'rgba(0,0,0,0.85)' }}>
+                              카카오 채널
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <span className={`font-semibold ${(partner.monthly_lead_count || 0) > 0 ? 'text-blue-600' : 'text-slate-400'}`}>

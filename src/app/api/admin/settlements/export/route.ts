@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { decryptSSN } from '@/lib/crypto';
+import { logAuditEvent, AUDIT_ACTIONS, extractRequestContext } from '@/lib/audit';
 
 async function verifyAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const masterEmail = process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL;
+  const masterEmail = process.env.MASTER_ADMIN_EMAIL;
   if (!masterEmail || user.email !== masterEmail) return null;
   return user;
 }
@@ -64,11 +65,22 @@ export async function GET(request: NextRequest) {
     s => (s.partners as { ssn_encrypted: string | null } | null)?.ssn_encrypted
   ).length;
 
-  console.log('[SSN-ACCESS]', {
-    admin_email: user.email,
-    timestamp: new Date().toISOString(),
-    count: ssnCount,
-  });
+  // Audit log: SSN export (PIPA compliance)
+  const reqCtx = extractRequestContext(request);
+  logAuditEvent(
+    { type: 'admin', id: user.id, email: user.email ?? undefined },
+    AUDIT_ACTIONS.EXPORT_SSN,
+    { type: 'settlement' },
+    {
+      ...reqCtx,
+      metadata: {
+        ssnCount,
+        totalSettlements: (settlements || []).length,
+        statusFilter,
+        advertiserFilter: advertiserFilter || 'all',
+      },
+    }
+  );
 
   // CSV columns
   const STATUS_LABELS: Record<string, string> = {

@@ -305,10 +305,17 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold">활동정보</h1>
           <p className="text-gray-500 mt-1">프로필 및 정산 정보를 관리하세요</p>
         </div>
-        <Badge className={TIER_COLORS[partner?.tier || 'authorized']}>
-          <Award className="w-3 h-3 mr-1" />
-          {TIER_LABELS[partner?.tier || 'authorized']}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className={TIER_COLORS[partner?.tier || 'authorized']}>
+            <Award className="w-3 h-3 mr-1" />
+            {TIER_LABELS[partner?.tier || 'authorized']}
+          </Badge>
+          {process.env.NEXT_PUBLIC_KAKAO_CHANNEL_PUBLIC_ID && (partner as (typeof partner & { kakao_channel_added?: boolean }))?.kakao_channel_added && (
+            <Badge style={{ backgroundColor: '#FEE500', color: 'rgba(0,0,0,0.85)' }}>
+              카카오 채널 연결됨
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* 기본 정보 */}

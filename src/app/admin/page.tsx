@@ -16,7 +16,7 @@ export default async function AdminDashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || user.email !== process.env.NEXT_PUBLIC_MASTER_ADMIN_EMAIL) {
+  if (!user || user.email !== process.env.MASTER_ADMIN_EMAIL) {
     redirect('/dashboard');
   }
 
