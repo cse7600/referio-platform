@@ -6,7 +6,7 @@
 > **Version**: 2.0 (대규모 아키텍처 재설계)
 > **Author**: cse7600
 > **Date**: 2026-04-08
-> **Status**: Draft
+> **Status**: 완료 (2026-04-09)
 
 ---
 
@@ -903,4 +903,14 @@ keyword,is_featured,memo,memo_public
 
 | 날짜 | 빌드 유형 | 변경 내용 요약 | 결과 |
 |------|---------|--------------|------|
+| 2026-04-09 | dev | Migration 029 DB 적용 완료. 광고주 키워드 API 3개(CRUD·bulk·[id]) + 파트너 조회 API + Cron. 파트너 /dashboard/keywords 테이블뷰+CSV 다운로드. 광고주 /advertiser/keywords 카드→테이블 리팩토링. | 성공 |
+
+## 검증 이력
+
+| 날짜 | 검증 항목 | 결과 | 비고 |
+|------|---------|------|------|
+| 2026-04-09 | DB Migration 029 적용 여부 | PASS | `program_keywords` 테이블 존재, 18개 키워드 확인 |
+| 2026-04-09 | 네이버 API 실제 호출 테스트 | PASS | "독서" 키워드 → PC 1,690 / 모바일 4,620 응답 정상 |
+| 2026-04-09 | Vercel 환경변수 (NAVER_API_KEY, NAVER_CLIENT_SECRET, NAVER_ACCOUNT_ID) | PASS | 3개 모두 등록 확인 |
+| 2026-04-09 | Vercel Cron 등록 (매일 KST 05:00) | PASS | vercel.json `0 20 * * *` 등록 완료 |
 | 2026-04-09 | production | Migration 029 DB 적용 완료. API 7개(단건 CRUD, bulk, 파트너 조회, Cron) + 파트너 키워드 탭(/dashboard/keywords) + 광고주 키워드 관리(/advertiser/keywords) 구현. 네이버 searchad 유틸 생성. 사이드바 양쪽 탭 추가. | 성공 |

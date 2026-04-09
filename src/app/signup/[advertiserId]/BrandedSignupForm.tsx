@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, User, Lock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 
 interface AdvertiserBranding {
   id: string
@@ -476,6 +477,14 @@ export default function BrandedSignupForm({ advertiser, code, prefillEmail }: Pr
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
+              <KakaoLoginButton />
+              {process.env.NEXT_PUBLIC_KAKAO_ENABLED === 'true' && (
+                <div className="relative flex items-center gap-3">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-xs text-gray-400">또는 이메일로 가입</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">이름</Label>
                 <div className="relative">

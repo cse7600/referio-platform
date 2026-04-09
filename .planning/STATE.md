@@ -2,10 +2,10 @@
 
 ## Current Position
 
-Phase: 16 (CRM Phase 3 완료)
-Plan: Ready to plan
-Status: CRM Phase 3 완료 (Email 5/13/14 구현)
-Last activity: 2026-03-31 — CRM Phase 3 완료. Email 5(신규프로그램), 13(위반경고+Admin UI), 14(탈퇴처리) 구현. 빌드 성공.
+Phase: 16 (카카오 로그인 도입)
+Plan: 코드 구현 완료 — 외부 설정(Supabase + 환경변수) 대기
+Status: KakaoLoginButton 컴포넌트 생성, signup/login/BrandedSignupForm 수정, auth/callback 개선 완료
+Last activity: 2026-04-09 — 카카오 로그인 Phase 16 코드 전체 구현. NEXT_PUBLIC_KAKAO_ENABLED=true 환경변수 주입 시 즉시 활성화.
 
 ## Project Reference
 

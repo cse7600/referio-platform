@@ -58,6 +58,21 @@
 
 ### Phase 15: CRM 이메일 구조 완성 — 파트너 거절 이메일 추가, 전체 수신거부 링크 삽입, 1일 발송 쿨다운 규칙 설계
 
+### Phase 16: 카카오 로그인 + 카카오싱크 도입
+
+**Goal:** 환경변수 하나로 카카오 로그인 활성화 — 모든 코드 구현 완료, 외부 설정 대기 중
+
+**Status:** 코드 구현 완료 ✓ / Supabase 대시보드 설정 + 환경변수 주입 대기
+
+**Plans:** 7 plans / 5 implemented
+
+**활성화 절차:**
+1. 카카오 개발자 콘솔 → 앱 생성 → REST API 키 + Client Secret 발급
+2. Supabase Dashboard → Authentication → Providers → Kakao → 키 입력
+3. Vercel 환경변수: `NEXT_PUBLIC_KAKAO_ENABLED=true` 추가 → 재배포
+
+**Phase 2 (카카오싱크 채널 추가):** 비즈앱 심사 후 `NEXT_PUBLIC_KAKAO_CHANNEL_PUBLIC_ID` 추가 시 자동 활성화
+
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 14

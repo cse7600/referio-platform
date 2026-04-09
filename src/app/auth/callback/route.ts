@@ -25,7 +25,9 @@ export async function GET(request: Request) {
       // user metadata에서 이름 가져오기 (URL 파라미터보다 우선)
       const userName = nameParam
         ? decodeURIComponent(nameParam)
-        : (data.user.user_metadata?.name as string) || '파트너'
+        : (data.user.user_metadata?.full_name as string)
+        || (data.user.user_metadata?.name as string)
+        || '파트너'
 
       // partners 테이블에서 현재 유저 확인
       const { data: existingPartner } = await supabase

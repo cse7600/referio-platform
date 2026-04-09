@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-09T03:04:08.801Z",
+  "lastUpdated": "2026-04-09T05:05:33.526Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -103,7 +103,8 @@
     "keywords",
     "bulk",
     "refresh-keyword-volumes",
-    "partner-programs"
+    "partner-programs",
+    "auth"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -168,7 +169,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T02:00:39.130Z",
-        "lastUpdated": "2026-03-31T05:58:08.607Z"
+        "lastUpdated": "2026-04-09T05:05:33.526Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/[advertiserId]/BrandedSignupForm.tsx"
     },
@@ -285,7 +286,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T06:09:02.786Z",
-        "lastUpdated": "2026-04-06T00:52:44.671Z"
+        "lastUpdated": "2026-04-09T05:05:15.113Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/login/page.tsx"
     },
@@ -454,7 +455,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T10:32:59.752Z",
-        "lastUpdated": "2026-03-30T04:42:29.862Z"
+        "lastUpdated": "2026-04-09T05:05:04.024Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/signup/page.tsx"
     },
@@ -1034,7 +1035,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:47:27.601Z",
-        "lastUpdated": "2026-03-31T05:30:27.857Z"
+        "lastUpdated": "2026-04-09T05:05:19.464Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/auth/callback/route.ts"
     },
@@ -1086,7 +1087,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T08:50:49.566Z",
-        "lastUpdated": "2026-03-31T08:50:49.566Z"
+        "lastUpdated": "2026-04-09T04:56:27.072Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/nudge-inactive-partners/route.ts"
     },
@@ -1099,7 +1100,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T08:51:32.892Z",
-        "lastUpdated": "2026-03-31T08:51:32.892Z"
+        "lastUpdated": "2026-04-09T04:57:44.507Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/cron/nudge-no-activity/route.ts"
     },
@@ -1440,6 +1441,19 @@
         "lastUpdated": "2026-04-09T02:22:57.962Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/partner-programs/route.ts"
+    },
+    "auth": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T05:04:54.743Z",
+        "lastUpdated": "2026-04-09T05:04:54.743Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/auth/KakaoLoginButton.tsx"
     }
   },
   "pipeline": {
@@ -1450,7 +1464,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-09T03:04:08.801Z"
+    "lastActivity": "2026-04-09T05:05:33.526Z"
   },
   "history": [
     {
@@ -9130,6 +9144,90 @@
     {
       "timestamp": "2026-04-09T03:04:08.801Z",
       "feature": "keywords",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:50:23.765Z",
+      "feature": "nudge-inactive-partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:50:34.736Z",
+      "feature": "nudge-inactive-partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:50:41.948Z",
+      "feature": "nudge-no-activity",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:50:50.577Z",
+      "feature": "nudge-no-activity",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:56:27.072Z",
+      "feature": "nudge-inactive-partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T04:57:44.507Z",
+      "feature": "nudge-no-activity",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:04:54.744Z",
+      "feature": "auth",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:04:59.062Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:04.024Z",
+      "feature": "signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:10.316Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:15.113Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:19.464Z",
+      "feature": "callback",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:26.356Z",
+      "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:05:33.526Z",
+      "feature": "[advertiserId]",
       "phase": "do",
       "action": "updated"
     }

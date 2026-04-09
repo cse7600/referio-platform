@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Lock } from 'lucide-react'
 import { trackPartnerLogin } from '@/lib/gtm'
+import KakaoLoginButton from '@/components/auth/KakaoLoginButton'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -140,6 +141,14 @@ export default function LoginPage() {
                 <p className="text-green-600 text-sm">{resetMsg}</p>
               )}
 
+              <KakaoLoginButton />
+              {process.env.NEXT_PUBLIC_KAKAO_ENABLED === 'true' && (
+                <div className="relative flex items-center gap-3">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-xs text-gray-400">또는 이메일로 로그인</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
