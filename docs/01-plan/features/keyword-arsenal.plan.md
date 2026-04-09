@@ -667,32 +667,33 @@ is_featured 키워드 + 경쟁도 기반으로 카드 하단에 표시:
 
 ## 16. 구현 단계
 
-### Phase 1 — DB + API 기반 (추정 2일)
-- [ ] Migration 029 실행
-- [ ] 단건 CRUD API 4개
-- [ ] Bulk upload API (CSV + JSON)
-- [ ] 파트너 조회 API (cursor pagination + search)
+### Phase 1 — DB + API 기반 ✅ 완료 (2026-04-09)
+- [x] Migration 029 실행 — program_keywords 테이블 + 인덱스 5개 + RLS + 트리거
+- [x] 단건 CRUD API 4개 — POST/PATCH/DELETE /api/advertiser/keywords
+- [x] Bulk upload API — CSV(papaparse) + JSON, append/replace 모드, 1,000행 배치
+- [x] 파트너 조회 API — cursor pagination, sort 3종, pg_trgm 검색, featured_only
 
-### Phase 2 — 광고주 UI (추정 1.5일)
-- [ ] 프로그램 설정 내 키워드 탭
-- [ ] CSV 업로드 UI (drag & drop, 진행률)
-- [ ] 태그 입력 (기존 UX 유지)
-- [ ] is_featured 토글 + memo 인라인 편집
-- [ ] 무한스크롤 키워드 목록
+### Phase 2 — 광고주 UI ✅ 완료 (2026-04-09)
+- [x] 광고주 사이드바 "키워드" 메뉴 추가 → /advertiser/keywords
+- [x] CSV 업로드 UI (drag & drop, 배치 진행률 바, append/replace 모드)
+- [x] 태그 입력 (Enter/쉼표로 즉시 추가)
+- [x] is_featured 토글 + memo 인라인 편집 + memo_public 스위치
+- [x] 무한스크롤 키워드 목록 + 검색 + 정렬
+- [x] 템플릿 CSV 다운로드
 
-### Phase 3 — 파트너 UI (추정 1일)
-- [ ] 사이드바 "키워드" 탭 추가
-- [ ] 추천 키워드 상단 섹션
-- [ ] 무한스크롤 전체 키워드 목록
-- [ ] 검색 + 정렬
+### Phase 3 — 파트너 UI ✅ 완료 (2026-04-09)
+- [x] 사이드바 "키워드" 탭 추가 (Target 아이콘, 이벤트 탭 다음)
+- [x] 추천 키워드 상단 가로 스크롤 카드 섹션
+- [x] 전체 키워드 테이블뷰 + 무한스크롤
+- [x] 검색(300ms debounce) + 정렬(추천순/검색량순/가나다순)
+- [x] CSV 다운로드 (전체 페이지 순회, 추천·메모·검색량·경쟁도 컬럼 포함)
 
-### Phase 4 — 네이버 API 연동 + 멀티 계정 (추정 1.5일)
-- [ ] 네이버 검색광고 API 클라이언트 (`src/lib/naver-search-ad.ts`)
-- [ ] `getNaverCredentialsPool()` 멀티 계정 로드 (§17.6)
-- [ ] 일별 할당 + fallback 로테이션 로직 (§17.5)
-- [ ] Cron job 구현 (멀티 계정 분배 포함)
-- [ ] 경쟁도 뱃지 + 힌트 메시지
-- [ ] 전략 가이드 콘텐츠
+### Phase 4 — 네이버 API 연동 🔲 대기 중 (Vercel 환경변수 등록 필요)
+- [x] 네이버 검색광고 API 클라이언트 (`src/lib/naver-searchad.ts`) — HMAC-SHA256 서명, 5개 배치
+- [x] Cron job 구현 (`/api/cron/refresh-keyword-volumes`, KST 05:00 실행)
+- [x] 경쟁도 뱃지 + 힌트 메시지 UI
+- [ ] **Vercel 환경변수 등록** (PO 액션 필요) — NAVER_API_KEY, NAVER_CLIENT_SECRET, NAVER_ACCOUNT_ID
+- [ ] 실제 검색량 데이터 수신 확인 (등록 후 다음날 Cron 실행 후 확인)
 
 ---
 
