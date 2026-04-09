@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-09T05:05:33.526Z",
+  "lastUpdated": "2026-04-09T05:34:48.841Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -104,7 +104,9 @@
     "bulk",
     "refresh-keyword-volumes",
     "partner-programs",
-    "auth"
+    "auth",
+    "kakao-signup",
+    "kakao-login"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -1451,9 +1453,35 @@
       "documents": {},
       "timestamps": {
         "started": "2026-04-09T05:04:54.743Z",
-        "lastUpdated": "2026-04-09T05:04:54.743Z"
+        "lastUpdated": "2026-04-09T05:30:25.636Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/components/auth/KakaoLoginButton.tsx"
+    },
+    "kakao-signup": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T05:28:30.565Z",
+        "lastUpdated": "2026-04-09T05:34:23.660Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/kakao-signup/page.tsx"
+    },
+    "kakao-login": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T05:34:48.841Z",
+        "lastUpdated": "2026-04-09T05:34:48.841Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/kakao-login/page.tsx"
     }
   },
   "pipeline": {
@@ -1464,7 +1492,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-09T05:05:33.526Z"
+    "lastActivity": "2026-04-09T05:34:48.841Z"
   },
   "history": [
     {
@@ -9228,6 +9256,36 @@
     {
       "timestamp": "2026-04-09T05:05:33.526Z",
       "feature": "[advertiserId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:28:30.565Z",
+      "feature": "kakao-signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:30:25.636Z",
+      "feature": "auth",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:30:49.335Z",
+      "feature": "kakao-signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:34:23.660Z",
+      "feature": "kakao-signup",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T05:34:48.841Z",
+      "feature": "kakao-login",
       "phase": "do",
       "action": "updated"
     }
