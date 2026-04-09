@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-09T01:17:44.192Z",
+  "lastUpdated": "2026-04-09T02:07:41.278Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -372,9 +372,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T04:42:22.140Z",
-        "lastUpdated": "2026-04-06T03:20:14.473Z"
+        "lastUpdated": "2026-04-09T02:07:41.278Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/airbridge.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/naver-searchad.ts"
     },
     "[id]": {
       "phase": "do",
@@ -1394,7 +1394,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-09T01:17:44.192Z"
+    "lastActivity": "2026-04-09T02:07:41.278Z"
   },
   "history": [
     {
@@ -8894,6 +8894,12 @@
     {
       "timestamp": "2026-04-09T01:17:44.192Z",
       "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T02:07:41.278Z",
+      "feature": "referio-platform",
       "phase": "do",
       "action": "updated"
     }
