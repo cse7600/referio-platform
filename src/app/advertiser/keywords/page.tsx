@@ -593,87 +593,93 @@ export default function AdvertiserKeywordsPage() {
           )}
         </div>
 
-        {/* Select all */}
-        {keywords.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <input
-              type="checkbox"
-              checked={selectedIds.size === keywords.length && keywords.length > 0}
-              onChange={toggleSelectAll}
-              className="accent-indigo-600"
-            />
-            <span>전체 선택 ({keywords.length}개)</span>
-          </div>
-        )}
-
-        {/* Keyword rows */}
+        {/* Keyword table */}
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="animate-pulse h-16 bg-slate-100 rounded-xl" />
+              <div key={i} className="animate-pulse h-10 bg-slate-100 rounded" />
             ))}
           </div>
         ) : keywords.length === 0 ? (
-          <Card className="py-16">
-            <CardContent className="text-center text-slate-500">
-              <Target className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">
-                {search ? '검색 결과가 없습니다' : '등록된 키워드가 없습니다'}
-              </p>
-              {!search && (
-                <p className="text-sm mt-1">위에서 키워드를 입력하거나 CSV를 업로드하세요.</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="py-16 text-center text-slate-500 border border-slate-100 rounded-xl">
+            <Target className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-medium">
+              {search ? '검색 결과가 없습니다' : '등록된 키워드가 없습니다'}
+            </p>
+            {!search && (
+              <p className="text-sm mt-1">위에서 키워드를 입력하거나 CSV를 업로드하세요.</p>
+            )}
+          </div>
         ) : (
-          <div className="space-y-2">
-            {keywords.map(kw => {
-              const compCfg = kw.naver_competition ? COMPETITION_CONFIG[kw.naver_competition] : null
-              const totalVol = kw.naver_cached_at
-                ? (kw.naver_pc_volume ?? 0) + (kw.naver_mobile_volume ?? 0)
-                : null
-              const isEditing = editingMemoId === kw.id
-              const isSelected = selectedIds.has(kw.id)
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="py-2.5 pl-3 pr-1 w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === keywords.length && keywords.length > 0}
+                      onChange={toggleSelectAll}
+                      className="accent-indigo-600"
+                    />
+                  </th>
+                  <th className="py-2.5 px-1 w-7" />
+                  <th className="py-2.5 pl-1 pr-2 text-xs font-medium text-slate-500">키워드 / 메모</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right">총 검색량</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right hidden md:table-cell">PC</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right hidden md:table-cell">모바일</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-center hidden sm:table-cell">경쟁도</th>
+                  <th className="py-2.5 pl-2 pr-3 w-6" />
+                </tr>
+              </thead>
+              <tbody>
+                {keywords.map(kw => {
+                  const compCfg = kw.naver_competition ? COMPETITION_CONFIG[kw.naver_competition] : null
+                  const totalVol = kw.naver_cached_at
+                    ? (kw.naver_pc_volume ?? 0) + (kw.naver_mobile_volume ?? 0)
+                    : null
+                  const isEditing = editingMemoId === kw.id
+                  const isSelected = selectedIds.has(kw.id)
 
-              return (
-                <Card key={kw.id} className={`transition-colors ${isSelected ? 'ring-2 ring-indigo-400' : ''}`}>
-                  <CardContent className="px-4 py-3">
-                    <div className="flex items-start gap-3">
+                  return (
+                    <tr
+                      key={kw.id}
+                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-indigo-50' : ''}`}
+                    >
                       {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(kw.id)}
-                        className="mt-1 accent-indigo-600"
-                      />
+                      <td className="py-2.5 pl-3 pr-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(kw.id)}
+                          className="accent-indigo-600"
+                        />
+                      </td>
 
                       {/* Featured star */}
-                      <button
-                        onClick={() => toggleFeatured(kw.id, kw.is_featured)}
-                        className={`mt-0.5 transition-colors ${kw.is_featured ? 'text-amber-400' : 'text-slate-300 hover:text-amber-300'}`}
-                        title={kw.is_featured ? '추천 해제' : '추천으로 설정'}
-                      >
-                        <Star className="w-4 h-4" fill={kw.is_featured ? 'currentColor' : 'none'} />
-                      </button>
+                      <td className="py-2.5 px-1">
+                        <button
+                          onClick={() => toggleFeatured(kw.id, kw.is_featured)}
+                          className={`transition-colors ${kw.is_featured ? 'text-amber-400' : 'text-slate-300 hover:text-amber-300'}`}
+                          title={kw.is_featured ? '추천 해제' : '추천으로 설정'}
+                        >
+                          <Star className="w-3.5 h-3.5" fill={kw.is_featured ? 'currentColor' : 'none'} />
+                        </button>
+                      </td>
 
-                      {/* Keyword name */}
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-slate-900 text-sm">{kw.keyword}</span>
+                      {/* Keyword + memo */}
+                      <td className="py-2.5 pl-1 pr-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium text-slate-900">{kw.keyword}</span>
                           {kw.is_featured && (
-                            <Badge className="text-xs bg-amber-100 text-amber-700">추천</Badge>
-                          )}
-                          {compCfg && (
-                            <Badge className={`text-xs ${compCfg.color}`}>{compCfg.label}</Badge>
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">추천</span>
                           )}
                         </div>
-
-                        {/* Memo inline edit */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mt-0.5">
                           {isEditing ? (
                             <input
                               autoFocus
-                              className="text-xs border border-slate-300 rounded px-2 py-1 w-full max-w-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                              className="text-xs border border-slate-300 rounded px-2 py-0.5 w-48 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                               value={memoDraft}
                               onChange={e => setMemoDraft(e.target.value)}
                               onBlur={() => saveMemo(kw.id)}
@@ -685,76 +691,86 @@ export default function AdvertiserKeywordsPage() {
                             />
                           ) : (
                             <button
-                              className="text-xs text-slate-400 hover:text-slate-600 transition-colors text-left truncate max-w-xs"
-                              onClick={() => {
-                                setEditingMemoId(kw.id)
-                                setMemoDraft(kw.memo ?? '')
-                              }}
+                              className="text-xs text-slate-400 hover:text-slate-600 transition-colors text-left truncate max-w-[180px]"
+                              onClick={() => { setEditingMemoId(kw.id); setMemoDraft(kw.memo ?? '') }}
                             >
                               {kw.memo || '메모 추가...'}
                             </button>
                           )}
-
-                          {/* memo_public toggle */}
-                          <div className="flex items-center gap-1 ml-2 shrink-0">
-                            <span className="text-xs text-slate-400">공개</span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] text-slate-400">공개</span>
                             <Switch
                               checked={kw.memo_public}
                               onCheckedChange={() => toggleMemoPublic(kw.id, kw.memo_public)}
-                              className="scale-75"
+                              className="scale-[0.65] origin-left"
                             />
                           </div>
                         </div>
-                      </div>
+                      </td>
 
-                      {/* Search volume */}
-                      <div className="text-right shrink-0 min-w-[80px]">
+                      {/* 총 검색량 */}
+                      <td className="py-2.5 px-2 text-right">
                         {kw.naver_cached_at ? (
-                          <>
-                            <p className="font-semibold text-indigo-600 text-sm">{formatVolume(totalVol)}</p>
-                            <p className="text-[10px] text-slate-400">
-                              PC {formatVolume(kw.naver_pc_volume)} / 모바일 {formatVolume(kw.naver_mobile_volume)}
-                            </p>
-                          </>
+                          <span className="text-sm font-semibold text-indigo-600">{formatVolume(totalVol)}</span>
                         ) : (
-                          <p className="text-xs text-slate-400">준비 중</p>
+                          <span className="text-xs text-slate-300">-</span>
                         )}
-                      </div>
+                      </td>
 
-                      {/* Delete single */}
-                      <button
-                        className="text-slate-300 hover:text-red-400 transition-colors mt-0.5 shrink-0"
-                        onClick={async () => {
-                          try {
-                            const res = await fetch(`/api/advertiser/keywords/${kw.id}`, { method: 'DELETE' })
-                            if (res.ok) {
-                              setKeywords(prev => prev.filter(k => k.id !== kw.id))
-                              setTotal(prev => prev - 1)
-                              if (kw.is_featured) setFeaturedCount(prev => prev - 1)
-                              toast.success('삭제되었습니다')
-                            } else {
-                              toast.error('삭제에 실패했습니다')
+                      {/* PC */}
+                      <td className="py-2.5 px-2 text-right hidden md:table-cell">
+                        <span className="text-xs text-slate-500">{kw.naver_cached_at ? formatVolume(kw.naver_pc_volume) : '-'}</span>
+                      </td>
+
+                      {/* 모바일 */}
+                      <td className="py-2.5 px-2 text-right hidden md:table-cell">
+                        <span className="text-xs text-slate-500">{kw.naver_cached_at ? formatVolume(kw.naver_mobile_volume) : '-'}</span>
+                      </td>
+
+                      {/* 경쟁도 */}
+                      <td className="py-2.5 px-2 text-center hidden sm:table-cell">
+                        {compCfg ? (
+                          <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${compCfg.color}`}>
+                            {compCfg.label}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-300">-</span>
+                        )}
+                      </td>
+
+                      {/* Delete */}
+                      <td className="py-2.5 pl-2 pr-3">
+                        <button
+                          className="text-slate-300 hover:text-red-400 transition-colors"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`/api/advertiser/keywords/${kw.id}`, { method: 'DELETE' })
+                              if (res.ok) {
+                                setKeywords(prev => prev.filter(k => k.id !== kw.id))
+                                setTotal(prev => prev - 1)
+                                if (kw.is_featured) setFeaturedCount(prev => prev - 1)
+                                toast.success('삭제되었습니다')
+                              } else {
+                                toast.error('삭제에 실패했습니다')
+                              }
+                            } catch {
+                              toast.error('서버 오류가 발생했습니다')
                             }
-                          } catch {
-                            toast.error('서버 오류가 발생했습니다')
-                          }
-                        }}
-                        title="삭제"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-
+                          }}
+                          title="삭제"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
             {/* Infinite scroll sentinel */}
             <div ref={sentinelRef} className="h-4" />
             {loadingMore && (
-              <div className="text-center py-4">
-                <div className="animate-pulse text-sm text-slate-400">불러오는 중...</div>
-              </div>
+              <div className="text-center py-3 text-sm text-slate-400">불러오는 중...</div>
             )}
           </div>
         )}
