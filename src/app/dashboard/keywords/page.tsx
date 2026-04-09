@@ -97,44 +97,55 @@ function KeywordCard({ kw, featured = false }: { kw: Keyword; featured?: boolean
   )
 }
 
-function KeywordListCard({ kw }: { kw: Keyword }) {
+function KeywordTableRow({ kw }: { kw: Keyword }) {
   const compCfg = kw.naver_competition ? COMPETITION_CONFIG[kw.naver_competition] : null
-  const totalVolume =
-    kw.naver_cached_at
-      ? (kw.naver_pc_volume ?? 0) + (kw.naver_mobile_volume ?? 0)
-      : null
+  const totalVolume = kw.naver_cached_at
+    ? (kw.naver_pc_volume ?? 0) + (kw.naver_mobile_volume ?? 0)
+    : null
 
   return (
-    <Card>
-      <CardContent className="px-4 py-3 flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-slate-900 text-sm">{kw.keyword}</span>
-            {kw.is_featured && <Badge className="text-xs bg-amber-100 text-amber-700">추천</Badge>}
-          </div>
+    <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+      {/* 키워드 */}
+      <td className="py-3 pl-4 pr-2">
+        <div className="flex items-center gap-2">
+          {kw.is_featured && (
+            <span className="text-amber-400 text-xs">⭐</span>
+          )}
+          <span className="text-sm font-medium text-slate-900">{kw.keyword}</span>
           {kw.memo_public && kw.memo && (
-            <p className="text-xs text-slate-500 mt-0.5 truncate">{kw.memo}</p>
+            <span className="hidden sm:inline text-xs text-slate-400 truncate max-w-[120px]" title={kw.memo}>
+              · {kw.memo}
+            </span>
           )}
         </div>
-
-        <div className="text-right shrink-0">
-          {kw.naver_cached_at ? (
-            <>
-              <p className="font-semibold text-indigo-600 text-sm">{formatVolume(totalVolume)}</p>
-              <p className="text-[10px] text-slate-400">
-                PC {formatVolume(kw.naver_pc_volume)} / 모바일 {formatVolume(kw.naver_mobile_volume)}
-              </p>
-            </>
-          ) : (
-            <p className="text-xs text-slate-400">준비 중</p>
-          )}
-        </div>
-
-        {compCfg && (
-          <Badge className={`text-xs shrink-0 ${compCfg.color}`}>{compCfg.label}</Badge>
+      </td>
+      {/* 총 검색량 */}
+      <td className="py-3 px-2 text-right">
+        {kw.naver_cached_at ? (
+          <span className="text-sm font-semibold text-indigo-600">{formatVolume(totalVolume)}</span>
+        ) : (
+          <span className="text-xs text-slate-300">-</span>
         )}
-      </CardContent>
-    </Card>
+      </td>
+      {/* PC */}
+      <td className="py-3 px-2 text-right hidden sm:table-cell">
+        <span className="text-xs text-slate-500">{kw.naver_cached_at ? formatVolume(kw.naver_pc_volume) : '-'}</span>
+      </td>
+      {/* 모바일 */}
+      <td className="py-3 px-2 text-right hidden sm:table-cell">
+        <span className="text-xs text-slate-500">{kw.naver_cached_at ? formatVolume(kw.naver_mobile_volume) : '-'}</span>
+      </td>
+      {/* 경쟁도 */}
+      <td className="py-3 pl-2 pr-4 text-center">
+        {compCfg ? (
+          <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${compCfg.color}`}>
+            {compCfg.label}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-300">-</span>
+        )}
+      </td>
+    </tr>
   )
 }
 
@@ -349,36 +360,45 @@ export default function KeywordsPage() {
           />
         </div>
 
-        {/* Keyword list */}
+        {/* Keyword table */}
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="animate-pulse h-14 bg-slate-100 rounded-xl" />
+              <div key={i} className="animate-pulse h-10 bg-slate-100 rounded" />
             ))}
           </div>
         ) : keywords.length === 0 ? (
-          <Card className="py-16">
-            <CardContent className="text-center text-slate-500">
-              <Target className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-              <p className="font-medium">
-                {search ? '검색 결과가 없습니다' : '아직 등록된 키워드가 없어요'}
-              </p>
-              {!search && (
-                <p className="text-sm mt-1">광고주가 키워드를 등록하면 여기에 표시됩니다.</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="py-16 text-center text-slate-500 border border-slate-100 rounded-xl">
+            <Target className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-medium">
+              {search ? '검색 결과가 없습니다' : '아직 등록된 키워드가 없어요'}
+            </p>
+            {!search && (
+              <p className="text-sm mt-1">광고주가 키워드를 등록하면 여기에 표시됩니다.</p>
+            )}
+          </div>
         ) : (
-          <div className="space-y-2">
-            {keywords.map(kw => (
-              <KeywordListCard key={kw.id} kw={kw} />
-            ))}
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="py-2.5 pl-4 pr-2 text-xs font-medium text-slate-500">키워드</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right">총 검색량</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right hidden sm:table-cell">PC</th>
+                  <th className="py-2.5 px-2 text-xs font-medium text-slate-500 text-right hidden sm:table-cell">모바일</th>
+                  <th className="py-2.5 pl-2 pr-4 text-xs font-medium text-slate-500 text-center">경쟁도</th>
+                </tr>
+              </thead>
+              <tbody>
+                {keywords.map(kw => (
+                  <KeywordTableRow key={kw.id} kw={kw} />
+                ))}
+              </tbody>
+            </table>
             {/* Infinite scroll sentinel */}
             <div ref={sentinelRef} className="h-4" />
             {loadingMore && (
-              <div className="text-center py-4">
-                <div className="animate-pulse text-sm text-slate-400">불러오는 중...</div>
-              </div>
+              <div className="text-center py-3 text-sm text-slate-400">불러오는 중...</div>
             )}
           </div>
         )}
