@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/monthly-performance-report",
       "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/refresh-keyword-volumes",
+      "schedule": "0 20 * * *"
     }
   ]
 }

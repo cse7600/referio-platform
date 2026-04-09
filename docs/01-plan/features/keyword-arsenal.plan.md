@@ -895,3 +895,11 @@ keyword,is_featured,memo,memo_public
 | 2.0 | 2026-04-08 | 100만 건 대응 아키텍처 재설계: 무제한 등록, CSV 대량 업로드, cursor pagination, pg_trgm 검색, 인라인 캐시, Cron 순차 갱신, is_featured/memo 추가, BigQuery 불필요 결정 | cse7600 |
 | 2.1 | 2026-04-08 | memo_public 공개/비공개 토글 추가 (§18), 멀티 API 계정 로테이션 설계 (§17) | cse7600 |
 | 2.2 | 2026-04-09 | 네이버 API 공식 확인: 일일 한도 없음, 초당 20~30req 제한. 실제 엔드포인트 api.searchad.naver.com. 1M 키워드 단일 계정 5.5시간 처리 가능. 멀티 계정 불필요(선택적). 160일 추정 전면 수정. | cse7600 |
+
+---
+
+## 빌드 이력
+
+| 날짜 | 빌드 유형 | 변경 내용 요약 | 결과 |
+|------|---------|--------------|------|
+| 2026-04-09 | production | Migration 029 DB 적용 완료. API 7개(단건 CRUD, bulk, 파트너 조회, Cron) + 파트너 키워드 탭(/dashboard/keywords) + 광고주 키워드 관리(/advertiser/keywords) 구현. 네이버 searchad 유틸 생성. 사이드바 양쪽 탭 추가. | 성공 |

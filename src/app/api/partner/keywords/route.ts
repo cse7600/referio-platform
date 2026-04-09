@@ -136,11 +136,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '조회에 실패했습니다' }, { status: 500 })
     }
 
-    const rows = (keywords ?? []).map(row => ({
-      ...row,
-      // Hide memo content when memo_public is false
-      memo: row.memo_public ? row.memo : null,
-    }))
+    type KeywordRow = Record<string, unknown> & { id: string; memo_public: boolean; memo: string | null }
+    const rows: KeywordRow[] = (keywords ?? []).map(row => {
+      const r = row as unknown as KeywordRow
+      return {
+        ...r,
+        // Hide memo content when memo_public is false
+        memo: r.memo_public ? r.memo : null,
+      }
+    })
 
     const nextCursor = rows.length === limit ? rows[rows.length - 1]?.id ?? null : null
 

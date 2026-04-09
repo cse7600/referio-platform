@@ -63,6 +63,7 @@ function AdvertiserLayoutInner({
       { href: '/advertiser/settlements', icon: '💰', label: '정산 관리' },
       { href: '/advertiser/campaigns', icon: '📢', label: '캠페인 설정' },
       { href: '/advertiser/promotions', icon: '🎉', label: '이벤트' },
+      { href: '/advertiser/keywords', icon: '🎯', label: '키워드' },
       { href: '/advertiser/activity-support', icon: '📢', label: '파트너 활동 지원' },
       { href: '/advertiser/messages', icon: '💬', label: '파트너 메시지' },
       { href: '/advertiser/support', icon: '📩', label: '문의/피드백' },
