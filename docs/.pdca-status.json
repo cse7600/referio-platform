@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-09T02:07:41.278Z",
+  "lastUpdated": "2026-04-09T02:08:10.162Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -99,7 +99,8 @@
     "contexts",
     "configs",
     "account",
-    "[participationId]"
+    "[participationId]",
+    "keywords"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -1384,6 +1385,19 @@
         "lastUpdated": "2026-04-09T01:00:45.200Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/participations/[participationId]/route.ts"
+    },
+    "keywords": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T02:08:10.162Z",
+        "lastUpdated": "2026-04-09T02:08:10.162Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/keywords/route.ts"
     }
   },
   "pipeline": {
@@ -1394,7 +1408,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-09T02:07:41.278Z"
+    "lastActivity": "2026-04-09T02:08:10.162Z"
   },
   "history": [
     {
@@ -8900,6 +8914,12 @@
     {
       "timestamp": "2026-04-09T02:07:41.278Z",
       "feature": "referio-platform",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T02:08:10.162Z",
+      "feature": "keywords",
       "phase": "do",
       "action": "updated"
     }
