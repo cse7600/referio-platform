@@ -1,8 +1,9 @@
 # Security Hardening Plan
 
-**Version**: 1.0
+**Version**: 1.1
 **Created**: 2026-04-09
-**Status**: Do (Implementation)
+**Last Updated**: 2026-04-09
+**Status**: Phase 1+2 완료 / Phase 3(MFA) 미시작
 **Priority**: P0 (Enterprise readiness)
 
 ---
@@ -36,12 +37,12 @@ Benchmark: recatch.cc (B2B SaaS reference platform).
 - Admin UI: `/admin/audit-logs` page (future phase)
 
 **Completion Criteria**:
-- [ ] Migration 031 applied to Supabase
-- [ ] `logAuditEvent()` function created with proper error isolation
-- [ ] SSN export logs `view_ssn` and `export_ssn` events
-- [ ] Advertiser login logs `login_success` and `login_failure` events
-- [ ] Admin partner updates log `update_partner` events
-- [ ] Audit log failures never block main API responses
+- [x] Migration 031 applied to Supabase ✅ 2026-04-09
+- [x] `logAuditEvent()` function created with proper error isolation ✅ src/lib/audit.ts
+- [x] SSN export logs `view_ssn` and `export_ssn` events ✅
+- [x] Advertiser login logs `login_success` and `login_failure` events ✅
+- [x] Admin partner updates log `update_partner` events ✅
+- [x] Audit log failures never block main API responses ✅ (fire-and-forget)
 
 ### 2.2 Login Rate Limiting (P0)
 
@@ -56,11 +57,11 @@ Benchmark: recatch.cc (B2B SaaS reference platform).
 - Auto-cleanup of expired records
 
 **Completion Criteria**:
-- [ ] `login_attempts` table created
-- [ ] Login API checks attempt count before authentication
-- [ ] Locked accounts return 429 with remaining lockout time
-- [ ] Successful login resets attempt counter
-- [ ] Expired lockout records cleaned on access
+- [x] `login_attempts` table created ✅ migration 031
+- [x] Login API checks attempt count before authentication ✅ src/lib/rate-limit.ts
+- [x] Locked accounts return 429 with remaining lockout time ✅
+- [x] Successful login resets attempt counter ✅
+- [x] Expired lockout records cleaned on access ✅
 
 ### 2.3 RLS Policy Hardening (P0)
 
@@ -73,10 +74,10 @@ Benchmark: recatch.cc (B2B SaaS reference platform).
 - Apply `service_role`-only policies (matches current API architecture using admin client)
 
 **Completion Criteria**:
-- [ ] Migration 032 created and applied
-- [ ] All 4 tables have `service_role`-only RLS policies
-- [ ] No `USING(true)` anonymous access remains on tenant data
-- [ ] Existing API functionality unaffected (all use service_role client)
+- [x] Migration 032 created and applied ✅ 2026-04-09
+- [x] All 4 tables have `service_role`-only RLS policies ✅
+- [x] No `USING(true)` anonymous access remains on tenant data ✅
+- [x] Existing API functionality unaffected (all use service_role client) ✅ 빌드 성공 확인
 
 ### 2.4 MFA / Two-Factor Authentication (P1 - Future)
 
