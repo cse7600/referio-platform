@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Gift, Trophy, Zap, CheckCircle2, Calendar, Camera, ArrowLeft, ExternalLink } from 'lucide-react'
+import { Gift, Trophy, Zap, CheckCircle2, Calendar, Camera, ArrowLeft, ExternalLink, Pencil, Trash2, Loader2 } from 'lucide-react'
 
 // SSR disabled — Tiptap requires browser APIs
 const TiptapViewer = dynamic(() => import('@/components/editor/TiptapViewer'), { ssr: false })
@@ -33,6 +33,15 @@ interface Event {
   banner_bg_color: string | null
   event_link_url: string | null
   created_at: string
+}
+
+interface MyParticipation {
+  id: string
+  promotion_id: string
+  post_url: string | null
+  post_note: string | null
+  submitted_at: string | null
+  participated_at: string | null
 }
 
 interface PostVerificationState {
@@ -112,6 +121,11 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [participating, setParticipating] = useState(false)
   const [postModal, setPostModal] = useState<PostVerificationState | null>(null)
+  const [myParticipations, setMyParticipations] = useState<MyParticipation[]>([])
+  const [participationsLoading, setParticipationsLoading] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ post_url: '', post_note: '' })
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -135,6 +149,88 @@ export default function EventDetailPage() {
     setLoading(false)
   }
 
+  const fetchMyParticipations = async () => {
+    setParticipationsLoading(true)
+    try {
+      const res = await fetch(`/api/partner/events/participations?promotion_id=${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setMyParticipations(data.participations || [])
+      }
+    } catch { /* ignore */ }
+    setParticipationsLoading(false)
+  }
+
+  useEffect(() => {
+    if (event && (event.participated || event.participation_count > 0)) {
+      fetchMyParticipations()
+    }
+  }, [event?.participated, event?.participation_count])
+
+  const handleEditStart = (p: MyParticipation) => {
+    setEditingId(p.id)
+    setEditForm({ post_url: p.post_url || '', post_note: p.post_note || '' })
+    setConfirmDeleteId(null)
+  }
+
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditForm({ post_url: '', post_note: '' })
+  }
+
+  const handleEditSave = async (participationId: string) => {
+    try {
+      const res = await fetch(`/api/partner/events/participations/${participationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_url: editForm.post_url.trim(), post_note: editForm.post_note.trim() || undefined }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMyParticipations(prev => prev.map(p =>
+          p.id === participationId
+            ? { ...p, post_url: data.participation.post_url, post_note: data.participation.post_note }
+            : p
+        ))
+        setEditingId(null)
+        toast.success('수정되었습니다')
+      } else {
+        toast.error(data.error || '수정에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+  }
+
+  const handleDeleteParticipation = async (participationId: string) => {
+    if (confirmDeleteId !== participationId) {
+      setConfirmDeleteId(participationId)
+      setEditingId(null)
+      return
+    }
+    try {
+      const res = await fetch(`/api/partner/events/participations/${participationId}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMyParticipations(prev => prev.filter(p => p.id !== participationId))
+        const newCount = (event?.participation_count ?? 1) - 1
+        setEvent(prev => prev ? {
+          ...prev,
+          participated: newCount > 0,
+          participation_count: Math.max(0, newCount),
+        } : prev)
+        setConfirmDeleteId(null)
+        toast.success('참여가 취소되었습니다')
+      } else {
+        toast.error(data.error || '삭제에 실패했습니다')
+      }
+    } catch {
+      toast.error('서버 오류가 발생했습니다')
+    }
+  }
+
   const handleParticipate = async () => {
     if (!event) return
     setParticipating(true)
@@ -149,6 +245,7 @@ export default function EventDetailPage() {
       const data = await res.json()
       if (res.ok) {
         toast.success('이벤트 참여가 완료되었습니다!')
+        fetchMyParticipations()
       } else {
         setEvent(prev => prev ? { ...prev, participated: false } : prev)
         toast.error(data.error || '참여에 실패했습니다')
@@ -188,6 +285,7 @@ export default function EventDetailPage() {
           participation_count: prev.participation_count + 1,
         } : prev)
         setPostModal(null)
+        fetchMyParticipations()
       } else {
         setEvent(prev => prev ? { ...prev, participated: prev.participation_count > 0 } : prev)
         setPostModal(prev => prev ? { ...prev, submitting: false } : null)
@@ -339,6 +437,138 @@ export default function EventDetailPage() {
           )}
         </div>
       </div>
+
+      {/* My participations section */}
+      {(event.participated || event.participation_count > 0) && (
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm px-5 py-4">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-semibold text-slate-600">내 참여 현황</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+
+          {participationsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : myParticipations.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-4">참여 내역이 없습니다</p>
+          ) : (
+            <div className="space-y-3">
+              {myParticipations.map((p) => {
+                const isEditing = editingId === p.id
+                const isConfirmingDelete = confirmDeleteId === p.id
+                const dateStr = p.submitted_at || p.participated_at
+
+                return (
+                  <div key={p.id} className="border border-slate-100 rounded-lg p-3 space-y-2">
+                    {/* Date */}
+                    <div className="flex items-center justify-end">
+                      {dateStr && (
+                        <span className="text-xs text-slate-400">
+                          {new Date(dateStr).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-slate-600">게시물 URL</label>
+                          <Input
+                            value={editForm.post_url}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, post_url: e.target.value }))}
+                            placeholder="https://..."
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-slate-600">메모 (선택)</label>
+                          <Textarea
+                            value={editForm.post_note}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, post_note: e.target.value }))}
+                            placeholder="추가 설명을 입력하세요"
+                            rows={2}
+                            className="text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline" size="sm" onClick={handleEditCancel}>취소</Button>
+                          <Button size="sm" onClick={() => handleEditSave(p.id)}>저장</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Post URL */}
+                        {p.post_url && (
+                          <a
+                            href={p.post_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 transition-colors truncate"
+                          >
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{p.post_url}</span>
+                          </a>
+                        )}
+
+                        {/* Post note */}
+                        {p.post_note && (
+                          <p className="text-xs text-slate-500">{p.post_note}</p>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="flex items-center justify-end gap-1">
+                          {event.promotion_type === 'post_verification' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                              onClick={() => handleEditStart(p)}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+
+                          {isConfirmingDelete ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-red-600 font-medium">정말 삭제?</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteParticipation(p.id)}
+                              >
+                                확인
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs text-slate-500"
+                                onClick={() => setConfirmDeleteId(null)}
+                              >
+                                아니요
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
+                              onClick={() => handleDeleteParticipation(p.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Description */}
       {event.description && (
