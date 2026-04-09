@@ -1,9 +1,9 @@
 # Security Hardening Plan
 
-**Version**: 1.1
+**Version**: 1.2
 **Created**: 2026-04-09
 **Last Updated**: 2026-04-09
-**Status**: Phase 1+2 완료 / Phase 3(MFA) 미시작
+**Status**: Phase 1+2+3(WAF) 완료 / Phase 4(MFA) 미시작
 **Priority**: P0 (Enterprise readiness)
 
 ---
@@ -78,6 +78,13 @@ Benchmark: recatch.cc (B2B SaaS reference platform).
 - [x] All 4 tables have `service_role`-only RLS policies ✅
 - [x] No `USING(true)` anonymous access remains on tenant data ✅
 - [x] Existing API functionality unaffected (all use service_role client) ✅ 빌드 성공 확인
+
+### 2.3.5 Vercel WAF Custom Rules (P1 - 완료)
+
+**Completion Criteria**:
+- [x] Rule 1 — Block Login Brute Force: Request Path=/api/auth/advertiser/login, Rate Limit Fixed Window 60s/100req/IP → 429 ✅ 2026-04-09
+- [x] Rule 2 — Block Malicious Scanners: User Agent contains sqlmap/nikto/nmap → Deny(403) ✅ 2026-04-09
+- [x] Rule 3 — Protect Admin Panel: Request Path starts with /admin → Challenge ✅ 2026-04-09
 
 ### 2.4 MFA / Two-Factor Authentication (P1 - Future)
 

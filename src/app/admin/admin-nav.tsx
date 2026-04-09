@@ -18,6 +18,7 @@ import {
   Megaphone,
   MessageSquare,
   Star,
+  Shield,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: '유저 관리', icon: UserPlus },
   { href: '/admin/recruit', label: '광고주 모집', icon: Megaphone },
   { href: '/admin/support', label: '문의 관리', icon: MessageSquare },
+  { href: '/admin/audit-logs', label: '감사 로그', icon: Shield },
 ]
 
 export default function AdminNav({ children }: { children: React.ReactNode }) {
