@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-07T01:46:26.887Z",
+  "lastUpdated": "2026-04-09T01:17:44.192Z",
   "activeFeatures": [
     "inquiry",
     "security",
@@ -94,7 +94,12 @@
     "interest",
     "requests",
     "vote",
-    "recruit"
+    "recruit",
+    "demo-data",
+    "contexts",
+    "configs",
+    "account",
+    "[participationId]"
   ],
   "primaryFeature": "inquiry",
   "features": {
@@ -133,9 +138,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T01:55:19.659Z",
-        "lastUpdated": "2026-04-06T10:26:51.117Z"
+        "lastUpdated": "2026-04-08T09:09:41.120Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/layout.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/dashboard/page.tsx"
     },
     "programs": {
       "phase": "do",
@@ -237,7 +242,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T03:30:31.656Z",
-        "lastUpdated": "2026-04-01T07:09:19.935Z"
+        "lastUpdated": "2026-04-08T09:08:04.680Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/settlements/page.tsx"
     },
@@ -250,9 +255,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:37:36.917Z",
-        "lastUpdated": "2026-04-02T08:04:33.285Z"
+        "lastUpdated": "2026-04-08T09:07:46.783Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/partners/page.tsx"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/partners/page.tsx"
     },
     "advertiser": {
       "phase": "do",
@@ -263,7 +268,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T04:40:55.133Z",
-        "lastUpdated": "2026-03-30T01:03:31.472Z"
+        "lastUpdated": "2026-04-08T09:06:45.613Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/layout.tsx"
     },
@@ -315,7 +320,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-09T07:40:13.843Z",
-        "lastUpdated": "2026-03-23T02:41:49.620Z"
+        "lastUpdated": "2026-04-09T00:48:29.842Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/advertisers/page.tsx"
     },
@@ -380,7 +385,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T05:58:04.542Z",
-        "lastUpdated": "2026-04-07T01:37:42.119Z"
+        "lastUpdated": "2026-04-09T01:17:44.192Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/[id]/page.tsx"
     },
@@ -856,9 +861,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-27T04:40:43.385Z",
-        "lastUpdated": "2026-04-07T01:17:15.234Z"
+        "lastUpdated": "2026-04-09T01:11:35.649Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/dashboard/events/page.tsx"
     },
     "support": {
       "phase": "do",
@@ -1051,7 +1056,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T04:48:59.446Z",
-        "lastUpdated": "2026-04-07T01:35:55.545Z"
+        "lastUpdated": "2026-04-08T05:37:59.827Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/advertiser/promotions/page.tsx"
     },
@@ -1064,9 +1069,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-31T05:25:57.718Z",
-        "lastUpdated": "2026-04-01T04:27:28.890Z"
+        "lastUpdated": "2026-04-09T01:09:08.899Z"
       },
-      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/advertiser/promotions/[id]/participations/route.ts"
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/participations/route.ts"
     },
     "nudge-inactive-partners": {
       "phase": "do",
@@ -1314,6 +1319,71 @@
         "lastUpdated": "2026-04-07T01:23:40.917Z"
       },
       "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/admin/recruit/page.tsx"
+    },
+    "demo-data": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-08T08:28:37.703Z",
+        "lastUpdated": "2026-04-08T09:06:19.350Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/demo-data/millie-demo.ts"
+    },
+    "contexts": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-08T08:29:41.138Z",
+        "lastUpdated": "2026-04-08T08:29:41.138Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/contexts/demo-mode-context.tsx"
+    },
+    "configs": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-08T09:01:12.245Z",
+        "lastUpdated": "2026-04-08T09:04:31.527Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/lib/demo-data/configs/millie.ts"
+    },
+    "account": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T00:47:26.774Z",
+        "lastUpdated": "2026-04-09T00:47:26.774Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/admin/advertisers/account/route.ts"
+    },
+    "[participationId]": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-09T01:00:45.200Z",
+        "lastUpdated": "2026-04-09T01:00:45.200Z"
+      },
+      "lastFile": "/Users/hokang2father/projects/referio-platform/src/app/api/partner/events/participations/[participationId]/route.ts"
     }
   },
   "pipeline": {
@@ -1324,7 +1394,7 @@
   "session": {
     "startedAt": "2026-03-09T01:07:25.153Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-04-07T01:46:26.887Z"
+    "lastActivity": "2026-04-09T01:17:44.192Z"
   },
   "history": [
     {
@@ -8320,6 +8390,510 @@
     {
       "timestamp": "2026-04-07T01:46:26.887Z",
       "feature": "scripts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T05:37:38.746Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T05:37:52.336Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T05:37:59.827Z",
+      "feature": "promotions",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T05:38:08.627Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:28:37.703Z",
+      "feature": "demo-data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:29:41.138Z",
+      "feature": "contexts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:30:20.105Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:31:26.158Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:02.754Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:10.203Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:16.273Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:22.339Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:30.094Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:34.691Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:40.704Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:32:50.672Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:33:17.166Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:33:36.876Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:50:44.718Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:50:51.266Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:50:58.178Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:04.048Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:09.631Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:13.965Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:18.136Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:21.509Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:51:28.330Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T08:59:55.530Z",
+      "feature": "demo-data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:01:12.245Z",
+      "feature": "configs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:02:47.207Z",
+      "feature": "configs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:04:31.527Z",
+      "feature": "configs",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:19.350Z",
+      "feature": "demo-data",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:25.342Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:30.093Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:35.240Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:40.816Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:45.613Z",
+      "feature": "advertiser",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:06:59.741Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:13.982Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:18.968Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:27.198Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:35.841Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:41.153Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:46.783Z",
+      "feature": "partners",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:52.378Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:07:57.074Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:04.680Z",
+      "feature": "settlements",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:10.416Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:22.848Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:31.145Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:45.723Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:08:54.244Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:09:32.440Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-08T09:09:41.120Z",
+      "feature": "dashboard",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:47:26.775Z",
+      "feature": "account",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:47:32.238Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:47:49.249Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:48:01.718Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:48:29.842Z",
+      "feature": "advertisers",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:55:45.735Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:55:50.206Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:55:55.310Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:56:05.272Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:56:11.196Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T00:56:36.906Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:00:33.318Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:00:45.200Z",
+      "feature": "[participationId]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:08.899Z",
+      "feature": "participations",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:14.533Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:20.015Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:27.890Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:42.347Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:49.397Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:09:58.336Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:10:19.830Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:10:26.163Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:10:33.373Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:10:40.768Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:10:53.368Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:11:01.206Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:11:25.608Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:11:35.649Z",
+      "feature": "events",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:17:29.116Z",
+      "feature": "[id]",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-09T01:17:44.192Z",
+      "feature": "[id]",
       "phase": "do",
       "action": "updated"
     }

@@ -83,3 +83,37 @@ started: 2026-03-31
 |------|----------|--------------|------|
 | 2026-04-01 | production | 카드 모서리 all-rounded 통일, 이벤트 탭 신규 알림 빨간 점(localStorage 기반), 파트너/광고주 이벤트 게시 날짜 표시 | 성공 |
 | 2026-04-06 | production | 버그 수정: 이벤트 탭 데이터 조회를 서버 API → 브라우저 클라이언트 직접 쿼리로 교체 (카카오톡 인앱 브라우저 쿠키 미전달 문제 해결) | 성공 |
+| 2026-04-09 | production | Phase 4: 파트너 참여 현황 CRUD — 상세 페이지 내 참여 현황 섹션 추가, 조회/수정/삭제 API 신규, 섹션 순서 조정(타이틀→참여현황→상세내용) | 성공 |
+
+---
+
+# Phase 4 — 파트너 참여 현황 CRUD (2026-04-09 완료)
+
+## 배경
+파트너가 게시물 인증 이벤트에 참여 후 제출한 링크를 조회·수정·삭제할 수 없어 UX 불편. 이벤트 목록 페이지의 전역 "내 참여 현황" 버튼도 위치가 부적절해 인지율 낮음.
+
+## 요구사항
+1. 파트너가 본인의 참여 내역(게시물 URL, 메모)을 조회/수정/삭제 가능
+2. 이벤트 상세 페이지 내에서 해당 이벤트 참여 현황만 표시
+3. 섹션 순서: 타이틀(배너) → 내 참여 현황 → 이벤트 내용 → 이벤트 링크
+
+## 구현 파일
+- `src/app/api/partner/events/participations/route.ts` — GET (목록, promotion_id 필터 지원)
+- `src/app/api/partner/events/participations/[participationId]/route.ts` — PATCH (수정), DELETE (삭제)
+- `src/app/dashboard/events/[id]/page.tsx` — 내 참여 현황 섹션 추가 + 섹션 순서 조정
+- `src/app/dashboard/events/page.tsx` — 전역 "내 참여 현황" 버튼 제거
+
+## API 명세
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| GET | `/api/partner/events/participations?promotion_id=xxx` | 특정 이벤트 참여 목록 |
+| GET | `/api/partner/events/participations` | 전체 참여 목록 |
+| PATCH | `/api/partner/events/participations/[id]` | post_url / post_note 수정 |
+| DELETE | `/api/partner/events/participations/[id]` | 참여 삭제 (2단계 확인) |
+
+## UX 상세
+- 참여 완료 상태일 때만 섹션 표시
+- `post_verification` 타입: 수정(인라인) + 삭제
+- 다른 타입: 삭제만
+- 삭제 2단계: 휴지통 클릭 → "정말 삭제?" 인라인 확인 → 확인 클릭 시 실행
+- 삭제 성공 시 participation_count 감소, 0이 되면 섹션 자동 숨김

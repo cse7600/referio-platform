@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import {
   Search,
   Building2,
@@ -30,6 +31,9 @@ import {
   XCircle,
   ExternalLink,
   ChevronRight,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 
 interface AdvertiserRow {
@@ -262,6 +266,23 @@ export default function AdminAdvertisersPage() {
   )
 }
 
+interface AccountUser {
+  id: string
+  user_id: string
+  name: string
+  role: string
+  status: string
+  last_login_at: string | null
+  created_at: string
+}
+
+interface LegacyAccount {
+  id: string
+  user_id: string
+  status: string
+  created_at: string
+}
+
 function AdvertiserDetailDialog({
   advertiser,
   onClose,
@@ -272,15 +293,31 @@ function AdvertiserDetailDialog({
   const [partners, setPartners] = useState<{ id: string; name: string; email: string; status: string; tier: string; referral_code: string }[]>([])
   const [referrals, setReferrals] = useState<{ id: string; name: string; phone: string; contract_status: string; is_valid: boolean; created_at: string; partner_name: string | null }[]>([])
   const [loading, setLoading] = useState(true)
+  const [accountUsers, setAccountUsers] = useState<AccountUser[]>([])
+  const [legacyAccount, setLegacyAccount] = useState<LegacyAccount | null>(null)
+  const [pwTarget, setPwTarget] = useState<{ userId: string; isLegacy: boolean } | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwMessage, setPwMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`/api/admin/advertisers/detail?id=${advertiser.id}`)
-        if (!res.ok) throw new Error('Failed to fetch')
-        const data = await res.json()
-        setPartners(data.partners || [])
-        setReferrals(data.referrals || [])
+        const [detailRes, accountRes] = await Promise.all([
+          fetch(`/api/admin/advertisers/detail?id=${advertiser.id}`),
+          fetch(`/api/admin/advertisers/account?advertiserId=${advertiser.advertiser_id}`),
+        ])
+        if (detailRes.ok) {
+          const data = await detailRes.json()
+          setPartners(data.partners || [])
+          setReferrals(data.referrals || [])
+        }
+        if (accountRes.ok) {
+          const data = await accountRes.json()
+          setAccountUsers(data.users || [])
+          setLegacyAccount(data.legacy || null)
+        }
       } catch {
         // silently fail
       } finally {
@@ -288,7 +325,37 @@ function AdvertiserDetailDialog({
       }
     }
     load()
-  }, [advertiser.id])
+  }, [advertiser.id, advertiser.advertiser_id])
+
+  const handlePasswordChange = async () => {
+    if (!pwTarget || !newPassword) return
+    setPwLoading(true)
+    setPwMessage(null)
+    try {
+      const res = await fetch('/api/admin/advertisers/account', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          advertiserId: advertiser.advertiser_id,
+          userId: pwTarget.userId,
+          newPassword,
+          isLegacy: pwTarget.isLegacy,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setPwMessage({ type: 'error', text: data.error || '변경 실패' })
+      } else {
+        setPwMessage({ type: 'success', text: '비밀번호가 변경되었습니다' })
+        setNewPassword('')
+        setPwTarget(null)
+      }
+    } catch {
+      setPwMessage({ type: 'error', text: '네트워크 오류' })
+    } finally {
+      setPwLoading(false)
+    }
+  }
 
   const statusLabel: Record<string, string> = {
     pending: '대기', new_contact: '신규', first_call: '1차통화',
@@ -327,6 +394,7 @@ function AdvertiserDetailDialog({
             <TabsTrigger value="referrals">
               리드 ({advertiser.referral_count})
             </TabsTrigger>
+            <TabsTrigger value="account">계정 관리</TabsTrigger>
           </TabsList>
 
           {/* 기본 정보 탭 */}
@@ -518,6 +586,143 @@ function AdvertiserDetailDialog({
                   ))}
                 </TableBody>
               </Table>
+            )}
+          </TabsContent>
+
+          {/* 계정 관리 탭 */}
+          <TabsContent value="account" className="mt-4 space-y-4">
+            {/* 비밀번호 변경 메시지 */}
+            {pwMessage && (
+              <div className={`p-3 rounded-lg text-sm ${pwMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                {pwMessage.text}
+              </div>
+            )}
+
+            {/* 레거시 계정 */}
+            {legacyAccount && (
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-sm">메인 계정</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        로그인 ID: <code className="bg-gray-100 px-1 rounded">{legacyAccount.user_id}</code>
+                        &nbsp;·&nbsp;상태: <span className={legacyAccount.status === 'active' ? 'text-green-600' : 'text-red-500'}>{legacyAccount.status}</span>
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPwTarget({ userId: legacyAccount.user_id, isLegacy: true })
+                        setNewPassword('')
+                        setPwMessage(null)
+                      }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      비밀번호 변경
+                    </Button>
+                  </div>
+
+                  {pwTarget?.isLegacy && (
+                    <div className="flex gap-2 pt-1">
+                      <div className="relative flex-1">
+                        <input
+                          type={showPw ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handlePasswordChange()}
+                          placeholder="새 비밀번호 입력 (6자 이상)"
+                          className="w-full border rounded-md px-3 py-1.5 text-sm pr-9 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPw(!showPw)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                        >
+                          {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <Button size="sm" onClick={handlePasswordChange} disabled={pwLoading || !newPassword}>
+                        {pwLoading ? '변경 중...' : '저장'}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setPwTarget(null)}>취소</Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* advertiser_users 계정 목록 */}
+            {accountUsers.length > 0 && (
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <h3 className="font-semibold text-sm text-gray-700">서브 계정</h3>
+                  {accountUsers.map((u) => (
+                    <div key={u.id} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{u.name || u.user_id}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            ID: <code className="bg-gray-100 px-1 rounded">{u.user_id}</code>
+                            &nbsp;·&nbsp;역할: <span className="font-medium">{u.role}</span>
+                            &nbsp;·&nbsp;상태: <span className={u.status === 'active' ? 'text-green-600' : 'text-red-500'}>{u.status}</span>
+                          </p>
+                          {u.last_login_at && (
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              마지막 로그인: {new Date(u.last_login_at).toLocaleString('ko-KR')}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPwTarget({ userId: u.user_id, isLegacy: false })
+                            setNewPassword('')
+                            setPwMessage(null)
+                          }}
+                          className="flex items-center gap-1.5"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                          비밀번호 변경
+                        </Button>
+                      </div>
+
+                      {pwTarget?.userId === u.user_id && !pwTarget.isLegacy && (
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              type={showPw ? 'text' : 'password'}
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handlePasswordChange()}
+                              placeholder="새 비밀번호 입력 (6자 이상)"
+                              className="w-full border rounded-md px-3 py-1.5 text-sm pr-9 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPw(!showPw)}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                            >
+                              {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          <Button size="sm" onClick={handlePasswordChange} disabled={pwLoading || !newPassword}>
+                            {pwLoading ? '변경 중...' : '저장'}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setPwTarget(null)}>취소</Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {!legacyAccount && accountUsers.length === 0 && !loading && (
+              <div className="text-center py-8 text-gray-400 text-sm">등록된 계정이 없습니다</div>
             )}
           </TabsContent>
         </Tabs>
